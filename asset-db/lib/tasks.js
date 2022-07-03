@@ -1,8 +1,8 @@
 "use strict";
+let oldglobby = require("globby");
 const e = require("fire-fs"),
   t = require("fire-path"),
   i = require("async"),
-  a = require("globby"),
   r = require("minimatch"),
   n = require("del"),
   o = require("lodash"),
@@ -10,6 +10,40 @@ const e = require("fire-fs"),
   { shell: u } = require("electron"),
   l = require("./meta");
 let d = {};
+let myPath = {};
+let globby = oldglobby;
+if(Editor.argv.MYAPP){
+  globby = function(path, cb) {
+    if(path.endsWith("/assets/**/*")){
+      if(myPath[path]){
+        cb(null, myPath[path]);
+      }else{
+        let RES = path.replace("/**/*", "/resources");
+        let filter = [
+          `${RES}/MTP/**/*`,
+          `${RES}/${Editor.argv.MYAPP}/**/*`
+        ]
+        oldglobby(filter, (err, paths)=>{
+          paths.push(RES);
+          paths.push(`${RES}.meta`);
+          paths.push(filter[0].replace("/**/*", ""));
+          paths.push(filter[0].replace("/**/*", ".meta"));
+          paths.push(filter[1].replace("/**/*", ""));
+          paths.push(filter[1].replace("/**/*", ".meta"));
+          myPath[path] = paths;
+          cb(null, myPath[path]);
+        });
+      }
+    }else{
+      oldglobby(path, cb);
+    }
+  }
+}
+Editor.argv.resetGlobby=function(){
+    globby = oldglobby;
+    myPath = undefined;
+}
+
 async function h(e, r, o) {
   let s = e._uuidToImportPathNoExt(r);
   try {
@@ -22,7 +56,7 @@ async function h(e, r, o) {
       (e) => {
         let i = t.dirname(s),
           r = t.join(i, "**/*");
-        a(r, (a, r) => {
+        globby(r, (a, r) => {
           0 === (r = r.map((e) => t.normalize(e))).length
             ? n(i.replace(/\\/g, "/"), { force: !0 }).then((t) => {
                 e();
@@ -81,7 +115,7 @@ function m(i, a, r) {
 }
 function p(r, n) {
   let o = /\S{8}-\S{4}-\S{4}-\S{4}-\S{12}/;
-  a(t.join(r._importPath, "**/*"), (a, s) => {
+  oldglobby(t.join(r._importPath, "**/*"), (a, s) => {
     i.each(
       s,
       (i, a) => {
@@ -129,10 +163,10 @@ function y(i, r, n, o) {
       (n["remove-unused-meta"] = !0),
     "boolean" != typeof n["filter-meta"] && (n["filter-meta"] = !0);
   let s = r;
-  e.isDirSync(r) && (s = [t.join(r, "**/*")]);
+  e.isDirSync(r) && (s = t.join(r, "**/*"));
   let u = [],
     l = [];
-  a(s, (e, a) => {
+  globby(s, (e, a) => {
     if (e) return o && o(e), void 0;
     (a = a.map((e) => t.normalize(e))).includes(r) || a.unshift(r),
       a.forEach((e) => {
@@ -182,7 +216,7 @@ function g(i, r, n, o, u) {
   e.isDirSync(r) &&
     ((d = t.join(r, "**/*")), i._isMountPath(r) || (d = [r, d]));
   let h = [];
-  a(d, (a, r) => {
+  globby(d, (a, r) => {
     if (a) return u && u(a), void 0;
     r.forEach((a) => {
       let r;
@@ -1551,7 +1585,7 @@ function w(e, i, a) {
         (i) => {
           if (!e.isDirSync(s) || u) return i(), void 0;
           let r = [t.join(s, "**/*.meta")];
-          a(r, (e, a) => {
+          oldglobby(r, (e, a) => {
             Promise.all(
               a.map(
                 (e) => (
