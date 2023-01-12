@@ -1,1 +1,1 @@
-Object.assign(cc.game,{setFrameRate(){}});
+Object.assign(cc.game, { setFrameRate() {} });

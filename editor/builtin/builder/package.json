@@ -26,14 +26,13 @@
       "packageName": "org.cocos2d.demo",
       "startScene": "",
       "excludeScenes": [],
-
       "orientation": {
         "landscapeRight": true,
         "landscapeLeft": true,
         "portrait": false,
         "upsideDown": false
       },
-      "webOrientation" : "auto",
+      "webOrientation": "auto",
       "inlineSpriteFrames": true,
       "inlineSpriteFrames_native": true,
       "mainCompressionType": "default",
@@ -41,12 +40,10 @@
       "optimizeHotUpdate": false,
       "md5Cache": true,
       "nativeMd5Cache": true,
-
       "encryptJs": true,
       "xxteaKey": "",
       "zipCompressJs": true,
-      "fb-instant-games": {
-      },
+      "fb-instant-games": {},
       "android": {
         "packageName": "org.cocos2d.demo",
         "REMOTE_SERVER_ROOT": ""
@@ -79,7 +76,7 @@
       "appBundle": false,
       "agreements": {}
     },
-    "local":{
+    "local": {
       "platform": "web-mobile",
       "actualPlatform": "",
       "template": "link",

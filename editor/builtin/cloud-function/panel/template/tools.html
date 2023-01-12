@@ -1,5 +1,5 @@
 <div class="tools layout horizontal">
-  <!-- <ui-input v-el:input
+   <!-- <ui-input v-el:input
             :placeholder="t('SHARED.search') + '...'"
             :value="filter"
             @confirm="onFilterAssets"
@@ -8,9 +8,9 @@
   <span class="fa fa-times-circle tool-cancel"
         v-if="filter"
         @click="emptyFilter"></span> -->
-  <div class="flex-1"
-       style="overflow: hidden;white-space: nowrap;text-overflow: ellipsis;">{{t("cloud-function.current-env")}}：{{current_env_id}}</div>
-  <!-- <ui-select class="flex-1"
+   <div class="flex-1" style="overflow: hidden;white-space: nowrap;text-overflow: ellipsis;">
+      {{t("cloud-function.current-env")}}：{{current_env_id}}</div>
+   <!-- <ui-select class="flex-1"
              value="4">
     <option value="0">Foo</option>
     <option value="1">Bar</option>
@@ -18,10 +18,8 @@
     <option value="3">World</option>
     <option value="4">A Long Text</option>
   </ui-select> -->
-  <i class="fa fa-plus"
-     :title="t('HIERARCHY.tab.create')"
-     @click="createPopup"></i>
-  <!-- <i class="fa fa-search"
+   <i class="fa fa-plus" :title="t('HIERARCHY.tab.create')" @click="createPopup"></i>
+   <!-- <i class="fa fa-search"
      :title="t('HIERARCHY.tab.search')"
      @click="searchPopup"></i> -->
 </div>

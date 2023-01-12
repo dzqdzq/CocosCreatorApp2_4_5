@@ -32,63 +32,71 @@ let S_INTERVAL_ID = 0;
 let recordList = [];
 
 let _genItemInfo = function (item) {
-    return {
-        uuid: item.uuid || null,
-        url: item.url,
-    }
+  return {
+    uuid: item.uuid || null,
+    url: item.url,
+  };
 };
 
 let _genRecordInfo = function (time) {
-    return {
-        id: ++BEGIN_ID,
-        ts: time,
-        items: [],
-        screenshot: ""
+  return {
+    id: ++BEGIN_ID,
+    ts: time,
+    items: [],
+    screenshot: "",
+  };
+};
+
+function screenShot() {
+  S_INTERVAL_ID = setInterval(function () {
+    let now = new Date().getTime();
+    let recordInfo = _genRecordInfo(now);
+    recordList.push(recordInfo);
+
+    let size = cc.winSize;
+    let current_scene = cc.director.getScene();
+    if (current_scene) {
+      let render = new cc.RenderTexture();
+      render.initWithSize(size.width, size.height);
+
+      cc.Camera.main.targetTexture = render;
+      cc.Camera.main.render();
+      cc.Camera.main.targetTexture = null;
+      let name = `${now}.jpg`;
+      recordInfo.screenshot = name;
+
+      let data = render.readPixels();
+      let width = render.width;
+      let height = render.height;
+      jsb.saveImageData(
+        data,
+        width,
+        height,
+        `${CC_SIMULATOR_RECORD_PATH}/${name}`
+      );
     }
-};
 
-function screenShot () {
-    S_INTERVAL_ID = setInterval(function () {
-        let now = new Date().getTime();
-        let recordInfo = _genRecordInfo(now);
-        recordList.push(recordInfo);
+    jsb.fileUtils.writeStringToFile(
+      JSON.stringify(recordList),
+      `${CC_SIMULATOR_RECORD_PATH}/timeline.json`
+    );
+  }, RECORD_DELTA_TIME * 1000);
+}
 
-        let size = cc.winSize;
-        let current_scene = cc.director.getScene();
-        if (current_scene) {
-            let render = new cc.RenderTexture();
-            render.initWithSize(size.width, size.height);
-
-            cc.Camera.main.targetTexture = render;
-            cc.Camera.main.render();
-            cc.Camera.main.targetTexture = null;
-            let name = `${now}.jpg`;
-            recordInfo.screenshot = name;
-
-            let data = render.readPixels();
-            let width = render.width;
-            let height = render.height;
-            jsb.saveImageData(data, width, height, `${CC_SIMULATOR_RECORD_PATH}/${name}`);
-        }
-
-        jsb.fileUtils.writeStringToFile(JSON.stringify(recordList), `${CC_SIMULATOR_RECORD_PATH}/timeline.json`);
-    }, RECORD_DELTA_TIME * 1000);
-};
-
-function recordFrame (task, done) {
-    var input = task.input;
-    let last_item = recordList[recordList.length - 1];
-    for (var i = 0, l = input.length; i < l; i++) {
-        last_item.items.push(_genItemInfo(input[i]));
-    }
-    task.output = task.input;
-    done();
-};
+function recordFrame(task, done) {
+  var input = task.input;
+  let last_item = recordList[recordList.length - 1];
+  for (var i = 0, l = input.length; i < l; i++) {
+    last_item.items.push(_genItemInfo(input[i]));
+  }
+  task.output = task.input;
+  done();
+}
 
 if (CC_SIMULATOR_RECORD_MODE) {
-    recordList.push(_genRecordInfo(new Date().getTime()));
-    screenShot();
-    cc.assetManager.pipeline.insert(recordFrame, 1);
-    cc.assetManager.fetchPipeline.insert(recordFrame, 1);
-    cc.assetManager._recordPipe = recordFrame;
+  recordList.push(_genRecordInfo(new Date().getTime()));
+  screenShot();
+  cc.assetManager.pipeline.insert(recordFrame, 1);
+  cc.assetManager.fetchPipeline.insert(recordFrame, 1);
+  cc.assetManager._recordPipe = recordFrame;
 }

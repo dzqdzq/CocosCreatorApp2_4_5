@@ -11,7 +11,7 @@
  */
 
 if (cc.Toggle) {
-    // Whether to trigger 'toggle' and 'checkEvents' events when modifying 'toggle.isChecked' in the code
-    // 在代码中修改 'toggle.isChecked' 时是否触发 'toggle' 与 'checkEvents' 事件
-    cc.Toggle._triggerEventInScript_isChecked = true;
+  // Whether to trigger 'toggle' and 'checkEvents' events when modifying 'toggle.isChecked' in the code
+  // 在代码中修改 'toggle.isChecked' 时是否触发 'toggle' 与 'checkEvents' 事件
+  cc.Toggle._triggerEventInScript_isChecked = true;
 }

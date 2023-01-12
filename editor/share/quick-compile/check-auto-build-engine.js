@@ -1,1 +1,7 @@
-module.exports=function(){let e=Editor.Profile.load("local://settings.json");e&&!1===e.get("use-global-engine-setting")||(e=Editor.Profile.load("global://settings.json"));let t=e.get("use-default-js-engine");return Editor.dev||!t};
+module.exports = function () {
+  let e = Editor.Profile.load("local://settings.json");
+  (e && !1 === e.get("use-global-engine-setting")) ||
+    (e = Editor.Profile.load("global://settings.json"));
+  let t = e.get("use-default-js-engine");
+  return Editor.dev || !t;
+};

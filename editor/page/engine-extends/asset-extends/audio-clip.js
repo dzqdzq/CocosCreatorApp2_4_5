@@ -1,1 +1,4 @@
-cc.AudioClip.prototype.createNode=function(c){var e=new cc.Node(this.name);return e.addComponent(cc.AudioSource).clip=this,c(null,e)};
+cc.AudioClip.prototype.createNode = function (c) {
+  var e = new cc.Node(this.name);
+  return (e.addComponent(cc.AudioSource).clip = this), c(null, e);
+};

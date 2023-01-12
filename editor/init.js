@@ -43,9 +43,9 @@ process.on("uncaughtException", o),
               action: "Editor Open",
               label: "new metrics",
             });
-            setTimeout(() => {
-                Editor.argv.resetGlobby && Editor.argv.resetGlobby();
-              }, 10000);
+          setTimeout(() => {
+            Editor.argv.resetGlobby && Editor.argv.resetGlobby();
+          }, 10000);
         }),
         process.removeListener("uncaughtException", o));
     },

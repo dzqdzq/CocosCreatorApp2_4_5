@@ -67,7 +67,7 @@ let l = {
       d = require("fire-path"),
       l = require("os"),
       p = require("del"),
-      f = require("express"),
+      express = require("express"),
       g = require("http"),
       v = require("mobile-detect"),
       h = require("async");
@@ -76,7 +76,7 @@ let l = {
     this._validateStashedScene = t;
     var E = d.join(l.tmpdir(), "fireball-game-builds");
     p.sync(d.join(E, "**/*").replace(/\\/g, "/"), { force: !0 }),
-      (s = f()).use(m());
+      (s = express()).use(m());
     let w = d.join(Editor.Project.path, "preview-templates");
     r.existsSync(w) || (w = Editor.url("unpack://static/preview-templates")),
       s.set("views", w),
@@ -235,7 +235,7 @@ let l = {
         );
       }),
       s.get("/*", function (e, t, i) {
-        return f.static(w)(e, t, i);
+        return express.static(w)(e, t, i);
       }),
       s.use(function (e, t, i, r) {
         console.error(e.stack), r(e);

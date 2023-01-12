@@ -245,20 +245,29 @@ async function I(r) {
       })(t, function (t, n, a) {
         var o,
           i = !1;
-        a instanceof cc.Component.EventHandler && (a = a.target),
-          a instanceof cc.Component && (a = a.node),
-          a instanceof cc._BaseNode &&
-            (a.isChildOf(e) || ((i = !0), (o = a.name))),
-          i &&
-            ((t[n] = null),
-            CC_TEST ||
-              r ||
-              Editor.error(
-                'Reference "%s" of "%s" to external scene object "%s" can not be saved in prefab asset.',
-                n,
-                t.name || e.name,
-                o
-              ));
+        if (a instanceof cc.Component.EventHandler) {
+          a = a.target;
+        }
+        if (a instanceof cc.Component) {
+          a = a.node;
+        }
+        if (a instanceof cc._BaseNode) {
+          if (!a.isChildOf(e)) {
+            i = true;
+            o = a.name;
+          }
+        }
+        if (i) {
+          t[n] = null;
+          if (!CC_TEST && !r) {
+            Editor.error(
+              'Reference "%s" of "%s" to external scene object "%s" can not be saved in prefab asset.',
+              n,
+              t.name || e.name,
+              o
+            );
+          }
+        }
       });
     }),
     _(e, function (e, r) {
@@ -618,7 +627,7 @@ async function I(r) {
   });
 let P = !1;
 (p.confirmPrefabSynced = async function (e, r) {
-    console.trace("dzq confirmPrefabSynced", e, r)
+  console.trace("dzq confirmPrefabSynced", e, r);
   return (
     !(!P && e && (await I(e))) ||
     (await new Promise(async (o) => {

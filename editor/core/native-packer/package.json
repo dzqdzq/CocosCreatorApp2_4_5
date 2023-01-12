@@ -1,8 +1,7 @@
 {
-    "name": "native-packer",
-    "version": "0.0.1",
-    "description": "A packer for native project",
-    "author": "Cocos Creator",
-    "main": "main.js"
-  }
-  
+  "name": "native-packer",
+  "version": "0.0.1",
+  "description": "A packer for native project",
+  "author": "Cocos Creator",
+  "main": "main.js"
+}

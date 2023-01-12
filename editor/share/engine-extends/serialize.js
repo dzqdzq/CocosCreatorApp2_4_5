@@ -42,12 +42,15 @@ function d(e, r) {
       !!r.reserveContentsForSyncablePrefab),
     e instanceof cc.Prefab && (this._prefabRoot = e.data),
     (function (e, r) {
-      if (r instanceof i || cc.Class._isCCClass(r.constructor)) m(e, r);
-      else if (ArrayBuffer.isView(r)) e.serializedList = m(e, r);
-      else if ("object" == typeof r && r) {
+      if (r instanceof i || cc.Class._isCCClass(r.constructor)) {
+        m(e, r);
+      } else if (ArrayBuffer.isView(r)) {
+        e.serializedList = m(e, r);
+      } else if ("object" == typeof r && r) {
         var t;
-        if (Array.isArray(r)) t = [];
-        else {
+        if (Array.isArray(r)) {
+          t = [];
+        } else {
           t = {};
           var s = cc.js._getClassId(r, !1);
           if ((s && (t.__type__ = s), r._serialize))
@@ -57,10 +60,10 @@ function d(e, r) {
               void 0
             );
         }
-        (r.__id__ = 0),
-          e._objsToResetId.push(r),
-          e.serializedList.push(t),
-          j(e, r, t);
+        r.__id__ = 0;
+        e._objsToResetId.push(r);
+        e.serializedList.push(t);
+        j(e, r, t);
       } else e.serializedList.push(r || null);
     })(this, e);
   for (var t = 0; t < this._objsToResetId.length; ++t)

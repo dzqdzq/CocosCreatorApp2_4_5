@@ -1,1 +1,1 @@
-module.exports={platform_name:"字节跳动小游戏开放数据域"};
+module.exports = { platform_name: "字节跳动小游戏开放数据域" };

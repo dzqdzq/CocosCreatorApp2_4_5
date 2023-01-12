@@ -1,1 +1,2 @@
-const e=require("./const");module.exports={platform:e.PLATFORM,message:{}};
+const e = require("./const");
+module.exports = { platform: e.PLATFORM, message: {} };
