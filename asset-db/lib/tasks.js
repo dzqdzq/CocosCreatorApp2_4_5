@@ -19,9 +19,11 @@ if(Editor.argv.MYAPP){
         cb(null, myPath[path]);
       }else{
         let RES = path.replace("/**/*", "/resources");
+        let bundleGames = path.replace("/**/*", "/bundleGames");
         let filter = [
           `${RES}/MTP/**/*`,
-          `${RES}/${Editor.argv.MYAPP}/**/*`
+          `${RES}/${Editor.argv.MYAPP}/**/*`,
+          `${bundleGames}/**/*`,
         ]
         oldglobby(filter, (err, paths)=>{
           paths.push(RES);
@@ -30,6 +32,8 @@ if(Editor.argv.MYAPP){
           paths.push(filter[0].replace("/**/*", ".meta"));
           paths.push(filter[1].replace("/**/*", ""));
           paths.push(filter[1].replace("/**/*", ".meta"));
+          paths.push(filter[2].replace("/**/*", ""));
+          paths.push(filter[2].replace("/**/*", ".meta"));
           myPath[path] = paths;
           cb(null, myPath[path]);
         });

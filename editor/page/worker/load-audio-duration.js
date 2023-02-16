@@ -1,7 +1,6 @@
 require("electron").ipcRenderer.on("app:load-audio-duration", (e, r) => {
   let n = new Audio();
   function t(r) {
-    console.log("dzq123:", r, typeof r);
     n.removeEventListener("error", t), e.reply(r);
   }
   n.addEventListener("loadedmetadata", () => {

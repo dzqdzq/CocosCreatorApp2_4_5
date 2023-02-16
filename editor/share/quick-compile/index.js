@@ -1,9 +1,9 @@
 const e = require("fire-fs"),
-  t = require("fire-path"),
-  i = require("module-deps"),
+  firePath = require("fire-path"),
+  moduleDeps = require("module-deps"),
   s = require("JSONStream"),
-  r = require("concat-stream"),
-  o = require("browser-resolve"),
+  concatStream = require("concat-stream"),
+  BrowserResolve = require("browser-resolve"),
   a = require("del"),
   c = require("browserify/lib/builtins.js"),
   n = require("lodash"),
@@ -36,8 +36,8 @@ function m() {
       console.log("watching...");
       const i = require("chokidar");
       this.watching = !0;
-      let s = (e.exts || [".js"]).map((e) => t.join(this.root, "**/*" + e)),
-        r = i.watch(s, { ignored: t.join(this.out, "**"), ignoreInitial: !0 });
+      let s = (e.exts || [".js"]).map((e) => firePath.join(this.root, "**/*" + e)),
+        r = i.watch(s, { ignored: firePath.join(this.out, "**"), ignoreInitial: !0 });
       r.on("all", (t, i) => {
         if (((i = h(i)), "add" === t))
           return (
@@ -83,7 +83,7 @@ function m() {
     },
     async _readFileStats() {
       this._fileStats = {};
-      let i = t.join(this.out, "__file_stats__.json");
+      let i = firePath.join(this.out, "__file_stats__.json");
       if (!e.existsSync(i)) return;
       let s = await l(e.readJson)(i);
       "1.0.8" === s.version
@@ -91,7 +91,7 @@ function m() {
         : a.sync(this.out.replace(/\\/g, "/"), { force: !0 });
     },
     async _writeFileStats() {
-      let i = t.join(this.out, "__file_stats__.json");
+      let i = firePath.join(this.out, "__file_stats__.json");
       await l(e.writeJson)(i, { version: "1.0.8", stats: this._fileStats });
     },
     async rebuild() {
@@ -119,19 +119,19 @@ function m() {
       await this._writeFileStats();
     },
     getRelativePath(e) {
-      return h(t.relative(this.root, e));
+      return h(firePath.relative(this.root, e));
     },
     getDstPath(e) {
       if (p(e)) return this.getNodeModuleDstPath(e);
       let i = this.getRelativePath(e);
-      return h(t.join(this.out, t.stripExt(i) + ".js"));
+      return h(firePath.join(this.out, firePath.stripExt(i) + ".js"));
     },
     getNodeModuleDstPath(e) {
-      let i = t.join(
+      let i = firePath.join(
         "__node_modules",
         e.slice(e.indexOf("/node_modules/") + "/node_modules/".length)
       );
-      return (i = t.stripExt(i) + ".js"), t.join(this.out, i);
+      return (i = firePath.stripExt(i) + ".js"), firePath.join(this.out, i);
     },
     async compileScripts(e) {
       Array.isArray(e) || (e = [e]),
@@ -191,7 +191,7 @@ function m() {
           }
       }
       return (
-        await l(e.ensureDir)(t.dirname(s.dst)),
+        await l(e.ensureDir)(firePath.dirname(s.dst)),
         await l(e.writeFile)(s.dst, s.source),
         this.watching && console.timeEnd("_transform: " + i),
         (r = await l(e.stat)(i)),
@@ -204,13 +204,16 @@ function m() {
       return this._scriptsCache[e];
     },
     _refineScript(e) {
-      (e.src = h(e.file)), (e.dst = this.getDstPath(e.src)), delete e.file;
-      for (let t in e.deps) e.deps[t] = h(e.deps[t]);
+      e.src = h(e.file);
+      e.dst = this.getDstPath(e.src);
+      delete e.file;
+      for (let t in e.deps) 
+        e.deps[t] = h(e.deps[t]);
     },
     _parseModules(e, t, a) {
       (e = h(e)), console.time(`Parse [${e}]`);
       let l = 0,
-        u = r((i) => {
+        concatStreamObj = concatStream((i) => {
           console.log(`Parse [${e}]: walk ${l}  files.`),
             console.timeEnd(`Parse [${e}]`);
           let s = i.toString();
@@ -229,26 +232,34 @@ function m() {
             a();
         }),
         m = { extensions: [".js", ".json", ".ts"], ignoreMissing: !0 };
-      (m.modules = Object.assign(Object.create(null), c)),
-        (m.cache = {}),
-        (m.resolve = (e, t, i) => {
+        m.modules = Object.assign(Object.create(null), c);
+        m.cache = {};
+        m.resolve = (e, t, resolveCb) => {
           let s = "";
-          if (
-            (this.plugins.forEach((i) => {
-              i.resolve && (s = i.resolve(e, t));
+          this.plugins.forEach((i) => {
+            if(i.resolve){
+              s = i.resolve(e, t);
+            }
+          });
+          if (s){
+            return resolveCb(null, s);
+          }
+          t.paths = require.main.paths.concat(t.paths);
+          if(e.startsWith("@MTP/")){
+            const base = t.id.replace(/assets\/.*/, "assets/resources/MTP/scripts/");
+            return resolveCb(null, `${base}${e.replace("@MTP/", "")}.js`);
+          }
+          BrowserResolve(e, t, (err, r) => {
+            if (err) 
+              return resolveCb(err);
+            this.plugins.forEach((i) => {
+              if(i.onResolve){
+                i.onResolve(e, r, t && t.filename);
+              }
             }),
-            s)
-          )
-            return i(null, s);
-          (t.paths = require.main.paths.concat(t.paths)),
-            o(e, t, (s, r) => {
-              if (s) return i(s);
-              this.plugins.forEach((i) => {
-                i.onResolve && i.onResolve(e, r, t && t.filename);
-              }),
-                i(s, r);
-            });
-        }),
+            resolveCb(err, r);
+          });
+        };
         (m.persistentCache = (i, s, r, o, a) => {
           process.nextTick(() => {
             t || h(i) === e || p(i)
@@ -265,8 +276,8 @@ function m() {
               : o("module.exports = {};", a);
           });
         });
-      var _ = new i(m);
-      _.pipe(s.stringify()).pipe(u),
+      var _ = new moduleDeps(m);
+      _.pipe(s.stringify()).pipe(concatStreamObj),
         _.write({ file: e }),
         _.end(),
         _.on("missing", (e, t) => {

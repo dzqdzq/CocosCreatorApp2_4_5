@@ -9,14 +9,14 @@
         const e = Editor.Profile.load("global://features.json");
         e && (i = e.get("compile-worker-debug-log") || !1);
       } catch (e) {}
-      const o = require("fire-path"),
+      const firePath = require("fire-path"),
         n = (require("async"), require("globby")),
         s = require("gulp"),
         a = require("del"),
         l = require("fire-fs");
       Editor.isDarwin && require("graceful-fs").gracefulify(require("fs"));
-      var u = t.cacheDir ? null : require("browserify"),
-        c = t.cacheDir ? require("persistify") : null;
+      var browserify = t.cacheDir ? null : require("browserify"),
+        persistify = t.cacheDir ? require("persistify") : null;
       let d = !1;
       const p = require("vinyl-source-stream"),
         f = require("vinyl-buffer"),
@@ -50,9 +50,9 @@
         (t.platform = t.platform || "editor"),
         (t.debug = !!t.debug),
         (t.sourceMaps = "sourceMaps" in t ? t.sourceMaps : t.debug);
-      var q = { proj: o.resolve(t.project) };
+      var q = { proj: firePath.resolve(t.project) };
       t.platform;
-      if (o.contains(Editor.appPath, q.proj)) {
+      if (firePath.contains(Editor.appPath, q.proj)) {
         return (
           r.reply(
             null,
@@ -65,12 +65,12 @@
       var _ = {},
         j = {};
       function k(e) {
-        return o.basenameNoExt(e);
+        return firePath.basenameNoExt(e);
       }
       s.task("do-clean", async function () {
         for (let r = 0; r < M.length; ++r) {
           let t = M[r];
-          var e = o.join(t.scriptDest, "index.js");
+          var e = firePath.join(t.scriptDest, "index.js");
           try {
             await a(e.replace(/\\/g, "/"), { force: !0 });
           } catch (r) {
@@ -132,21 +132,20 @@
           (function (e, r) {
             if (r._bresolve)
               (r.__bresolve = r._bresolve),
-                (r._bresolve = function t(n, s, a) {
-                  r.__bresolve(n, s, function (r, l, u) {
+                (r._bresolve = function t(depOne, modulesInfo, a) {
+                  r.__bresolve(depOne, modulesInfo, function (r, l, u) {
                     if (r) {
-                      if (s && s.filename) {
-                        var c = j[s.filename] || j[s.filename.toLowerCase()];
-                        if (c)
-                          return (
-                            (s.filename = c),
-                            (s.basedir = o.dirname(c)),
-                            t(n, s, a)
-                          );
+                      if (modulesInfo && modulesInfo.filename) {
+                        var c = j[modulesInfo.filename] || j[modulesInfo.filename.toLowerCase()];
+                        if (c){
+                          modulesInfo.filename = c;
+                          modulesInfo.basedir = firePath.dirname(c);
+                          return t(depOne, modulesInfo, a);
+                        }
                         i &&
                           Editor.warn(
-                            `Failed to resolve script "${n}" in raw directory: `,
-                            s
+                            `Failed to resolve script "${depOne}" in raw directory: `,
+                            modulesInfo
                           );
                       }
                       return a(null, l, u);
@@ -157,7 +156,7 @@
                         ((d = _[l.toLowerCase()]) &&
                           i &&
                           Editor.log(
-                            `resolve "${n}" to "${d}" by ignoring case mistake`
+                            `resolve "${depOne}" to "${d}" by ignoring case mistake`
                           )),
                       a(null, (l = !d && e ? "" : d || l), u)
                     );
@@ -170,16 +169,16 @@
           })(
             a,
             (E = t.cacheDir
-              ? c(k, {
+              ? persistify(k, {
                   recreate: t.recreateCache,
                   cacheId: t.platform + "_" + !!t.debug + "_" + !!t.sourceMaps,
                   cacheDir: t.cacheDir,
                 })
-              : new u(k))
+              : new browserify(k))
           );
         for (let r = 0; r < e.length; ++r) {
           var x = e[r];
-          E.add(x), E.require(x, { expose: o.basenameNoExt(x) });
+          E.add(x), E.require(x, { expose: firePath.basenameNoExt(x) });
         }
         for (let r = 0; r < $.length; ++r) {
           let t = $[r];
@@ -202,7 +201,7 @@
                       i = (e.message || e.toString()).trim();
                     if (!i) return e;
                     if ((t = r(i, "ENOENT, open '", ".js'"))) {
-                      let e = o.basenameNoExt(t);
+                      let e = firePath.basenameNoExt(t);
                       return `${y} Cannot require '${e}', module not found, ${i}`;
                     }
                     if (
@@ -212,7 +211,7 @@
                         ".js'"
                       ))
                     ) {
-                      let e = o.basenameNoExt(t);
+                      let e = firePath.basenameNoExt(t);
                       return `${y} Cannot require '${e}', module not found, ${i}`;
                     }
                     if (r(i, w)) {
@@ -220,8 +219,8 @@
                         r = i.indexOf("'", e);
                       if (-1 === r) return i;
                       let t = i.slice(e, r);
-                      if (o.basename(t) === t && o.extname(t))
-                        return `${y} Cannot require '${t}', module not found, please remove file extension and retry. ( just "require('${o.basenameNoExt(
+                      if (firePath.basename(t) === t && firePath.extname(t))
+                        return `${y} Cannot require '${t}', module not found, please remove file extension and retry. ( just "require('${firePath.basenameNoExt(
                           t
                         )}');"`;
                       i =
@@ -284,11 +283,11 @@
       }),
         s.task("get-scripts", function (e) {
           (function (e) {
-            var r = o.join(E, "**/*.js"),
+            var r = firePath.join(E, "**/*.js"),
               t = q.proj,
               i = { cwd: t };
             function s(e) {
-              return o.relative(i.cwd, e);
+              return firePath.relative(i.cwd, e);
             }
             function a(e, r, t) {
               e[r] = t;
@@ -303,9 +302,9 @@
                   c = k(u),
                   d = Editor.assetdb.remote.uuidToFspath(c);
                 if (d) {
-                  var p = o.resolve(t, u);
+                  var p = firePath.resolve(t, u);
                   a(j, p, d), a(_, d, p);
-                  var f = o.basenameNoExt(d),
+                  var f = firePath.basenameNoExt(d),
                     m = x[f];
                   if (m) {
                     var g = s(d),
@@ -316,7 +315,7 @@
                     return e(h);
                   }
                   (x[f] = d),
-                    M.find((e) => e.scripts.find((e) => o.contains(e, d))) ||
+                    M.find((e) => e.scripts.find((e) => firePath.contains(e, d))) ||
                       l.push(d),
                     $.push(d);
                 } else
@@ -337,10 +336,10 @@
               a = !!M[t].root,
               l = "index.js";
             try {
-              const t = o.join(s, l);
-              i && Editor.log("Start Output bundle : " + t),
-                await e(C)(n, s, l, a),
-                i && Editor.log("End Output bundle : " + t);
+              const t = firePath.join(s, l);
+              i && Editor.log("Start Output bundle : " + t);
+              await e(C)(n, s, l, a);
+              i && Editor.log("End Output bundle : " + t);
             } catch (e) {
               return r(e);
             }

@@ -71,13 +71,17 @@ module.exports = function (t) {
         c = this.excludes.map((e) => o(e)).concat(r.excludes),
         s = (i = i.filter((e) => -1 === c.indexOf(e.src))).map((e) => {
           let n = {};
-          for (let r in e.deps)
-            c.includes(e.deps[r])
-              ? (n[r] = -1)
-              : (n[r] = i.findIndex(function (n) {
-                  return n.src === e.deps[r];
-                }));
-          return { mtime: r._mtimes[e.src], deps: n, path: u(e.src, e.dst, r) };
+          for (let r in e.deps){
+            if(c.includes(e.deps[r])){
+              n[r] = -1;
+            }else{
+              n[r] = i.findIndex(function (n) {
+                return n.src === e.deps[r];
+              });
+            }
+          }
+          const path22 = u(e.src, e.dst, r);
+          return { mtime: r._mtimes[e.src], deps: n, path: path22 };
         }),
         l = "";
       if (t.bundle) {

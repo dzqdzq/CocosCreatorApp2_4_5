@@ -2,7 +2,7 @@ var e = require("fire-fs"),
   t = require("fire-url"),
   r = require("fire-path"),
   i = require("async"),
-  s = require("detective");
+  detective = require("detective");
 let u = Editor.remote.importPath;
 module.exports = {
   INTERNAL: "db://internal",
@@ -26,7 +26,7 @@ module.exports = {
     let a = t.slice(0, 2) + r.sep + t + ".js",
       p = r.join(u, a),
       c = e.readFileSync(p, "utf-8"),
-      o = s(c);
+      o = detective(c);
     if (0 === o.length) return l();
     i.each(
       o,
