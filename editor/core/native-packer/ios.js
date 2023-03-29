@@ -10,13 +10,13 @@ module.exports = class extends s {
       -1 === process.env.PATH.indexOf("/usr/local/bin") &&
         (process.env.PATH += ":/usr/local/bin"),
       (process.env.LANG = "en_US.UTF-8");
-    let i = Editor.Profile.load("global://settings.json").get("http-proxy");
+    let http_proxy = Editor.Profile.load("global://settings.json").get("http-proxy");
     if (
       (Editor.isDarwin &&
-        i &&
+        http_proxy &&
         (process.env = Object.assign(process.env, {
-          http_proxy: i,
-          https_proxy: i,
+          http_proxy: http_proxy,
+          https_proxy: http_proxy,
         })),
       (this.projectPath = e.join(
         o.dest,

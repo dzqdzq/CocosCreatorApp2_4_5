@@ -4,7 +4,7 @@ const { ipcMain: e } = require("electron"),
   i = require("../../share/bundle-utils"),
   r = require("path");
 var n,
-  s,
+  app,
   o,
   a,
   c,
@@ -76,11 +76,11 @@ let l = {
     this._validateStashedScene = t;
     var E = d.join(l.tmpdir(), "fireball-game-builds");
     p.sync(d.join(E, "**/*").replace(/\\/g, "/"), { force: !0 }),
-      (s = express()).use(m());
+      (app = express()).use(m());
     let w = d.join(Editor.Project.path, "preview-templates");
     r.existsSync(w) || (w = Editor.url("unpack://static/preview-templates")),
-      s.set("views", w),
-      s.set("view engine", "jade");
+      app.set("views", w),
+      app.set("view engine", "jade");
     const b = require("ejs");
     function S(e, t) {
       var i = e.params[1];
@@ -92,10 +92,10 @@ let l = {
         return t.send(u()), void 0;
       (i = d.join(Editor.importPath, i)), t.sendFile(i);
     }
-    s.engine("html", b.renderFile),
-      s.engine("ejs", b.renderFile),
-      (s.locals.basedir = s.get("views")),
-      s.use(function (e, t, i) {
+    app.engine("html", b.renderFile),
+      app.engine("ejs", b.renderFile),
+      (app.locals.basedir = app.get("views")),
+      app.use(function (e, t, i) {
         var r = j.userMiddlewares;
         Array.isArray(r) && r.length > 0
           ? h.eachSeries(
@@ -114,15 +114,15 @@ let l = {
             )
           : i();
       }),
-      s.use("/build", function (e, t, i) {
+      app.use("/build", function (e, t, i) {
         a ? a(e, t, i) : t.send("Please build your game project first!");
       }),
-      s.use("/preview-android-instant", function (e, t, i) {
+      app.use("/preview-android-instant", function (e, t, i) {
         c
           ? c(e, t, i)
           : t.send("Please build your android instant project first!");
       }),
-      s.get("/", function (e, t) {
+      app.get("/", function (e, t) {
         var i = e.headers["user-agent"],
           n = new v(i),
           s = r.existsSync(
@@ -163,7 +163,7 @@ let l = {
           p
         );
       }),
-      s.get("/compile", function (e, t) {
+      app.get("/compile", function (e, t) {
         Editor.Compiler.compileScripts(!1, (e, i) => {
           i ||
             (e
@@ -172,56 +172,56 @@ let l = {
               : t.send("Compile failed!"));
         });
       }),
-      s.get("/update-db", function (e, t) {
+      app.get("/update-db", function (e, t) {
         Editor.assetdb.submitChanges(), t.send("Changes submitted");
       }),
-      s.get(["/app/engine/*", "/engine/*"], function (e, t) {
+      app.get(["/app/engine/*", "/engine/*"], function (e, t) {
         var i = d.join(Editor.url("unpack://engine"), e.params[0]);
         t.sendFile(i);
       }),
-      s.get("/engine-dev/*", function (e, t) {
+      app.get("/engine-dev/*", function (e, t) {
         var i = d.join(Editor.url("unpack://engine-dev"), e.params[0]);
         t.sendFile(i);
       }),
-      s.get("/app/editor/static/*", function (e, t) {
+      app.get("/app/editor/static/*", function (e, t) {
         var i = Editor.url("unpack://static/" + e.params[0]);
         t.sendFile(i);
       }),
-      s.get("/app/*", function (e, t) {
+      app.get("/app/*", function (e, t) {
         var i = Editor.url("app://" + e.params[0]);
         t.sendFile(i);
       }),
-      s.get("/project/*", function (e, t) {
+      app.get("/project/*", function (e, t) {
         var i = d.join(Editor.Project.path, e.params[0]);
         t.sendFile(i);
       }),
-      s.get("/preview-scripts/*", function (e, t) {
+      app.get("/preview-scripts/*", function (e, t) {
         let i = Editor.ProjectCompiler.DEST_PATH;
         var r = d.join(i, e.params[0]);
         t.sendFile(r);
       }),
-      s.get("/plugins/*", function (e, t) {
+      app.get("/plugins/*", function (e, t) {
         var i = e.params[0];
         (i = Editor.assetdb._fspath("db://" + i)), t.sendFile(i);
       }),
-      s.get("/assets/*/import/*", S),
-      s.get("/assets/*/native/*", S),
-      s.get("/assets/*/config.json", function (e, t) {
+      app.get("/assets/*/import/*", S),
+      app.get("/assets/*/native/*", S),
+      app.get("/assets/*/config.json", function (e, t) {
         j.query(`${e.params[0]}/config.json`, function (e, i) {
           if (e) return t.status(404).send({ error: e.message });
           t.send(i);
         });
       }),
-      s.get("/assets/*/index.js", function (e, t) {
+      app.get("/assets/*/index.js", function (e, t) {
         t.send("");
       }),
-      s.get("/settings.js", function (e, t) {
+      app.get("/settings.js", function (e, t) {
         j.query("settings.js", function (e, r) {
           if (e) return i(e);
           t.send(r);
         });
       }),
-      s.get("/preview-scene.json", function (e, t) {
+      app.get("/preview-scene.json", function (e, t) {
         j.getPreviewScene(
           function (e) {
             return i(e);
@@ -234,19 +234,19 @@ let l = {
           }
         );
       }),
-      s.get("/*", function (e, t, i) {
+      app.get("/*", function (e, t, i) {
         return express.static(w)(e, t, i);
       }),
-      s.use(function (e, t, i, r) {
+      app.use(function (e, t, i, r) {
         console.error(e.stack), r(e);
       }),
-      s.use(function (e, t, i, r) {
+      app.use(function (e, t, i, r) {
         t.xhr ? i.status(e.status || 500).send({ error: e.message }) : r(e);
       }),
-      s.use(function (e, t) {
+      app.use(function (e, t) {
         t.status(404).send({ error: "404 Error." });
       }),
-      (o = g.createServer(s));
+      (o = g.createServer(app));
     let y = Editor.Profile.load("project://project.json");
     this._listenByPort((y && y.get("preview-port")) || this._previewPort, i),
       (function (e) {

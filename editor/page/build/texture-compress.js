@@ -1,14 +1,14 @@
 const t = require(Editor.url("app://editor/share/sharp")),
   e = require("child_process").spawn,
   r = require("child_process").spawnSync,
-  n = require("fire-fs"),
-  o = require("fire-path"),
-  i = require("async"),
+  fireFs = require("fire-fs"),
+  firePath = require("fire-path"),
+  async = require("async"),
   a = require("./texture-compress-cache"),
   c = Editor.remote.Project.path,
-  s = o.join(c, "temp/TexturePacker/build");
+  s = firePath.join(c, "temp/TexturePacker/build");
 function l(t, e) {
-  return o.join(o.dirname(t), o.basenameNoExt(t) + e);
+  return firePath.join(firePath.dirname(t), firePath.basenameNoExt(t) + e);
 }
 function u(t) {
   let e = cc.Texture2D.PixelFormat;
@@ -88,7 +88,7 @@ function _(e, r, i) {
           _ || (o = 255), (d[f] = o), (d[f + 1] = o), (d[f + 2] = o);
         }
       const b = { raw: { width: c, height: 2 * u, channels: 3 } };
-      n.ensureDirSync(o.dirname(r)),
+      fireFs.ensureDirSync(firePath.dirname(r)),
         t(d, b).toFile(r, (t) => {
           i(t);
         });
@@ -161,8 +161,8 @@ function f(t, r, n, i) {
       : "pvrtc_2bits_rgb_a" === n.name && ((p = "PVRTC1_2_RGB"), (u = !0)),
     u)
   ) {
-    let e = o.relative(c, t),
-      r = o.join(s, "pvr_alpha", e);
+    let e = firePath.relative(c, t),
+      r = firePath.join(s, "pvr_alpha", e);
     return (
       _(t, r, (e) => {
         if (e) return i(e);
@@ -184,8 +184,8 @@ function d(t, e, n, i) {
     (a = Editor.url(
       "unpack://static/tools/texture-compress/mali/Windows_64/etcpack.exe"
     ));
-  let l = o.dirname(a);
-  a = "." + o.sep + o.basename(a);
+  let l = firePath.dirname(a);
+  a = "." + firePath.sep + firePath.basename(a);
   let u = "etc1",
     p = "RGB";
   "etc1" === n.name
@@ -197,7 +197,7 @@ function d(t, e, n, i) {
     : "etc2_rgb" === n.name && (u = "etc2");
   let m = !1;
   function f() {
-    let c = [o.normalize(t), o.dirname(e), "-c", u, "-s", n.quality],
+    let c = [firePath.normalize(t), firePath.dirname(e), "-c", u, "-s", n.quality],
       s = l,
       m = Object.assign({}, process.env);
     m.PATH = l + ":" + m.PATH;
@@ -224,8 +224,8 @@ function d(t, e, n, i) {
       })(a, c, _, i);
   }
   if (("etc1" === u && "RGBA" === p && (m = !0), m)) {
-    let e = o.relative(c, t),
-      r = o.join(s, "etc_alpha", e);
+    let e = firePath.relative(c, t),
+      r = firePath.join(s, "etc_alpha", e);
     return (
       _(t, r, (e) => {
         if (e) return i(e);
@@ -245,7 +245,7 @@ module.exports = function (t, e) {
     s = t.dst,
     m = t.platform,
     _ = t.actualPlatform,
-    b = t.compressOption,
+    compressOption = t.compressOption,
     g = !!r,
     R = "wechatgame-subcontext" !== _ && "baidugame-subcontext" !== _;
   "web-mobile" === _ || "web-desktop" === _
@@ -254,25 +254,25 @@ module.exports = function (t, e) {
     ? (_ = "native")
     : ("mini-game" !== m && "runtime" !== m) || (_ = "minigame");
   let P = [],
-    h = b[_];
+    h = compressOption[_];
   function T() {
     return P.map(u);
   }
   if (
     (h && h.formats.length > 0 && R
       ? (P = h.formats)
-      : b.default && (P = b.default.formats),
-    n.ensureDirSync(o.dirname(s)),
+      : compressOption.default && (P = compressOption.default.formats),
+    fireFs.ensureDirSync(firePath.dirname(s)),
     0 === P.length)
   )
     return (
-      n.copy(c, s, (t) => {
+      fireFs.copy(c, s, (t) => {
         t && Editor.error("Failed to copy native asset file %s to %s", c, s),
           e(t, T(), [s]);
       }),
       void 0
     );
-  i.each(
+  async.each(
     P,
     (t, e) => {
       let n = p;
