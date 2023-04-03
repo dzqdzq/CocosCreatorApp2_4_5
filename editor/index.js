@@ -79,7 +79,7 @@ process.on("unhandledRejection", (i) => {
             r = t.join(i, "layout.editor.json");
           o.renameSync(e, r);
         } catch (i) {}
-        const i = [
+        const configs = [
           t.join(Editor.Project.path, "local", "layout.editor.json"),
           Editor.url("unpack://static/layout/classical.json"),
           Editor.url("unpack://static/layout/landscape.json"),
@@ -99,14 +99,14 @@ process.on("unhandledRejection", (i) => {
             "cloud-function"
           );
           r && !o.includes("cloud-function") && ((e && e.isNew) || s())
-            ? (i.forEach((i) => {
+            ? (configs.forEach((i) => {
                 a(i, !0);
               }),
               o.push("cloud-function"),
               t.set("migrate-history", o),
               t.save())
             : r ||
-              i.forEach((i) => {
+              configs.forEach((i) => {
                 a(i, !1);
               });
         } catch (i) {
