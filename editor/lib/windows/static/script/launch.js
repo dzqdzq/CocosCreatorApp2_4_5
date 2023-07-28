@@ -6,20 +6,18 @@ const QRCode = require('../../../../page/qrcode');
 
 const settingsProfile = Editor.Profile.load('global://settings.json');
 
-/**
- * 重新编译引擎
- */
 exports.compile = function () {
     return new Promise((resolve, reject) => {
         Editor.Ipc.sendToMain('app:rebuild-editor-engine', (error) => {
-            error ? reject(error) : resolve();
+            if (error) {
+                reject(error);
+            } else {
+                resolve();
+            }
         }, -1);
     });
 };
 
-/**
- * 初始化 pace
- */
 exports.pace = function () {
     return new Promise((resolve) => {
         const $script = document.createElement('script');
@@ -56,27 +54,17 @@ exports.initProfile = function () {
     }
 };
 
-/**
- * 初始化 scene
- * todo 场景不应该初始化到全局
- */
 exports.scene = function () {
     Editor.require('app://editor/page/index').init(true);
     Editor.require('app://editor/page/scene-utils');
 };
 
-/**
- * 初始化 dock
- */
 exports.dock = function () {
     const $dock = document.createElement('ui-main-dock');
     $dock.setAttribute('class', 'main-dock');
     document.querySelector('section').appendChild($dock);
 };
 
-/**
- * 初始化 header
- */
 exports.header = function () {
 
     function getUrl () {
@@ -85,7 +73,6 @@ exports.header = function () {
             const index = settingsProfile.get('local-ip') || 1;
             let ip = Editor.remote.Network.ip;
             if (index > 1) {
-                // -2 的原因是存储 IP 的下标是从 2 开始的。
                 ip = Editor.remote.Network.ipList[index - 2];
             }
 
@@ -277,7 +264,7 @@ exports.header = function () {
 
     //im 接收 html 的接口
     ipcRenderer.on('im-plugin:update-im-html', (event, html) => {
-        vm.imHtml = html
+        vm.imHtml = html;
     });
 
     // 绑定一些快捷键
@@ -312,9 +299,6 @@ exports.header = function () {
     });
 };
 
-/**
- * 初始化底部状态栏
- */
 exports.footer = function () {
     return new Promise((resolve) => {
         let vm = new Vue({
@@ -381,9 +365,6 @@ exports.footer = function () {
     });
 };
 
-/**
- * 注册一些全局事件
- */
 exports.golbal = async function () {
 
     window.addEventListener('paste', event => {
@@ -410,9 +391,11 @@ exports.golbal = async function () {
                         error: err.stack,
                     });
                 }
-            } else if (Editor.Ipc.sendToMain) {
-                Editor.Ipc.sendToMain('editor:renderer-console-error', err.stack || err);
-                Editor.Ipc.sendToMain('metrics:track-exception', (err.stack || err));
+            } else {
+                if (Editor.Ipc.sendToMain) {
+                    Editor.Ipc.sendToMain('editor:renderer-console-error', err.stack || err);
+                    Editor.Ipc.sendToMain('metrics:track-exception', (err.stack || err));
+                }
             }
         } else {
             console.error(err.stack || err);
@@ -469,4 +452,4 @@ exports.golbal = async function () {
         $login.hidden = true;
         $login.loading = false;
     });
-}
+};

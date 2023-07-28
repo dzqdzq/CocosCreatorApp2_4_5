@@ -50,170 +50,238 @@ Vue.component("cc-audio-preview", {
     this._updateAudio();
   },
   destroyed() {
-    this._sessionId &&
-      (Editor.Audio.cancel(this._sessionId), (this._sessionId = null)),
-      this._audioCtrl && (this._audioCtrl.stop(), (this._audioCtrl = null)),
-      clearTimeout(this._loaderID),
-      (this._destroyed = !0);
+    if (this._sessionId) {
+      Editor.Audio.cancel(this._sessionId);
+      this._sessionId = null;
+    }
+
+    if (this._audioCtrl) {
+      this._audioCtrl.stop();
+      this._audioCtrl = null;
+    }
+
+    clearTimeout(this._loaderID);
+    this._destroyed = true;
   },
   methods: {
     _T: Editor.T,
     _reset() {
-      this._sessionId &&
-        (Editor.Audio.cancel(this._sessionId), (this._sessionId = null)),
-        this._audioCtrl && (this._audioCtrl.stop(), (this._audioCtrl = null));
+      if (this._sessionId) {
+        Editor.Audio.cancel(this._sessionId);
+        this._sessionId = null;
+      }
+
+      if (this._audioCtrl) {
+        this._audioCtrl.stop();
+        this._audioCtrl = null;
+      }
+
       let t = this.$els.canvas.getContext("2d");
-      t && t.clearRect(0, 0, this.$els.canvas.width, this.$els.canvas.height),
-        (this.$els.progressBar.hidden = !0),
-        (this.audioInfo = ""),
-        (this.timeInfo = "");
+
+      if (t) {
+        t.clearRect(0, 0, this.$els.canvas.width, this.$els.canvas.height);
+      }
+
+      this.$els.progressBar.hidden = true;
+      this.audioInfo = "";
+      this.timeInfo = "";
     },
     _updateAudio() {
-      if ((this._reset(), !this.target.uuid)) return;
+      this._reset();
+      if (!this.target.uuid) {
+        return;
+      }
       this.showLoaderAfter(100);
-      let t = this.target.uuid,
-        i = `uuid://${this.target.uuid}?${this.target.__mtime__}`;
+      let t = this.target.uuid;
+      let i = `uuid://${this.target.uuid}?${this.target.__mtime__}`;
+
       this._sessionId = Editor.Audio.load(i, (i, e) => {
         if (!this._destroyed && t === this.target.uuid) {
-          if ((this.hideLoader(), i))
-            return (
-              Editor.error(`Failed to decoding audio data: ${i.message}`),
-              void 0
-            );
+          this.hideLoader();
+          if (i) {
+            Editor.error(`Failed to decoding audio data: ${i.message}`);
+            return;
+          }
+
           e.on("started", () => {
-            (this.state = this._audioCtrl.state()), this._tickProgress();
-          }),
-            e.on("ended", () => {
-              this.state = this._audioCtrl.state();
-            }),
-            e.on("paused", () => {
-              this.state = this._audioCtrl.state();
-            }),
-            (this._audioCtrl = e),
-            this._updateAudioInfo(),
-            this.setProgress(0),
-            this.resize();
+            this.state = this._audioCtrl.state();
+            this._tickProgress();
+          });
+
+          e.on("ended", () => {
+            this.state = this._audioCtrl.state();
+          });
+
+          e.on("paused", () => {
+            this.state = this._audioCtrl.state();
+          });
+
+          this._audioCtrl = e;
+          this._updateAudioInfo();
+          this.setProgress(0);
+          this.resize();
         }
       });
     },
     _playIconClass: (t) => ("playing" === t ? "fa fa-pause" : "fa fa-play"),
     playOrPause() {
-      this._audioCtrl &&
-        ("playing" === this.state
-          ? this._audioCtrl.pause()
-          : this._audioCtrl.resume());
+      if (this._audioCtrl) {
+        if ("playing" === this.state) {
+          this._audioCtrl.pause();
+        } else {
+          this._audioCtrl.resume();
+        }
+      }
     },
     replay() {
-      this._audioCtrl && this._audioCtrl.play();
+      if (this._audioCtrl) {
+        this._audioCtrl.play();
+      }
     },
     stop() {
-      this._audioCtrl && this._audioCtrl.stop();
+      if (this._audioCtrl) {
+        this._audioCtrl.stop();
+      }
     },
     mouseDown(t) {
-      if ((t.stopPropagation(), 1 === t.which)) {
-        let i = this.$els.content.getBoundingClientRect().left,
-          e = t.clientX - i,
-          s =
-            (e = Editor.Math.clamp(e, 0, this._contentRectWidth)) /
-            this._contentRectWidth,
-          a = this._audioCtrl.buffer().duration;
-        "playing" === this.state
-          ? this._audioCtrl.play(s * a)
-          : this.setProgress(s),
-          Editor.UI.startDrag(
-            "ew-resize",
-            t,
-            (t) => {
-              let e = t.clientX - i,
-                s =
-                  (e = Editor.Math.clamp(e, 0, this._contentRectWidth)) /
-                  this._contentRectWidth,
-                a = this._audioCtrl.buffer().duration;
-              "playing" === this.state
-                ? this._audioCtrl.play(s * a)
-                : this.setProgress(s);
-            },
-            (t) => {
-              if ("playing" === this.state) return;
-              let e = t.clientX - i,
-                s =
-                  (e = Editor.Math.clamp(e, 0, this._contentRectWidth)) /
-                  this._contentRectWidth,
-                a = this._audioCtrl.buffer().duration;
+      t.stopPropagation();
+      if ((1 === t.which)) {
+        let i = this.$els.content.getBoundingClientRect().left;
+        let e = t.clientX - i;
+
+        let s = (e = Editor.Math.clamp(e, 0, this._contentRectWidth)) /
+        this._contentRectWidth;
+
+        let a = this._audioCtrl.buffer().duration;
+
+        if ("playing" === this.state) {
+          this._audioCtrl.play(s * a);
+        } else {
+          this.setProgress(s);
+        }
+
+        Editor.UI.startDrag(
+          "ew-resize",
+          t,
+          (t) => {
+            let e = t.clientX - i;
+
+            let s = (e = Editor.Math.clamp(e, 0, this._contentRectWidth)) /
+            this._contentRectWidth;
+
+            let a = this._audioCtrl.buffer().duration;
+
+            if ("playing" === this.state) {
               this._audioCtrl.play(s * a);
+            } else {
+              this.setProgress(s);
             }
-          );
+          },
+          (t) => {
+            if ("playing" === this.state) {
+              return;
+            }
+            let e = t.clientX - i;
+
+            let s = (e = Editor.Math.clamp(e, 0, this._contentRectWidth)) /
+            this._contentRectWidth;
+
+            let a = this._audioCtrl.buffer().duration;
+            this._audioCtrl.play(s * a);
+          }
+        );
       }
     },
     resize() {
       var t = this.$els.content.getBoundingClientRect();
-      Editor.isRetina
-        ? ((this.$els.canvas.width = 2 * t.width),
-          (this.$els.canvas.height = 2 * t.height))
-        : ((this.$els.canvas.width = t.width),
-          (this.$els.canvas.height = t.height)),
-        (this.$els.canvas.style.width = t.width + "px"),
-        (this.$els.canvas.style.height = t.height + "px"),
-        (this._contentRectWidth = t.width),
-        this.repaint();
+
+      if (Editor.isRetina) {
+        this.$els.canvas.width = 2 * t.width;
+        this.$els.canvas.height = 2 * t.height;
+      } else {
+        this.$els.canvas.width = t.width;
+        this.$els.canvas.height = t.height;
+      }
+
+      this.$els.canvas.style.width = t.width + "px";
+      this.$els.canvas.style.height = t.height + "px";
+      this._contentRectWidth = t.width;
+      this.repaint();
     },
     _updateAudioInfo() {
       let t = this._audioCtrl.buffer();
       this.audioInfo = `ch:${t.numberOfChannels}, ${t.sampleRate}Hz`;
     },
     _updateTimeInfo(t) {
-      let i = this._audioCtrl.buffer().duration,
-        e = new Date(t * i * 1e3),
-        s = Editor.Utils.padLeft(e.getMinutes(), 2, "0"),
-        a = Editor.Utils.padLeft(e.getSeconds(), 2, "0"),
-        o = Editor.Utils.padLeft(e.getMilliseconds(), 3, "0");
+      let i = this._audioCtrl.buffer().duration;
+      let e = new Date(t * i * 1e3);
+      let s = Editor.Utils.padLeft(e.getMinutes(), 2, "0");
+      let a = Editor.Utils.padLeft(e.getSeconds(), 2, "0");
+      let o = Editor.Utils.padLeft(e.getMilliseconds(), 3, "0");
       this.timeInfo = `${s}:${a}.${o}`;
     },
     setProgress(t) {
       let i = Math.floor(t * this._contentRectWidth);
-      (this.$els.progressBar.hidden = !1),
-        (this.$els.progressBar.style.transform = `translateX(${i}px)`),
-        this._updateTimeInfo(t);
+      this.$els.progressBar.hidden = false;
+      this.$els.progressBar.style.transform = `translateX(${i}px)`;
+      this._updateTimeInfo(t);
     },
     repaint() {
-      if (!this._audioCtrl) return;
+      if (!this._audioCtrl) {
+        return;
+      }
       let t = this.$els.canvas.getContext("2d");
-      (t.imageSmoothingEnabled = !1),
-        t.clearRect(0, 0, this.$els.canvas.width, this.$els.canvas.height);
-      let i = this._audioCtrl.buffer(),
-        e = null,
-        s = this.$els.canvas.height / i.numberOfChannels,
-        a = 0;
-      for (let o = 0; o < i.numberOfChannels; ++o)
-        (e = this._getPeaks(i, o, this.$els.canvas.width)),
-          this._drawWave(t, e, 0, a, this.$els.canvas.width, s),
-          i.numberOfChannels > 1 && this._drawChannelTip(t, o, a),
-          (a += s);
+      t.imageSmoothingEnabled = false;
+      t.clearRect(0, 0, this.$els.canvas.width, this.$els.canvas.height);
+      let i = this._audioCtrl.buffer();
+      let e = null;
+      let s = this.$els.canvas.height / i.numberOfChannels;
+      let a = 0;
+      for (let o = 0; o < i.numberOfChannels; ++o) {
+        e = this._getPeaks(i, o, this.$els.canvas.width);
+        this._drawWave(t, e, 0, a, this.$els.canvas.width, s);
+
+        if (i.numberOfChannels > 1) {
+          this._drawChannelTip(t, o, a);
+        }
+
+        a += s;
+      }
     },
     showLoaderAfter(t) {
-      this.$els.loader.hidden &&
-        (this._loaderID ||
-          (this._loaderID = setTimeout(() => {
-            (this._loaderID = null), (this.$els.loader.hidden = !1);
-          }, t)));
+      if (this.$els.loader.hidden) {
+        if (!this._loaderID) {
+          this._loaderID = setTimeout(() => {
+            this._loaderID = null;
+            this.$els.loader.hidden = false;
+          }, t);
+        }
+      }
     },
     hideLoader() {
-      clearTimeout(this._loaderID),
-        (this._loaderID = null),
-        (this.$els.loader.hidden = !0);
+      clearTimeout(this._loaderID);
+      this._loaderID = null;
+      this.$els.loader.hidden = true;
     },
     _getPeaks(t, i, e) {
-      let s = t.length / e,
-        a = ~~(s / 10) || 1,
-        o = new Float32Array(e),
-        n = t.getChannelData(i);
+      let s = t.length / e;
+      let a = ~~(s / 10) || 1;
+      let o = new Float32Array(e);
+      let n = t.getChannelData(i);
       for (let t = 0; t < e; t++) {
-        let i = ~~(t * s),
-          e = ~~(i + s),
-          r = 0;
+        let i = ~~(t * s);
+        let e = ~~(i + s);
+        let r = 0;
         for (let t = i; t < e; t += a) {
           let i = n[t];
-          i > r ? (r = i) : -i > r && (r = -i);
+
+          if (i > r) {
+            r = i;
+          } else {
+            if (-i > r) {
+              r = -i;
+            }
+          }
         }
         o[t] = r;
       }
@@ -221,42 +289,63 @@ Vue.component("cc-audio-preview", {
     },
     _drawChannelTip: function (t, i, e) {
       let s = 0;
-      (t.fillStyle = "#aaa"),
-        Editor.isRetina
-          ? ((t.font = "24px Arial"), (s = 24))
-          : ((t.font = "12px Arial"), (s = 12)),
-        t.fillText("ch" + (i + 1), 4, e + s);
+      t.fillStyle = "#aaa";
+
+      if (Editor.isRetina) {
+        t.font = "24px Arial";
+        s = 24;
+      } else {
+        t.font = "12px Arial";
+        s = 12;
+      }
+
+      t.fillText("ch" + (i + 1), 4, e + s);
     },
     _drawWave(t, i, e, s, a, o) {
       let n = 0;
       n = Editor.isRetina ? 0.25 : 0.5;
-      let r = o / 2,
-        l = s + r,
-        d = i.length,
-        h = 1;
-      (t.fillStyle = "#ff8e00"),
-        a !== d && (h = a / d),
-        t.beginPath(),
-        t.moveTo(n, l);
+      let r = o / 2;
+      let l = s + r;
+      let d = i.length;
+      let h = 1;
+      t.fillStyle = "#ff8e00";
+
+      if (a !== d) {
+        h = a / d;
+      }
+
+      t.beginPath();
+      t.moveTo(n, l);
       for (let e = 0; e < d; e++) {
         let s = Math.round(i[e] * r);
         t.lineTo(e * h + n, l + s);
       }
-      t.lineTo(a + n, l), t.moveTo(n, l);
+      t.lineTo(a + n, l);
+      t.moveTo(n, l);
       for (let e = 0; e < d; e++) {
         let s = Math.round(i[e] * r);
         t.lineTo(e * h + n, l - s);
       }
-      t.lineTo(a + n, l), t.fill(), t.fillRect(0, l - n, a, 2 * n);
+      t.lineTo(a + n, l);
+      t.fill();
+      t.fillRect(0, l - n, a, 2 * n);
     },
     _tickProgress() {
       window.requestAnimationFrame(() => {
-        if (!this._audioCtrl) return;
-        if ("stopped" === this.state) return this.setProgress(0), void 0;
-        if ("paused" === this.state) return;
-        let t = this._audioCtrl.buffer().duration,
-          i = (this._audioCtrl.time() % t) / t;
-        this.setProgress(i), this._tickProgress();
+        if (!this._audioCtrl) {
+          return;
+        }
+        if ("stopped" === this.state) {
+          this.setProgress(0);
+          return;
+        }
+        if ("paused" === this.state) {
+          return;
+        }
+        let t = this._audioCtrl.buffer().duration;
+        let i = (this._audioCtrl.time() % t) / t;
+        this.setProgress(i);
+        this._tickProgress();
       });
     },
   },

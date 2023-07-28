@@ -1,3 +1,4 @@
 "use strict";
-require("async"), require("fire-path");
+require("async");
+require("fire-path");
 module.exports = {};

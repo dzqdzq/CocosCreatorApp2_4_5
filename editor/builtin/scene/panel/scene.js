@@ -1,18 +1,18 @@
-const e = require("electron"),
-  n = require("fs-extra"),
-  t = (require("path"), require("util")),
-  i = Editor.require("scene://edit-mode"),
-  o = Editor.require("packages://scene/panel/tools/camera"),
-  r = Editor.require("scene://utils/scene"),
-  s = Editor.require("scene://lib/sandbox"),
-  a = Editor.require("scene://utils/prefab"),
-  c = Editor.require("scene://utils/animation");
+const e = require("electron");
+const n = require("fs-extra");
+const t = (require("path"), require("util"));
+const i = Editor.require("scene://edit-mode");
+const o = Editor.require("packages://scene/panel/tools/camera");
+const r = Editor.require("scene://utils/scene");
+const s = Editor.require("scene://lib/sandbox");
+const a = Editor.require("scene://utils/prefab");
+const c = Editor.require("scene://utils/animation");
 function l(e) {
   let n = Editor.assets[e];
   return n && n.prototype.createNode;
 }
-Editor.require("packages://scene/panel/settings/rendering-setting"),
-  Editor.require("packages://scene/panel/scene-view");
+Editor.require("packages://scene/panel/settings/rendering-setting");
+Editor.require("packages://scene/panel/scene-view");
 let d = {
   template: n.readFileSync(
     Editor.url("packages://scene/panel/scene.html"),
@@ -22,16 +22,16 @@ let d = {
   $: { dropArea: "#dropArea", loader: "#loader", border: "#border" },
   messages: Editor.require("packages://scene/panel/messages"),
   ready() {
-    (this._vm = (function (e) {
+    this._vm = (function (e) {
       return new window.Vue({
         el: e,
-        data: { selection: [], align: !1, distribute: !1 },
+        data: { selection: [], align: false, distribute: false },
         watch: { selection: "_selectionChanged" },
         methods: {
           _T: (e) => Editor.T(e),
           _selectionChanged() {
-            (this.align = this.selection.length > 1),
-              (this.distribute = this.selection.length > 2);
+            this.align = this.selection.length > 1;
+            this.distribute = this.selection.length > 2;
           },
           _onZoomUp() {
             o.zoomUp();
@@ -80,26 +80,32 @@ let d = {
           },
         },
       });
-    })(this.shadowRoot)),
-      (this._viewReady = !1),
-      (this._ipcList = []),
-      (this._copyingIds = null),
-      (this._pastingId = ""),
-      (this._ensureClose = !1),
-      console.time("scene:reloading"),
-      Editor.Ipc.sendToAll("scene:reloading"),
-      (this.multi = !0),
-      this.$dropArea.setAttribute("droppable", "asset,file,cloud-function"),
-      _Scene.init(),
-      (this.$loader.hidden = !0),
-      this.$border.insertBefore(_Scene.view, this.$loader),
-      _Scene.view.init(),
-      e.ipcRenderer.on("editor:panel-undock", (e) => {
-        "scene" === e && _Scene.EngineEvents.unregister();
-      });
+    })(this.shadowRoot);
+
+    this._viewReady = false;
+    this._ipcList = [];
+    this._copyingIds = null;
+    this._pastingId = "";
+    this._ensureClose = false;
+    console.time("scene:reloading");
+    Editor.Ipc.sendToAll("scene:reloading");
+    this.multi = true;
+    this.$dropArea.setAttribute("droppable", "asset,file,cloud-function");
+    _Scene.init();
+    this.$loader.hidden = true;
+    this.$border.insertBefore(_Scene.view, this.$loader);
+    _Scene.view.init();
+
+    e.ipcRenderer.on("editor:panel-undock", (e) => {
+      if ("scene" === e) {
+        _Scene.EngineEvents.unregister();
+      }
+    });
   },
   run(e) {
-    if (!e || !e.uuid) return;
+    if (!e || !e.uuid) {
+      return;
+    }
     this.confirmCloseScene(() => {
       this._loadScene(e.uuid);
     });
@@ -107,23 +113,32 @@ let d = {
   async canClose() {
     if (!this._ensureClose) {
       let e = await t.promisify(this.confirmCloseScene)();
-      (2 !== e && 0 !== e) || (this._ensureClose = !0);
+
+      if (!(2 !== e && 0 !== e)) {
+        this._ensureClose = true;
+      }
     }
     return this._ensureClose;
   },
   close() {
     this._clearSelection();
-    let n = e.ipcRenderer.sendSync("app:is-main-window-attemp-to-close"),
-      t = Editor.remote.Panel.findWindow("scene");
-    n ? t.nativeWin.close() : t.nativeWin.reload();
+    let n = e.ipcRenderer.sendSync("app:is-main-window-attemp-to-close");
+    let t = Editor.remote.Panel.findWindow("scene");
+
+    if (n) {
+      t.nativeWin.close();
+    } else {
+      t.nativeWin.reload();
+    }
   },
   async confirmCloseScene(e) {
-    await a.confirmEditingPrefabSynced(), i.close(e);
+    await a.confirmEditingPrefabSynced();
+    i.close(e);
   },
   _clearSelection: function () {
-    Editor.Selection.clear("node"),
-      _Scene.unselect(this._vm.selection),
-      (this._vm.selection = []);
+    Editor.Selection.clear("node");
+    _Scene.unselect(this._vm.selection);
+    this._vm.selection = [];
   },
   _onDropAreaEnter(e) {
     e.stopPropagation();
@@ -133,45 +148,46 @@ let d = {
   },
   async _onDropAreaAccept(e) {
     e.stopPropagation();
-    let n = e.detail.dragOptions.unlinkPrefab,
-      t = await Promise.all(
-        e.detail.dragItems.map(async (n) =>
-          "cloud-function" === e.detail.dragType
-            ? new Promise((e, t) => {
-                Editor.Ipc.sendToPackage(
-                  "node-library",
-                  "import-cloud-component",
-                  n.path,
-                  (n, i) => {
-                    if (n) return t(n);
-                    e(i);
+    let n = e.detail.dragOptions.unlinkPrefab;
+
+    let t = await Promise.all(
+      e.detail.dragItems.map(async (n) =>
+        "cloud-function" === e.detail.dragType
+          ? new Promise((e, t) => {
+              Editor.Ipc.sendToPackage(
+                "node-library",
+                "import-cloud-component",
+                n.path,
+                (n, i) => {
+                  if (n) {
+                    return t(n);
                   }
-                );
-              })
-            : n.id
-        )
-      );
+                  e(i);
+                }
+              );
+            })
+          : n.id
+      )
+    );
+
     t = t.filter(Boolean);
-    let i = e.detail.offsetX,
-      o = e.detail.offsetY;
+    let i = e.detail.offsetX;
+    let o = e.detail.offsetY;
     r.createNodesAt(t, i, o, { unlinkPrefab: n });
   },
   _onDropAreaMove(e) {
-    if (c.STATE.RECORD)
-      return (
-        Editor.UI.DragDrop.updateDropEffect(e.detail.dataTransfer, "none"),
-        void 0
-      );
-    if ("cloud-function" === e.detail.dragType)
-      return (
-        Editor.UI.DragDrop.updateDropEffect(e.detail.dataTransfer, "copy"),
-        void 0
-      );
-    if ("asset" !== e.detail.dragType && "file" !== e.detail.dragType)
-      return (
-        Editor.UI.DragDrop.updateDropEffect(e.detail.dataTransfer, "none"),
-        void 0
-      );
+    if (c.STATE.RECORD) {
+      Editor.UI.DragDrop.updateDropEffect(e.detail.dataTransfer, "none");
+      return;
+    }
+    if ("cloud-function" === e.detail.dragType) {
+      Editor.UI.DragDrop.updateDropEffect(e.detail.dataTransfer, "copy");
+      return;
+    }
+    if ("asset" !== e.detail.dragType && "file" !== e.detail.dragType) {
+      Editor.UI.DragDrop.updateDropEffect(e.detail.dataTransfer, "none");
+      return;
+    }
     let n = "copy";
     for (let t of e.detail.dragItems) {
       if (
@@ -199,23 +215,25 @@ let d = {
     _Scene.EngineEvents.register();
   },
   _onSceneViewReady() {
-    this._loadSceneScripts(),
-      (this._viewReady = !0),
-      (this.$loader.hidden = !0),
-      _Scene.Undo.clear(),
-      Editor.Ipc.sendToAll("scene:ready"),
-      console.timeEnd("scene:reloading");
+    this._loadSceneScripts();
+    this._viewReady = true;
+    this.$loader.hidden = true;
+    _Scene.Undo.clear();
+    Editor.Ipc.sendToAll("scene:ready");
+    console.timeEnd("scene:reloading");
   },
   _onSceneViewInitError(e) {
     let n = e.error;
-    Editor.failed(`Failed to init scene: ${n.stack}`),
-      (this.$loader.hidden = !0);
+    Editor.failed(`Failed to init scene: ${n.stack}`);
+    this.$loader.hidden = true;
   },
   _onPanelResize() {
-    this._resizeDebounceID ||
-      (this._resizeDebounceID = setTimeout(() => {
-        (this._resizeDebounceID = null), _Scene.view._resize();
-      }, 10));
+    if (!this._resizeDebounceID) {
+      this._resizeDebounceID = setTimeout(() => {
+        this._resizeDebounceID = null;
+        _Scene.view._resize();
+      }, 10);
+    }
   },
   _onPanelCopy() {
     let e = Editor.Selection.curSelection("node");
@@ -229,45 +247,51 @@ let d = {
     Editor.Ipc.sendToAll("scene:panel-unload");
   },
   _loadScene(e) {
-    (_Scene.isLoadingScene = !0),
-      Editor.Ipc.sendToAll("scene:reloading"),
-      (this.$loader.hidden = !1),
-      _Scene.loadSceneByUuid(e, (e) => {
-        if (((_Scene.isLoadingScene = !1), e)) {
-          let n = new Event("scene-view-init-error");
-          return (n.error = e), this.dispatchEvent(n), void 0;
-        }
-        this.dispatchEvent(new Event("scene-view-ready"));
-      });
+    _Scene.isLoadingScene = true;
+    Editor.Ipc.sendToAll("scene:reloading");
+    this.$loader.hidden = false;
+
+    _Scene.loadSceneByUuid(e, (e) => {
+      _Scene.isLoadingScene = false;
+      if ((e)) {
+        let n = new Event("scene-view-init-error");
+        n.error = e;
+        this.dispatchEvent(n);
+        return;
+      }
+      this.dispatchEvent(new Event("scene-view-ready"));
+    });
   },
   _newScene() {
-    (this.$loader.hidden = !1),
-      Editor.Ipc.sendToAll("scene:reloading"),
-      _Scene.newScene(() => {
-        this.dispatchEvent(new Event("scene-view-ready")),
-          _Scene._applyCanvasPreferences();
-      });
+    this.$loader.hidden = false;
+    Editor.Ipc.sendToAll("scene:reloading");
+
+    _Scene.newScene(() => {
+      this.dispatchEvent(new Event("scene-view-ready"));
+      _Scene._applyCanvasPreferences();
+    });
   },
   _loadSceneScript: function (e, n) {
-    let t,
-      i = Editor.url(n);
+    let t;
+    let i = Editor.url(n);
     try {
-      i && (t = require(i));
+      if (i) {
+        t = require(i);
+      }
     } catch (t) {
-      return (
-        Editor.error(`Package [${e}] scene script [${n}] not exists.\n ${t}`),
-        void 0
-      );
+      Editor.error(`Package [${e}] scene script [${n}] not exists.\n ${t}`);
+      return;
     }
     this._sceneScripts[e] = { path: i, messages: [] };
     for (let n in t) {
       let i = t[n];
-      if ("function" != typeof i)
-        return (
-          Editor.warn(`[${n}] in package [${e}] is not a function.`), void 0
-        );
+      if ("function" != typeof i) {
+        Editor.warn(`[${n}] in package [${e}] is not a function.`);
+        return;
+      }
       let o = `${e}:${n}`;
-      (this.messages[o] = i.bind(t)), this._sceneScripts[e].messages.push(o);
+      this.messages[o] = i.bind(t);
+      this._sceneScripts[e].messages.push(o);
     }
   },
   _unloadSceneScript: function (e) {
@@ -276,8 +300,8 @@ let d = {
       let t = n[e];
       delete this.messages[t];
     }
-    delete s.getElectronRequire().cache[this._sceneScripts[e].path],
-      delete this._sceneScripts[e];
+    delete s.getElectronRequire().cache[this._sceneScripts[e].path];
+    delete this._sceneScripts[e];
   },
   _loadSceneScripts: function () {
     this._sceneScripts = {};
@@ -287,6 +311,7 @@ let d = {
     }
   },
 };
+
 Object.assign(d, {
   listeners: {
     "drop-area-enter": d._onDropAreaEnter,
@@ -302,5 +327,6 @@ Object.assign(d, {
     "panel-paste": d._onPanelPaste,
     "panel-unload": d._onPanelUnload,
   },
-}),
-  Editor.Panel.extend(d);
+});
+
+Editor.Panel.extend(d);

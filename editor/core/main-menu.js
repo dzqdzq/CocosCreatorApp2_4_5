@@ -1,9 +1,9 @@
 "use strict";
 require("fs-extra");
-const e = require("electron"),
-  r = e.BrowserWindow,
-  l = e.ipcMain,
-  o = Editor.require("app://editor/core/vscode-workflow");
+const e = require("electron");
+const r = e.BrowserWindow;
+const l = e.ipcMain;
+const o = Editor.require("app://editor/core/vscode-workflow");
 function t(e, r) {
   let l =
     Editor.Selection.contexts("node")[0] ||
@@ -276,7 +276,7 @@ function a() {
       ],
     },
   ];
-  if (Editor.Profile.load("global://features.json").get("cloud-function"))
+  if (Editor.Profile.load("global://features.json").get("cloud-function")) {
     try {
       const r = Editor.url("packages://node-library/panel/utils/prefab.js");
       if (r) {
@@ -285,10 +285,11 @@ function a() {
           const r = {
             label: Editor.T("MAIN_MENU.node.cloud_component"),
             submenu: [],
-            visible: !0,
+            visible: true,
           };
+
           l.forEach((e) => {
-            e.prefab &&
+            if (e.prefab) {
               e.prefab.forEach((e) => {
                 r.submenu.push({
                   label: e.name,
@@ -312,13 +313,16 @@ function a() {
                   },
                 });
               });
-          }),
-            e.push(r);
+            }
+          });
+
+          e.push(r);
         }
       }
     } catch (e) {
       Editor.warn(e);
     }
+  }
   return e;
 }
 function i() {
@@ -347,543 +351,586 @@ function d() {
 }
 function n(e) {
   Editor.stashedScene = null;
-  let l = Editor.Window.main.nativeWin,
-    o = r.getFocusedWindow(),
-    t = o === l;
-  (t || e) &&
-    (l.webContents.off("did-finish-load", d),
-    l.webContents.once("did-finish-load", d)),
-    !t && e ? l.reload() : o && o.reload();
-}
-Editor.Menu.register("create-node", a),
-  Editor.Menu.register("node-menu", i),
-  (module.exports = function () {
-    let l = [
-        {
-          label: Editor.T("MAIN_MENU.edit.title"),
-          submenu: [
-            {
-              label: Editor.T("MAIN_MENU.edit.undo"),
-              accelerator: "CmdOrCtrl+Z",
-              click() {
-                Editor.Ipc.sendToPanel("scene", "scene:undo");
-              },
-            },
-            {
-              label: Editor.T("MAIN_MENU.edit.redo"),
-              accelerator: "Shift+CmdOrCtrl+Z",
-              click() {
-                Editor.Ipc.sendToPanel("scene", "scene:redo");
-              },
-            },
-            { type: "separator" },
-            {
-              label: Editor.T("MAIN_MENU.edit.copy"),
-              accelerator: "CmdOrCtrl+C",
-              role: "copy",
-            },
-            {
-              label: Editor.T("MAIN_MENU.edit.paste"),
-              accelerator: "CmdOrCtrl+V",
-              role: "paste",
-            },
-            {
-              label: Editor.T("MAIN_MENU.edit.selectall"),
-              accelerator: "CmdOrCtrl+A",
-              role: "selectall",
-            },
-          ],
-        },
-        { label: Editor.T("MAIN_MENU.node.title"), id: "node", submenu: i() },
-        {
-          label: Editor.T("MAIN_MENU.component.title"),
-          id: "component",
-          submenu: [],
-        },
-        {
-          label: Editor.T("MAIN_MENU.project.title"),
-          id: "project",
-          submenu: [
-            {
-              label: Editor.T("MAIN_MENU.project.play"),
-              accelerator: "CmdOrCtrl+P",
-              click() {
-                Editor.Ipc.sendToWins("scene:play-on-device");
-              },
-            },
-            {
-              label: Editor.T("MAIN_MENU.project.reload"),
-              accelerator: "CmdOrCtrl+Shift+P",
-              click() {
-                Editor.Ipc.sendToWins("scene:reload-on-device");
-              },
-            },
-          ],
-        },
-        { label: Editor.T("MAIN_MENU.panel.title"), id: "panel", submenu: [] },
-        {
-          label: Editor.T("MAIN_MENU.layout.title"),
-          id: "layout",
-          submenu: [
-            {
-              label: Editor.T("MAIN_MENU.layout.default"),
-              click() {
-                Editor.Window.main.resetLayout(
-                  Editor.Window.defaultLayoutUrl,
-                  () => {
-                    n(!0);
-                  }
-                );
-              },
-            },
-            {
-              label: Editor.T("MAIN_MENU.layout.portrait"),
-              click() {
-                Editor.Window.main.resetLayout(
-                  "unpack://static/layout/portrait.json",
-                  () => {
-                    n(!0);
-                  }
-                );
-              },
-            },
-            {
-              label: Editor.T("MAIN_MENU.layout.classical"),
-              click() {
-                Editor.Window.main.resetLayout(
-                  "unpack://static/layout/classical.json",
-                  () => {
-                    n(!0);
-                  }
-                );
-              },
-            },
-          ],
-        },
-        {
-          label: Editor.T("MAIN_MENU.package.title"),
-          id: "package",
-          submenu: [
-            {
-              label: Editor.T("MAIN_MENU.package.create.title"),
-              submenu: [
-                {
-                  label: Editor.T("MAIN_MENU.package.create.global"),
-                  click() {
-                    Editor.Ipc.sendToMain("editor:create-package", "global");
-                  },
-                },
-                {
-                  label: Editor.T("MAIN_MENU.package.create.project"),
-                  click() {
-                    Editor.Ipc.sendToMain("editor:create-package", "project");
-                  },
-                },
-              ],
-            },
-          ],
-        },
-        {
-          label: Editor.T("MAIN_MENU.developer.title"),
-          id: "developer",
-          submenu: [
-            {
-              label: Editor.T("MAIN_MENU.developer.vscode.title"),
-              submenu: [
-                {
-                  label: Editor.T("MAIN_MENU.developer.vscode.get_tsd"),
-                  click() {
-                    o.updateAPIData();
-                  },
-                },
-                {
-                  label: Editor.T("MAIN_MENU.developer.vscode.copy_extension"),
-                  click() {
-                    o.updateDebugger();
-                  },
-                },
-                {
-                  label: Editor.T("MAIN_MENU.developer.vscode.copy_tsconfig"),
-                  click() {
-                    o.updateTypeScriptConf();
-                  },
-                },
-                {
-                  label: Editor.T(
-                    "MAIN_MENU.developer.vscode.copy_debug_setting"
-                  ),
-                  click() {
-                    o.updateDebugSetting();
-                  },
-                },
-                {
-                  label: Editor.T(
-                    "MAIN_MENU.developer.vscode.copy_compile_task"
-                  ),
-                  click() {
-                    o.updateCompileTask();
-                  },
-                },
-              ],
-            },
-            {
-              label: Editor.T("MAIN_MENU.developer.command_palette"),
-              enabled: !1,
-              accelerator: "CmdOrCtrl+:",
-              click() {
-                Editor.Window.main.focus(),
-                  Editor.Ipc.sendToMainWin("cmdp:show");
-              },
-            },
-            { type: "separator" },
-            {
-              label: Editor.T("MAIN_MENU.developer.reload"),
-              accelerator: "CmdOrCtrl+R",
-              click() {
-                n();
-              },
-            },
-            {
-              label: Editor.T("MAIN_MENU.developer.compile"),
-              accelerator: "F7",
-              click() {
-                Editor.ProjectCompiler.compileAndReload();
-              },
-            },
-            {
-              label: Editor.T("MAIN_MENU.developer.compile_engine"),
-              accelerator: "CmdOrCtrl+F7",
-              click() {
-                Editor.Ipc.sendToMain(
-                  "app:rebuild-editor-engine",
-                  (e) => {
-                    e
-                      ? Editor.error("rebuild engine failed: " + e)
-                      : Editor.log("Compile engine finished");
-                  },
-                  -1
-                );
-              },
-            },
-            { type: "separator", dev: !0 },
-            {
-              label: Editor.T("MAIN_MENU.developer.inspect"),
-              accelerator: "CmdOrCtrl+Shift+C",
-              click() {
-                let e = r.getFocusedWindow(),
-                  l = Editor.Window.find(e);
-                l && l.send("editor:window-inspect");
-              },
-            },
-            {
-              label: Editor.T("MAIN_MENU.developer.devtools"),
-              accelerator: "CmdOrCtrl+Alt+I",
-              click() {
-                let e = r.getFocusedWindow(),
-                  l = Editor.Window.find(e);
-                if (l) return l.openDevTools(), void 0;
-                e.openDevTools(),
-                  e.devToolsWebContents && e.devToolsWebContents.focus();
-              },
-            },
-            {
-              label: Editor.T("MAIN_MENU.developer.toggle_node_inspector"),
-              type: "checkbox",
-              checked: !1,
-              dev: !0,
-              click() {
-                Editor.Debugger.toggleNodeInspector();
-              },
-            },
-            { type: "separator", dev: !0 },
-            {
-              label: "Generate UUID",
-              dev: !0,
-              click() {
-                let e = require("node-uuid");
-                Editor.log(e.v4());
-              },
-            },
-            {
-              label: "Remove All Meta Files",
-              dev: !0,
-              async click() {
-                await Editor.assetdb._rmMetas(),
-                  Editor.success("Meta files removed");
-              },
-            },
-            { type: "separator", dev: !0 },
-            {
-              label: "Human Tests",
-              dev: !0,
-              submenu: [
-                {
-                  label: "Reload Scene",
-                  accelerator: "Alt+F7",
-                  click() {
-                    var e = require("./compiler");
-                    Editor.Ipc.sendToWins(
-                      "scene:soft-reload",
-                      "failed" !== e.state
-                    );
-                  },
-                },
-                {
-                  label: "Throw an Uncaught Exception",
-                  click() {
-                    throw new Error("editor-framework Unknown Error");
-                  },
-                },
-                {
-                  label: "send2panel 'foo:bar' foobar.panel",
-                  click() {
-                    Editor.Ipc.sendToPanel("foobar.panel", "foo:bar");
-                  },
-                },
-                {
-                  label: "Enable Build Worker Devtools",
-                  click() {
-                    Editor.Builder.debugWorker = !Editor.Builder.debugWorker;
-                  },
-                },
-                {
-                  label: "Enable Compile Worker Devtools",
-                  click() {
-                    Editor.Compiler.debugWorker = !Editor.Compiler.debugWorker;
-                  },
-                },
-              ],
-            },
-            { type: "separator", dev: !0 },
-          ],
-        },
-      ],
-      t = function () {
-        let e = new Editor.Window("about", {
-            title: Editor.T("MAIN_MENU.about", {
-              product: Editor.T("SHARED.product_name"),
-            }),
-            width: 500,
-            height: 215,
-            alwaysOnTop: !0,
-            show: !1,
-            resizable: !1,
-          }),
-          r = Editor.Window.main,
-          l = r.nativeWin.getPosition(),
-          o = r.nativeWin.getSize(),
-          t = l[0] + o[0] / 2 - 200,
-          a = l[1] + o[1] / 2 - 90;
-        e.load("app://editor/page/app-about.html"),
-          e.nativeWin.setPosition(Math.floor(t), Math.floor(a)),
-          e.nativeWin.setMenuBarVisibility(!1),
-          e.nativeWin.setTitle(
-            Editor.T("MAIN_MENU.about", {
-              product: Editor.T("SHARED.product_name"),
-            })
-          ),
-          e.show();
-      },
-      a = {
-        label: Editor.T("SHARED.product_name"),
-        position: "before=help",
-        submenu: [
-          {
-            label: Editor.T("MAIN_MENU.about", {
-              product: Editor.T("SHARED.product_name"),
-            }),
-            id: 0,
-            click: t,
-          },
-          { type: "separator" },
-          {
-            label: Editor.T("MAIN_MENU.panel.preferences"),
-            click() {
-              Editor.Ipc.sendToMain("preferences:open");
-            },
-          },
-          { type: "separator" },
-          {
-            label: Editor.T("MAIN_MENU.window.hide", {
-              product: Editor.T("SHARED.product_name"),
-            }),
-            id: 2,
-            accelerator: "CmdOrCtrl+H",
-            visible: Editor.isDarwin,
-            role: "hide",
-          },
-          {
-            label: Editor.T("MAIN_MENU.window.hide_others"),
-            accelerator: "CmdOrCtrl+Shift+H",
-            visible: Editor.isDarwin,
-            role: "hideothers",
-          },
-          {
-            label: Editor.T("MAIN_MENU.window.show_all"),
-            role: "unhide",
-            visible: Editor.isDarwin,
-          },
-          {
-            label: Editor.T("MAIN_MENU.window.minimize"),
-            accelerator: "CmdOrCtrl+M",
-            role: "minimize",
-          },
-          {
-            label: Editor.T("MAIN_MENU.window.bring_all_front"),
-            visible: Editor.isDarwin,
-            role: "front",
-          },
-          { type: "separator" },
-          {
-            label: Editor.T("MAIN_MENU.window.close"),
-            accelerator: "CmdOrCtrl+W",
-            role: "close",
-          },
-          {
-            label: Editor.T("MAIN_MENU.window.quit"),
-            accelerator: "CmdOrCtrl+Q",
-            role: "close",
-          },
-        ],
-      },
-      d = {
-        label: Editor.T("MAIN_MENU.file.title"),
-        submenu: [
-          {
-            label: Editor.T("MAIN_MENU.file.open_project"),
-            click() {
-              Editor.App.runDashboard();
-            },
-          },
-          {
-            label: Editor.T("MAIN_MENU.file.open_dashboard"),
-            click() {
-              process.send && process.send({ channel: "show-dashboard" });
-            },
-          },
-          { type: "separator" },
-          { label: Editor.T("MAIN_MENU.file.open_recent_items"), submenu: [] },
-          { type: "separator" },
-          {
-            label: Editor.T("MAIN_MENU.file.new_scene"),
-            accelerator: "CmdOrCtrl+N",
-            click() {
-              Editor.Ipc.sendToPanel("scene", "scene:new-scene");
-            },
-          },
-          {
-            label: Editor.T("MAIN_MENU.file.save_scene"),
-            accelerator: "CmdOrCtrl+S",
-            click() {
-              Editor.Ipc.sendToPanel("scene", "scene:stash-and-save");
-            },
-          },
-          { type: "separator" },
-          {
-            label: Editor.T("MAIN_MENU.file.import_asset"),
-            click() {
-              Editor.Ipc.sendToMain("package-asset:import");
-            },
-          },
-          {
-            label: Editor.T("MAIN_MENU.file.export_asset"),
-            click() {
-              Editor.Ipc.sendToMain("package-asset:export");
-            },
-          },
-        ],
-      },
-      c = {
-        label: Editor.T("SHARED.help"),
-        id: "help",
-        role: "help",
-        submenu: [
-          {
-            label: Editor.T("MAIN_MENU.help.docs"),
-            click() {
-              require("../../share/manual").openManual("home");
-            },
-          },
-          {
-            label: Editor.T("MAIN_MENU.help.api"),
-            click() {
-              require("../../share/manual").openAPI("home");
-            },
-          },
-          {
-            label: Editor.T("MAIN_MENU.help.forum"),
-            click() {
-              let r =
-                "zh" === Editor.lang
-                  ? "https://forum.cocos.org/c/Creator"
-                  : "https://discuss.cocos2d-x.org/c/creator";
-              e.shell.openExternal(r), e.shell.beep();
-            },
-          },
-          { type: "separator" },
-          {
-            label: Editor.T("MAIN_MENU.help.release_notes"),
-            click() {
-              e.shell.openExternal("https://www.cocos.com/creator"),
-                e.shell.beep();
-            },
-          },
-          {
-            label: Editor.T("MAIN_MENU.help.engine_repo"),
-            click() {
-              e.shell.openExternal("https://github.com/cocos-creator/engine"),
-                e.shell.beep();
-            },
-          },
-          { type: "separator" },
-          { label: Editor.T("MAIN_MENU.account.none"), enabled: !1 },
-        ],
-      };
-    if ((l.unshift(d), l.push(c), Editor.isDarwin)) l.unshift(a);
-    else {
-      let e = [
-        { type: "separator" },
-        {
-          label: Editor.T("MAIN_MENU.panel.preferences"),
-          click() {
-            Editor.Ipc.sendToMain("preferences:open");
-          },
-        },
-        { type: "separator" },
-        {
-          label: Editor.T("MAIN_MENU.window.quit"),
-          accelerator: "CmdOrCtrl+Q",
-          role: "close",
-        },
-      ];
-      d.submenu = d.submenu.concat(e);
-      let r = [
-        {
-          label: Editor.T("MAIN_MENU.about", {
-            product: Editor.T("SHARED.product_name"),
-          }),
-          id: 0,
-          click: t,
-        },
-        { type: "separator" },
-      ];
-      c.submenu.splice(7, 0, ...r);
+  let l = Editor.Window.main.nativeWin;
+  let o = r.getFocusedWindow();
+  let t = o === l;
+
+  if ((t || e)) {
+    l.webContents.off("did-finish-load", d);
+    l.webContents.once("did-finish-load", d);
+  }
+
+  if (!t && e) {
+    l.reload();
+  } else {
+    if (o) {
+      o.reload();
     }
-    return l;
-  }),
-  l.on("scene:animation-record-changed", (e, r, l) => {
-    let o = i();
-    Editor.Menu.walk(o, (e) => {
-      e.enabled = !r;
-    }),
-      Editor.MainMenu.update(Editor.T("MAIN_MENU.node.title"), o);
-  }),
-  l.on("node-library:update-menu", (e, r) => {
-    Editor.Menu.unregister("create-node"),
-      Editor.Menu.register("create-node", a);
-    let l = i();
-    Editor.Menu.walk(l, (e) => {
-      e.label === Editor.T("MAIN_MENU.node.cloud_component") && (e.visible = r);
-    }),
-      Editor.MainMenu.update(Editor.T("MAIN_MENU.node.title"), l);
+  }
+}
+Editor.Menu.register("create-node", a);
+Editor.Menu.register("node-menu", i);
+
+module.exports = function () {
+  let l = [
+      {
+        label: Editor.T("MAIN_MENU.edit.title"),
+        submenu: [
+          {
+            label: Editor.T("MAIN_MENU.edit.undo"),
+            accelerator: "CmdOrCtrl+Z",
+            click() {
+              Editor.Ipc.sendToPanel("scene", "scene:undo");
+            },
+          },
+          {
+            label: Editor.T("MAIN_MENU.edit.redo"),
+            accelerator: "Shift+CmdOrCtrl+Z",
+            click() {
+              Editor.Ipc.sendToPanel("scene", "scene:redo");
+            },
+          },
+          { type: "separator" },
+          {
+            label: Editor.T("MAIN_MENU.edit.copy"),
+            accelerator: "CmdOrCtrl+C",
+            role: "copy",
+          },
+          {
+            label: Editor.T("MAIN_MENU.edit.paste"),
+            accelerator: "CmdOrCtrl+V",
+            role: "paste",
+          },
+          {
+            label: Editor.T("MAIN_MENU.edit.selectall"),
+            accelerator: "CmdOrCtrl+A",
+            role: "selectall",
+          },
+        ],
+      },
+      { label: Editor.T("MAIN_MENU.node.title"), id: "node", submenu: i() },
+      {
+        label: Editor.T("MAIN_MENU.component.title"),
+        id: "component",
+        submenu: [],
+      },
+      {
+        label: Editor.T("MAIN_MENU.project.title"),
+        id: "project",
+        submenu: [
+          {
+            label: Editor.T("MAIN_MENU.project.play"),
+            accelerator: "CmdOrCtrl+P",
+            click() {
+              Editor.Ipc.sendToWins("scene:play-on-device");
+            },
+          },
+          {
+            label: Editor.T("MAIN_MENU.project.reload"),
+            accelerator: "CmdOrCtrl+Shift+P",
+            click() {
+              Editor.Ipc.sendToWins("scene:reload-on-device");
+            },
+          },
+        ],
+      },
+      { label: Editor.T("MAIN_MENU.panel.title"), id: "panel", submenu: [] },
+      {
+        label: Editor.T("MAIN_MENU.layout.title"),
+        id: "layout",
+        submenu: [
+          {
+            label: Editor.T("MAIN_MENU.layout.default"),
+            click() {
+              Editor.Window.main.resetLayout(
+                Editor.Window.defaultLayoutUrl,
+                () => {
+                  n(true);
+                }
+              );
+            },
+          },
+          {
+            label: Editor.T("MAIN_MENU.layout.portrait"),
+            click() {
+              Editor.Window.main.resetLayout(
+                "unpack://static/layout/portrait.json",
+                () => {
+                  n(true);
+                }
+              );
+            },
+          },
+          {
+            label: Editor.T("MAIN_MENU.layout.classical"),
+            click() {
+              Editor.Window.main.resetLayout(
+                "unpack://static/layout/classical.json",
+                () => {
+                  n(true);
+                }
+              );
+            },
+          },
+        ],
+      },
+      {
+        label: Editor.T("MAIN_MENU.package.title"),
+        id: "package",
+        submenu: [
+          {
+            label: Editor.T("MAIN_MENU.package.create.title"),
+            submenu: [
+              {
+                label: Editor.T("MAIN_MENU.package.create.global"),
+                click() {
+                  Editor.Ipc.sendToMain("editor:create-package", "global");
+                },
+              },
+              {
+                label: Editor.T("MAIN_MENU.package.create.project"),
+                click() {
+                  Editor.Ipc.sendToMain("editor:create-package", "project");
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        label: Editor.T("MAIN_MENU.developer.title"),
+        id: "developer",
+        submenu: [
+          {
+            label: Editor.T("MAIN_MENU.developer.vscode.title"),
+            submenu: [
+              {
+                label: Editor.T("MAIN_MENU.developer.vscode.get_tsd"),
+                click() {
+                  o.updateAPIData();
+                },
+              },
+              {
+                label: Editor.T("MAIN_MENU.developer.vscode.copy_extension"),
+                click() {
+                  o.updateDebugger();
+                },
+              },
+              {
+                label: Editor.T("MAIN_MENU.developer.vscode.copy_tsconfig"),
+                click() {
+                  o.updateTypeScriptConf();
+                },
+              },
+              {
+                label: Editor.T(
+                  "MAIN_MENU.developer.vscode.copy_debug_setting"
+                ),
+                click() {
+                  o.updateDebugSetting();
+                },
+              },
+              {
+                label: Editor.T(
+                  "MAIN_MENU.developer.vscode.copy_compile_task"
+                ),
+                click() {
+                  o.updateCompileTask();
+                },
+              },
+            ],
+          },
+          {
+            label: Editor.T("MAIN_MENU.developer.command_palette"),
+            enabled: false,
+            accelerator: "CmdOrCtrl+:",
+            click() {
+              Editor.Window.main.focus();
+              Editor.Ipc.sendToMainWin("cmdp:show");
+            },
+          },
+          { type: "separator" },
+          {
+            label: Editor.T("MAIN_MENU.developer.reload"),
+            accelerator: "CmdOrCtrl+R",
+            click() {
+              n();
+            },
+          },
+          {
+            label: Editor.T("MAIN_MENU.developer.compile"),
+            accelerator: "F7",
+            click() {
+              Editor.ProjectCompiler.compileAndReload();
+            },
+          },
+          {
+            label: Editor.T("MAIN_MENU.developer.compile_engine"),
+            accelerator: "CmdOrCtrl+F7",
+            click() {
+              Editor.Ipc.sendToMain(
+                "app:rebuild-editor-engine",
+                (e) => {
+                  if (e) {
+                    Editor.error("rebuild engine failed: " + e);
+                  } else {
+                    Editor.log("Compile engine finished");
+                  }
+                },
+                -1
+              );
+            },
+          },
+          { type: "separator", dev: true },
+          {
+            label: Editor.T("MAIN_MENU.developer.inspect"),
+            accelerator: "CmdOrCtrl+Shift+C",
+            click() {
+              let e = r.getFocusedWindow();
+              let l = Editor.Window.find(e);
+
+              if (l) {
+                l.send("editor:window-inspect");
+              }
+            },
+          },
+          {
+            label: Editor.T("MAIN_MENU.developer.devtools"),
+            accelerator: "CmdOrCtrl+Alt+I",
+            click() {
+              let e = r.getFocusedWindow();
+              let l = Editor.Window.find(e);
+              if (l) {
+                l.openDevTools();
+                return;
+              }
+              e.openDevTools();
+
+              if (e.devToolsWebContents) {
+                e.devToolsWebContents.focus();
+              }
+            },
+          },
+          {
+            label: Editor.T("MAIN_MENU.developer.toggle_node_inspector"),
+            type: "checkbox",
+            checked: false,
+            dev: true,
+            click() {
+              Editor.Debugger.toggleNodeInspector();
+            },
+          },
+          { type: "separator", dev: true },
+          {
+            label: "Generate UUID",
+            dev: true,
+            click() {
+              let e = require("node-uuid");
+              Editor.log(e.v4());
+            },
+          },
+          {
+            label: "Remove All Meta Files",
+            dev: true,
+            async click() {
+              await Editor.assetdb._rmMetas();
+              Editor.success("Meta files removed");
+            },
+          },
+          { type: "separator", dev: true },
+          {
+            label: "Human Tests",
+            dev: true,
+            submenu: [
+              {
+                label: "Reload Scene",
+                accelerator: "Alt+F7",
+                click() {
+                  var e = require("./compiler");
+                  Editor.Ipc.sendToWins(
+                    "scene:soft-reload",
+                    "failed" !== e.state
+                  );
+                },
+              },
+              {
+                label: "Throw an Uncaught Exception",
+                click() {
+                  throw new Error("editor-framework Unknown Error");
+                },
+              },
+              {
+                label: "send2panel 'foo:bar' foobar.panel",
+                click() {
+                  Editor.Ipc.sendToPanel("foobar.panel", "foo:bar");
+                },
+              },
+              {
+                label: "Enable Build Worker Devtools",
+                click() {
+                  Editor.Builder.debugWorker = !Editor.Builder.debugWorker;
+                },
+              },
+              {
+                label: "Enable Compile Worker Devtools",
+                click() {
+                  Editor.Compiler.debugWorker = !Editor.Compiler.debugWorker;
+                },
+              },
+            ],
+          },
+          { type: "separator", dev: true },
+        ],
+      },
+    ];
+
+  let t = function () {
+    let e = new Editor.Window("about", {
+        title: Editor.T("MAIN_MENU.about", {
+          product: Editor.T("SHARED.product_name"),
+        }),
+        width: 500,
+        height: 215,
+        alwaysOnTop: true,
+        show: false,
+        resizable: false,
+      });
+
+    let r = Editor.Window.main;
+    let l = r.nativeWin.getPosition();
+    let o = r.nativeWin.getSize();
+    let t = l[0] + o[0] / 2 - 200;
+    let a = l[1] + o[1] / 2 - 90;
+    e.load("app://editor/page/app-about.html");
+    e.nativeWin.setPosition(Math.floor(t), Math.floor(a));
+    e.nativeWin.setMenuBarVisibility(false);
+
+    e.nativeWin.setTitle(
+      Editor.T("MAIN_MENU.about", {
+        product: Editor.T("SHARED.product_name"),
+      })
+    );
+
+    e.show();
+  };
+
+  let a = {
+    label: Editor.T("SHARED.product_name"),
+    position: "before=help",
+    submenu: [
+      {
+        label: Editor.T("MAIN_MENU.about", {
+          product: Editor.T("SHARED.product_name"),
+        }),
+        id: 0,
+        click: t,
+      },
+      { type: "separator" },
+      {
+        label: Editor.T("MAIN_MENU.panel.preferences"),
+        click() {
+          Editor.Ipc.sendToMain("preferences:open");
+        },
+      },
+      { type: "separator" },
+      {
+        label: Editor.T("MAIN_MENU.window.hide", {
+          product: Editor.T("SHARED.product_name"),
+        }),
+        id: 2,
+        accelerator: "CmdOrCtrl+H",
+        visible: Editor.isDarwin,
+        role: "hide",
+      },
+      {
+        label: Editor.T("MAIN_MENU.window.hide_others"),
+        accelerator: "CmdOrCtrl+Shift+H",
+        visible: Editor.isDarwin,
+        role: "hideothers",
+      },
+      {
+        label: Editor.T("MAIN_MENU.window.show_all"),
+        role: "unhide",
+        visible: Editor.isDarwin,
+      },
+      {
+        label: Editor.T("MAIN_MENU.window.minimize"),
+        accelerator: "CmdOrCtrl+M",
+        role: "minimize",
+      },
+      {
+        label: Editor.T("MAIN_MENU.window.bring_all_front"),
+        visible: Editor.isDarwin,
+        role: "front",
+      },
+      { type: "separator" },
+      {
+        label: Editor.T("MAIN_MENU.window.close"),
+        accelerator: "CmdOrCtrl+W",
+        role: "close",
+      },
+      {
+        label: Editor.T("MAIN_MENU.window.quit"),
+        accelerator: "CmdOrCtrl+Q",
+        role: "close",
+      },
+    ],
+  };
+
+  let d = {
+    label: Editor.T("MAIN_MENU.file.title"),
+    submenu: [
+      {
+        label: Editor.T("MAIN_MENU.file.open_project"),
+        click() {
+          Editor.App.runDashboard();
+        },
+      },
+      {
+        label: Editor.T("MAIN_MENU.file.open_dashboard"),
+        click() {
+          if (process.send) {
+            process.send({ channel: "show-dashboard" });
+          }
+        },
+      },
+      { type: "separator" },
+      { label: Editor.T("MAIN_MENU.file.open_recent_items"), submenu: [] },
+      { type: "separator" },
+      {
+        label: Editor.T("MAIN_MENU.file.new_scene"),
+        accelerator: "CmdOrCtrl+N",
+        click() {
+          Editor.Ipc.sendToPanel("scene", "scene:new-scene");
+        },
+      },
+      {
+        label: Editor.T("MAIN_MENU.file.save_scene"),
+        accelerator: "CmdOrCtrl+S",
+        click() {
+          Editor.Ipc.sendToPanel("scene", "scene:stash-and-save");
+        },
+      },
+      { type: "separator" },
+      {
+        label: Editor.T("MAIN_MENU.file.import_asset"),
+        click() {
+          Editor.Ipc.sendToMain("package-asset:import");
+        },
+      },
+      {
+        label: Editor.T("MAIN_MENU.file.export_asset"),
+        click() {
+          Editor.Ipc.sendToMain("package-asset:export");
+        },
+      },
+    ],
+  };
+
+  let c = {
+    label: Editor.T("SHARED.help"),
+    id: "help",
+    role: "help",
+    submenu: [
+      {
+        label: Editor.T("MAIN_MENU.help.docs"),
+        click() {
+          require("../../share/manual").openManual("home");
+        },
+      },
+      {
+        label: Editor.T("MAIN_MENU.help.api"),
+        click() {
+          require("../../share/manual").openAPI("home");
+        },
+      },
+      {
+        label: Editor.T("MAIN_MENU.help.forum"),
+        click() {
+          let r =
+            "zh" === Editor.lang
+              ? "https://forum.cocos.org/c/Creator"
+              : "https://discuss.cocos2d-x.org/c/creator";
+          e.shell.openExternal(r);
+          e.shell.beep();
+        },
+      },
+      { type: "separator" },
+      {
+        label: Editor.T("MAIN_MENU.help.release_notes"),
+        click() {
+          e.shell.openExternal("https://www.cocos.com/creator");
+          e.shell.beep();
+        },
+      },
+      {
+        label: Editor.T("MAIN_MENU.help.engine_repo"),
+        click() {
+          e.shell.openExternal("https://github.com/cocos-creator/engine");
+          e.shell.beep();
+        },
+      },
+      { type: "separator" },
+      { label: Editor.T("MAIN_MENU.account.none"), enabled: false },
+    ],
+  };
+
+  l.unshift(d);
+  l.push(c);
+  if (Editor.isDarwin) {
+    l.unshift(a);
+  } else {
+    let e = [
+      { type: "separator" },
+      {
+        label: Editor.T("MAIN_MENU.panel.preferences"),
+        click() {
+          Editor.Ipc.sendToMain("preferences:open");
+        },
+      },
+      { type: "separator" },
+      {
+        label: Editor.T("MAIN_MENU.window.quit"),
+        accelerator: "CmdOrCtrl+Q",
+        role: "close",
+      },
+    ];
+    d.submenu = d.submenu.concat(e);
+    let r = [
+      {
+        label: Editor.T("MAIN_MENU.about", {
+          product: Editor.T("SHARED.product_name"),
+        }),
+        id: 0,
+        click: t,
+      },
+      { type: "separator" },
+    ];
+    c.submenu.splice(7, 0, ...r);
+  }
+  return l;
+};
+
+l.on("scene:animation-record-changed", (e, r, l) => {
+  let o = i();
+
+  Editor.Menu.walk(o, (e) => {
+    e.enabled = !r;
   });
+
+  Editor.MainMenu.update(Editor.T("MAIN_MENU.node.title"), o);
+});
+
+l.on("node-library:update-menu", (e, r) => {
+  Editor.Menu.unregister("create-node");
+  Editor.Menu.register("create-node", a);
+  let l = i();
+
+  Editor.Menu.walk(l, (e) => {
+    if (e.label === Editor.T("MAIN_MENU.node.cloud_component")) {
+      e.visible = r;
+    }
+  });
+
+  Editor.MainMenu.update(Editor.T("MAIN_MENU.node.title"), l);
+});

@@ -50,133 +50,173 @@ Editor.Panel.extend({
         locality: "",
         state: "",
         country: "",
-        passwordError: !1,
-        confirmPasswordError: !1,
-        aliasError: !1,
-        aliasPasswordError: !1,
-        confirmAliasPasswordError: !1,
-        validityError: !1,
-        commonNameError: !1,
-        organizationalUnitError: !1,
-        organizationError: !1,
-        localityError: !1,
-        stateError: !1,
-        countryError: !1,
+        passwordError: false,
+        confirmPasswordError: false,
+        aliasError: false,
+        aliasPasswordError: false,
+        confirmAliasPasswordError: false,
+        validityError: false,
+        commonNameError: false,
+        organizationalUnitError: false,
+        organizationError: false,
+        localityError: false,
+        stateError: false,
+        countryError: false,
       },
       watch: {
         password: {
           handler() {
-            (this.passwordError = !1), (this.confirmPasswordError = !1);
+            this.passwordError = false;
+            this.confirmPasswordError = false;
           },
         },
         confirmPassword: {
           handler() {
-            (this.passwordError = !1), (this.confirmPasswordError = !1);
+            this.passwordError = false;
+            this.confirmPasswordError = false;
           },
         },
         alias: {
           handler() {
-            this.aliasError = !1;
+            this.aliasError = false;
           },
         },
         aliasPassword: {
           handler() {
-            (this.aliasPasswordError = !1),
-              (this.confirmAliasPasswordError = !1);
+            this.aliasPasswordError = false;
+            this.confirmAliasPasswordError = false;
           },
         },
         confirmAliasPassword: {
           handler() {
-            (this.aliasPasswordError = !1),
-              (this.confirmAliasPasswordError = !1);
+            this.aliasPasswordError = false;
+            this.confirmAliasPasswordError = false;
           },
         },
         validity: {
           handler() {
-            this.validityError = !1;
+            this.validityError = false;
           },
         },
         commonName: {
           handler() {
-            this.commonNameError = !1;
+            this.commonNameError = false;
           },
         },
         organizationalUnit: {
           handler() {
-            this.organizationalUnitError = !1;
+            this.organizationalUnitError = false;
           },
         },
         organization: {
           handler() {
-            this.organizationError = !1;
+            this.organizationError = false;
           },
         },
         locality: {
           handler() {
-            this.localityError = !1;
+            this.localityError = false;
           },
         },
         state: {
           handler() {
-            this.stateError = !1;
+            this.stateError = false;
           },
         },
         country: {
           handler() {
-            this.countryError = !1;
+            this.countryError = false;
           },
         },
       },
       methods: {
         _onSaveClick(r) {
-          if (
-            (r.stopPropagation(),
-            (!this.password || this.password.length < 6) &&
-              ((this.passwordError = !0),
-              Editor.error(
-                Editor.T("KEYSTORE.error.keystore_password_too_short")
-              )),
-            !this.confirmPassword && (this.confirmPasswordError = !0),
-            this.password !== this.confirmPassword &&
-              ((this.passwordError = !0),
-              (this.confirmPasswordError = !0),
-              Editor.error(
-                Editor.T("KEYSTORE.error.keystore_password_not_match")
-              )),
-            this.alias ||
-              ((this.aliasError = !0),
-              Editor.error(Editor.T("KEYSTORE.error.keystore_alias_empty"))),
-            (!this.aliasPassword || this.aliasPassword.length < 6) &&
-              ((this.aliasPasswordError = !0),
-              Editor.error(
-                Editor.T("KEYSTORE.error.keystore_password_too_short")
-              )),
-            !this.confirmAliasPassword && (this.confirmAliasPasswordError = !0),
-            this.aliasPassword !== this.confirmAliasPassword &&
-              ((this.aliasPasswordError = !0),
-              (this.confirmAliasPasswordError = !0),
-              Editor.error(Editor.T("KEYSTORE.error.key_password_not_match"))),
-            this.validity ||
-              ((this.validityError = !0),
-              Editor.error(Editor.T("KEYSTORE.error.key_validity_empty"))),
-            !this.commonName && (this.commonNameError = !0),
-            !this.organizationalUnit && (this.organizationalUnitError = !0),
-            !this.organization && (this.organizationError = !0),
-            !this.locality && (this.localityError = !0),
-            !this.state && (this.stateError = !0),
-            !this.country && (this.countryError = !0),
-            !(
-              this.commonName ||
-              this.organizationalUnit ||
-              this.organization ||
-              this.locality ||
-              this.state ||
-              this.country
-            ))
-          )
-            return (
-              Editor.error(Editor.T("KEYSTORE.error.publish_empty")), void 0
+          r.stopPropagation();
+
+          if ((!this.password || this.password.length < 6)) {
+            this.passwordError = true;
+
+            Editor.error(
+              Editor.T("KEYSTORE.error.keystore_password_too_short")
             );
+          }
+
+          if (!this.confirmPassword) {
+            this.confirmPasswordError = true;
+          }
+
+          if (this.password !== this.confirmPassword) {
+            this.passwordError = true;
+            this.confirmPasswordError = true;
+
+            Editor.error(
+              Editor.T("KEYSTORE.error.keystore_password_not_match")
+            );
+          }
+
+          if (!this.alias) {
+            this.aliasError = true;
+            Editor.error(Editor.T("KEYSTORE.error.keystore_alias_empty"));
+          }
+
+          if ((!this.aliasPassword || this.aliasPassword.length < 6)) {
+            this.aliasPasswordError = true;
+
+            Editor.error(
+              Editor.T("KEYSTORE.error.keystore_password_too_short")
+            );
+          }
+
+          if (!this.confirmAliasPassword) {
+            this.confirmAliasPasswordError = true;
+          }
+
+          if (this.aliasPassword !== this.confirmAliasPassword) {
+            this.aliasPasswordError = true;
+            this.confirmAliasPasswordError = true;
+            Editor.error(Editor.T("KEYSTORE.error.key_password_not_match"));
+          }
+
+          if (!this.validity) {
+            this.validityError = true;
+            Editor.error(Editor.T("KEYSTORE.error.key_validity_empty"));
+          }
+
+          if (!this.commonName) {
+            this.commonNameError = true;
+          }
+
+          if (!this.organizationalUnit) {
+            this.organizationalUnitError = true;
+          }
+
+          if (!this.organization) {
+            this.organizationError = true;
+          }
+
+          if (!this.locality) {
+            this.localityError = true;
+          }
+
+          if (!this.state) {
+            this.stateError = true;
+          }
+
+          if (!this.country) {
+            this.countryError = true;
+          }
+
+          if (!(
+            this.commonName ||
+            this.organizationalUnit ||
+            this.organization ||
+            this.locality ||
+            this.state ||
+            this.country
+          )) {
+            Editor.error(Editor.T("KEYSTORE.error.publish_empty"));
+            return;
+          }
           if (
             !(
               this.passwordError ||
@@ -198,8 +238,9 @@ Editor.Panel.extend({
               defaultPath: Editor.remote.Project.path,
               filters: [{ name: "Keystore", extensions: ["keystore"] }],
             });
-            o &&
-              -1 !== o &&
+
+            if (o &&
+              -1 !== o) {
               Editor.Ipc.sendToMain(
                 "app:save-keystore",
                 {
@@ -216,7 +257,10 @@ Editor.Panel.extend({
                   country: this.country,
                 },
                 (r) => {
-                  if (r) return Editor.error(r), void 0;
+                  if (r) {
+                    Editor.error(r);
+                    return;
+                  }
                   Editor.Ipc.sendToWins("keystore:created", {
                     path: o,
                     password: this.password,
@@ -225,6 +269,7 @@ Editor.Panel.extend({
                   });
                 }
               );
+            }
           }
         },
       },

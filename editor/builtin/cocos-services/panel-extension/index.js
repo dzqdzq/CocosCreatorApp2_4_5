@@ -1,5 +1,5 @@
-let e = require("fs"),
-  t = Editor.require("packages://cocos-services/panel/utils/ccServices.js");
+let e = require("fs");
+let t = Editor.require("packages://cocos-services/panel/utils/ccServices.js");
 Editor.Panel.extend({
   style: "",
   template: e.readFileSync(
@@ -8,8 +8,8 @@ Editor.Panel.extend({
   ),
   ready() {
     const e = document.createElement("style");
-    (e.innerHTML = "ui-dock-tabs#tabs {display: none;}"),
-      document.querySelector("ui-dock-panel").shadowRoot.appendChild(e);
+    e.innerHTML = "ui-dock-tabs#tabs {display: none;}";
+    document.querySelector("ui-dock-panel").shadowRoot.appendChild(e);
   },
   run(e) {
     this._vm = (function (e, n) {
@@ -26,13 +26,15 @@ Editor.Panel.extend({
         },
       });
     })(this, e);
+
     var n = t.readServicePackageInfo(e.service_component_name);
-    (document.title = n.panel.title),
-      Editor.Ipc.sendToMain(
-        "cocos-services:change-float-window-size",
-        n.panel.width,
-        n.panel.height
-      );
+    document.title = n.panel.title;
+
+    Editor.Ipc.sendToMain(
+      "cocos-services:change-float-window-size",
+      n.panel.width,
+      n.panel.height
+    );
   },
   messages: {
     "vue-test:hello"(e) {

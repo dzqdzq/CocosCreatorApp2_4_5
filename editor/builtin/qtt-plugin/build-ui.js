@@ -1,7 +1,8 @@
 "use strict";
-let t = Editor.Profile.load("project://qtt-runtime.json"),
-  e = t.getSelfData();
-(exports.template = `\n        <ui-prop name="${Editor.T(
+let t = Editor.Profile.load("project://qtt-runtime.json");
+let e = t.getSelfData();
+
+exports.template = `\n        <ui-prop name="${Editor.T(
   "qtt-runtime.pack_res_to_first_pack"
 )}">\n             <ui-checkbox v-value="runtimeSetting.packFirstScreenRes"></ui-checkbox>\n        </ui-prop>\n        <ui-prop name="${Editor.T(
   "qtt-runtime.screen_orientation"
@@ -43,34 +44,42 @@ let t = Editor.Profile.load("project://qtt-runtime.json"),
   "qtt-runtime.worker_path"
 )}" auto-height  v-show="false">\n            <ui-checkbox v-value="project.nativeRenderer"></ui-checkbox>\n            <ui-input\n                 class = "flex-1"\n                 v-value = "runtimeSetting.workerPath"\n                 placeholder = "${Editor.T(
   "qtt-runtime.worker_path_hint"
-)}"\n            ></ui-input>\n        </ui-prop>\n\n`),
-  (exports.name = "qtt-game"),
-  (exports.data = function () {
-    return { runtimeSetting: e, originEncryptJs: !1, profile: null };
-  }),
-  (exports.watch = {
+)}"\n            ></ui-input>\n        </ui-prop>\n\n`;
+
+exports.name = "qtt-game";
+
+exports.data = function () {
+    return { runtimeSetting: e, originEncryptJs: false, profile: null };
+  };
+
+exports.watch = {
     runtimeSetting: {
       handler(e) {
         Object.keys(this.runtimeSetting).forEach((e) => {
           t.set(e, this.runtimeSetting[e]);
-        }),
-          t.save();
+        });
+
+        t.save();
       },
-      deep: !0,
+      deep: true,
     },
-  }),
-  (exports.created = function () {
-    (this.originEncryptJs = this.project.encryptJs),
-      (this.includeSDKBox = this.project.includeSDKBox),
-      (this.project.encryptJs = !1),
-      (this.project.includeSDKBox = !1);
-  }),
-  (exports.directives = {}),
-  (exports.beforeDestroy = function () {
-    (this.project.encryptJs = this.originEncryptJs),
-      (this.project.includeSDKBox = this.includeSDKBox);
-  }),
-  (exports.methods = {
+  };
+
+exports.created = function () {
+  this.originEncryptJs = this.project.encryptJs;
+  this.includeSDKBox = this.project.includeSDKBox;
+  this.project.encryptJs = false;
+  this.project.includeSDKBox = false;
+};
+
+exports.directives = {};
+
+exports.beforeDestroy = function () {
+  this.project.encryptJs = this.originEncryptJs;
+  this.project.includeSDKBox = this.includeSDKBox;
+};
+
+exports.methods = {
     _getProjectPath: () =>
       Editor.Project && Editor.Project.path
         ? Editor.Project.path
@@ -84,7 +93,10 @@ let t = Editor.Profile.load("project://qtt-runtime.json"),
           { name: Editor.T("qtt-runtime.select_pic"), extensions: ["png"] },
         ],
       });
-      e && e[0] && (this.runtimeSetting.icon = e[0]);
+
+      if (e && e[0]) {
+        this.runtimeSetting.icon = e[0];
+      }
     },
     onCpkPath(t) {
       t.stopPropagation();
@@ -93,6 +105,9 @@ let t = Editor.Profile.load("project://qtt-runtime.json"),
         properties: ["openDirectory"],
         filters: [{ name: Editor.T("qtt-runtime.out_cpk_path_hint") }],
       });
-      e && e[0] && (this.runtimeSetting.outputCpkPath = e[0]);
+
+      if (e && e[0]) {
+        this.runtimeSetting.outputCpkPath = e[0];
+      }
     },
-  });
+  };

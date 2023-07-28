@@ -2,7 +2,7 @@
 const e = require("./create");
 module.exports = function (t, l, o, n) {
   return [
-    { label: Editor.T("HIERARCHY.create"), enabled: !t, submenu: e(!0, t) },
+    { label: Editor.T("HIERARCHY.create"), enabled: !t, submenu: e(true, t) },
     { type: "separator" },
     {
       label: Editor.T("HIERARCHY.copy"),
@@ -28,7 +28,10 @@ module.exports = function (t, l, o, n) {
       enabled: !t && l,
       click() {
         let e = Editor.Selection.contexts("node");
-        e.length > 0 && Editor.Ipc.sendToPanel("hierarchy", "duplicate", e);
+
+        if (e.length > 0) {
+          Editor.Ipc.sendToPanel("hierarchy", "duplicate", e);
+        }
       },
     },
     { type: "separator" },
@@ -37,7 +40,10 @@ module.exports = function (t, l, o, n) {
       enabled: !t && l,
       click() {
         let e = Editor.Selection.contexts("node");
-        e.length > 0 && Editor.Ipc.sendToPanel("hierarchy", "rename", e[0]);
+
+        if (e.length > 0) {
+          Editor.Ipc.sendToPanel("hierarchy", "rename", e[0]);
+        }
       },
     },
     {
@@ -45,7 +51,10 @@ module.exports = function (t, l, o, n) {
       enabled: !t && l && !n,
       click() {
         let e = Editor.Selection.contexts("node");
-        e.length > 0 && Editor.Ipc.sendToPanel("hierarchy", "delete", e);
+
+        if (e.length > 0) {
+          Editor.Ipc.sendToPanel("hierarchy", "delete", e);
+        }
       },
     },
     { type: "separator" },
@@ -54,7 +63,10 @@ module.exports = function (t, l, o, n) {
       enabled: l,
       click() {
         let e = Editor.Selection.contexts("node");
-        e.length > 0 && Editor.Ipc.sendToPanel("hierarchy", "show-path", e[0]);
+
+        if (e.length > 0) {
+          Editor.Ipc.sendToPanel("hierarchy", "show-path", e[0]);
+        }
       },
     },
   ];

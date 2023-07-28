@@ -21,30 +21,31 @@ Vue.component("cc-null-prop", {
   watch: { "target.attrs.type": "_updateAction" },
   props: {
     indent: { type: Number, default: 0 },
-    target: { twoWay: !0, type: Object },
+    target: { twoWay: true, type: Object },
   },
   methods: {
     _updateAction() {
       let t = this.target.attrs.type;
-      this.action =
-        "String" === t ||
-        "Enum" === t ||
-        "Boolean" === t ||
-        "Float" === t ||
-        "Integer" === t
-          ? "Reset"
-          : "Create";
+      this.action = "String" === t ||
+      "Enum" === t ||
+      "Boolean" === t ||
+      "Float" === t ||
+      "Integer" === t
+        ? "Reset"
+        : "Create";
     },
     _applyAction() {
-      "Create" === this.action
-        ? Editor.UI.fire(this.$el, "new-prop", {
-            bubbles: !0,
-            detail: { path: this.target.path, type: this.target.attrs.type },
-          })
-        : Editor.UI.fire(this.$el, "reset-prop", {
-            bubbles: !0,
-            detail: { path: this.target.path, type: this.target.attrs.type },
-          });
+      if ("Create" === this.action) {
+        Editor.UI.fire(this.$el, "new-prop", {
+              bubbles: true,
+              detail: { path: this.target.path, type: this.target.attrs.type },
+            });
+      } else {
+        Editor.UI.fire(this.$el, "reset-prop", {
+              bubbles: true,
+              detail: { path: this.target.path, type: this.target.attrs.type },
+            });
+      }
     },
   },
   compiled() {

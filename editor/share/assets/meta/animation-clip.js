@@ -1,7 +1,8 @@
 "use strict";
-const e = require("./custom-asset"),
-  t = require("fire-fs"),
-  r = require("fire-path");
+const e = require("./custom-asset");
+const t = require("fire-fs");
+const r = require("fire-path");
+
 module.exports = class extends e {
   static defaultType() {
     return "animation-clip";
@@ -10,7 +11,8 @@ module.exports = class extends e {
     return "2.1.0";
   }
   deserialize(e) {
-    super.deserialize(e), (this._oldVer = e.ver);
+    super.deserialize(e);
+    this._oldVer = e.ver;
   }
   import(e, i) {
     t.readFile(e, "utf8", (s, a) => {
@@ -19,13 +21,22 @@ module.exports = class extends e {
         try {
           o = JSON.parse(a);
         } catch (e) {
-          return i && i(e), void 0;
+          if (i) {
+            i(e);
+          }
+
+          return;
         }
         function n(e) {
-          if (!e || !e.rotation) return;
+          if (!e || !e.rotation) {
+            return;
+          }
           let t = e.rotation;
-          for (let e = 0; e < t.length; e++) t[e].value *= -1;
-          (e.angle = e.rotation), delete e.rotation;
+          for (let e = 0; e < t.length; e++) {
+            t[e].value *= -1;
+          }
+          e.angle = e.rotation;
+          delete e.rotation;
         }
         if ("1.0.0" === this._oldVer) {
           let r = o.curveData;
@@ -35,10 +46,13 @@ module.exports = class extends e {
             t.writeFileSync(e, JSON.stringify(o, null, 2));
           }
         }
-        Editor.serialize.setName(o, r.basenameNoExt(e)),
-          this._assetdb.saveAssetToLibrary(this.uuid, o);
+        Editor.serialize.setName(o, r.basenameNoExt(e));
+        this._assetdb.saveAssetToLibrary(this.uuid, o);
       }
-      i && i(s);
+
+      if (i) {
+        i(s);
+      }
     });
   }
 };

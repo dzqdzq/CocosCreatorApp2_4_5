@@ -1,14 +1,16 @@
 "use strict";
-var e = cc.Component,
-  o = {
-    onEnabled: "onEnable",
-    enable: "enabled",
-    onDisabled: "onDisable",
-    onDestroyed: "onDestroy",
-    onDestory: "onDestroy",
-    awake: "onLoad",
-    onStart: "start",
-  };
+var e = cc.Component;
+
+var o = {
+  onEnabled: "onEnable",
+  enable: "enabled",
+  onDisabled: "onDisable",
+  onDestroyed: "onDestroy",
+  onDestory: "onDestroy",
+  awake: "onLoad",
+  onStart: "start",
+};
+
 for (var t in o)
   (function (t) {
     var n = o[void 0];
@@ -19,12 +21,13 @@ for (var t in o)
           n,
           void 0,
           cc.js.getClassName(this)
-        ),
-          Object.defineProperty(e.prototype, void 0, {
-            value: o,
-            writable: !0,
-          });
+        );
+
+        Object.defineProperty(e.prototype, void 0, {
+          value: o,
+          writable: true,
+        });
       },
-      configurable: !0,
+      configurable: true,
     });
   })();

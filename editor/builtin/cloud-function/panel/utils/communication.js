@@ -10,7 +10,7 @@ exports.popup = function (p, o) {
     o.x,
     o.y,
     o.assetType,
-    o.allowAssign || !1,
+    o.allowAssign || false,
     o.id,
     o.copyEnable
   );

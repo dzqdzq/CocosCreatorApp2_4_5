@@ -1,18 +1,20 @@
-const e = require("fire-fs"),
-  t = require("fire-path"),
-  i = Editor.require("app://editor/share/build-platforms");
+const e = require("fire-fs");
+const t = require("fire-path");
+const i = Editor.require("app://editor/share/build-platforms");
+
 module.exports = {
   combineDestJson({ dest: i }, o, a) {
     try {
-      let s = t.join(i, a),
-        r = e.readJsonSync(s);
-      Object.assign(r, o), Object.assign(o, r);
+      let s = t.join(i, a);
+      let r = e.readJsonSync(s);
+      Object.assign(r, o);
+      Object.assign(o, r);
     } catch (e) {}
   },
   combineBuildTemplateJson({ actualPlatform: i }, o, a) {
     try {
-      let s = t.join(Editor.Project.path, "build-templates", i, a),
-        r = e.readJsonSync(s);
+      let s = t.join(Editor.Project.path, "build-templates", i, a);
+      let r = e.readJsonSync(s);
       Object.assign(o, r);
     } catch (e) {}
   },
@@ -23,33 +25,43 @@ module.exports = {
     e
   ),
   getOptions(e, t) {
-    e ||
-      (e = Editor.isMainProcess
-        ? Editor.Profile.load("project://builder.json")
-        : Editor.remote.Profile.load("project://builder.json")),
-      t ||
-        (t = Editor.isMainProcess
+    if (!e) {
+      e = Editor.isMainProcess
+          ? Editor.Profile.load("project://builder.json")
+          : Editor.remote.Profile.load("project://builder.json");
+    }
+
+    if (!t) {
+      t = Editor.isMainProcess
           ? Editor.Profile.load("local://builder.json")
-          : Editor.remote.Profile.load("local://builder.json"));
+          : Editor.remote.Profile.load("local://builder.json");
+    }
+
     let i = Object.assign({}, e.getSelfData(), t.getSelfData());
-    return this.updateOptions(i), i;
+    this.updateOptions(i);
+    return i;
   },
   getCommonOptions: function (e) {
-    e || (e = this.getOptions());
+    if (!e) {
+      e = this.getOptions();
+    }
+
     let t = Object.assign({}, e);
-    return (
-      delete t.keystorePath,
-      delete t.keystorePassword,
-      delete t.keystoreAlias,
-      delete t.keystoreAliasPassword,
-      t
-    );
+    delete t.keystorePath;
+    delete t.keystorePassword;
+    delete t.keystoreAlias;
+    delete t.keystoreAliasPassword;
+    return t;
   },
   updateOptions(e) {
-    let o = (e.buildPath = this.getAbsoluteBuildPath(e.buildPath)),
-      a = t.join(o, this._getOutputDir(e.actualPlatform) || e.actualPlatform);
-    i[e.platform].useTemplate && (a = t.join(o, "jsb-" + e.template)),
-      (e.dest = a);
+    let o = (e.buildPath = this.getAbsoluteBuildPath(e.buildPath));
+    let a = t.join(o, this._getOutputDir(e.actualPlatform) || e.actualPlatform);
+
+    if (i[e.platform].useTemplate) {
+      a = t.join(o, "jsb-" + e.template);
+    }
+
+    e.dest = a;
   },
   _getOutputDir(e) {
     let t = (

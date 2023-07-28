@@ -1,1 +1,1 @@
-"use strict";const{EventEmitter:e}=require("events");module.exports=new e;
+"use strict";const{EventEmitter:e}=require("events");module.exports = new e;

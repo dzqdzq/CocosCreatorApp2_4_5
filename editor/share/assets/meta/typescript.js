@@ -1,8 +1,9 @@
 "use strict";
-var e = require("fire-fs"),
-  t = require("convert-source-map"),
-  r = require("typescript"),
-  o = require("path");
+var e = require("fire-fs");
+var t = require("convert-source-map");
+var r = require("typescript");
+var o = require("path");
+
 module.exports = class extends require("./javascript") {
   static defaultType() {
     return "typescript";
@@ -11,30 +12,35 @@ module.exports = class extends require("./javascript") {
     return !e.endsWith(".d.ts");
   }
   compile(i, s) {
-    var c,
-      a = "";
+    var c;
+    var a = "";
     try {
       a = e.readFileSync(i, { encoding: "utf8" });
-      let t,
-        n = o.join(Editor.Project.path, "tsconfig.json"),
-        p = {
-          target: "ES5",
-          sourceMap: !0,
-          allowJS: !0,
-          experimentalDecorators: !0,
-          allowSyntheticDefaultImports: !0,
-          pretty: !0,
-          noEmitHelpers: !0,
-          noImplicitUseStrict: !0,
-          module: r.ModuleKind.CommonJS,
-        };
+      let t;
+      let n = o.join(Editor.Project.path, "tsconfig.json");
+
+      let p = {
+        target: "ES5",
+        sourceMap: true,
+        allowJS: true,
+        experimentalDecorators: true,
+        allowSyntheticDefaultImports: true,
+        pretty: true,
+        noEmitHelpers: true,
+        noImplicitUseStrict: true,
+        module: r.ModuleKind.CommonJS,
+      };
+
       try {
-        let o = e.readFileSync(n, "utf8"),
-          i = r.parseConfigFileTextToJson(n, o);
-        i.error
-          ? (Editor.error("Error in tsconfig.json: " + i.error.messageText),
-            (t = p))
-          : ((t = i.config.compilerOptions).sourceMap = !0);
+        let o = e.readFileSync(n, "utf8");
+        let i = r.parseConfigFileTextToJson(n, o);
+
+        if (i.error) {
+          Editor.error("Error in tsconfig.json: " + i.error.messageText);
+          t = p;
+        } else {
+          (t = i.config.compilerOptions).sourceMap = true;
+        }
       } catch (e) {
         t = p;
       }
@@ -43,10 +49,10 @@ module.exports = class extends require("./javascript") {
       return s(e);
     }
     let n = JSON.parse(c.sourceMapText);
-    (n.sourcesContent = [a]),
-      (n.file = ""),
-      (c.sourceMapObject = n),
-      (c.outputText = t.removeMapFileComments(c.outputText)),
-      s(null, c);
+    n.sourcesContent = [a];
+    n.file = "";
+    c.sourceMapObject = n;
+    c.outputText = t.removeMapFileComments(c.outputText);
+    s(null, c);
   }
 };

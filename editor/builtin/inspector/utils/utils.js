@@ -7,107 +7,199 @@ const e = {
   "cc.ShapeModule": "cc-shape-module",
 };
 function t(a, r, n, l, i) {
-  let s = n.value,
-    o = n.type;
-  (n.name = l.displayName ? l.displayName : Editor.UI.toHumanText(r)),
-    (n.path = a),
-    (n.attrs = Object.assign({}, l)),
-    o
-      ? "visible" in n && (n.attrs.visible = n.visible)
-      : (n.attrs.visible = !1);
-  let c = i[o],
-    u = !1,
-    d = !1,
-    p = Editor.UI.getProperty(o);
-  c &&
-    c.extends &&
-    ((u = "cc.Asset" === o || -1 !== c.extends.indexOf("cc.Asset")),
-    (d = -1 !== c.extends.indexOf("cc.Object"))),
-    !Array.isArray(n.value) || ("default" in l && !Array.isArray(l.default))
-      ? u
-        ? ((n.type = "cc.Asset"), (n.attrs.assetType = l.type))
-        : d
-        ? ((n.type = "cc.Node"),
-          (n.attrs.typeid = l.type),
-          c && (n.attrs.typename = c.name))
-        : p || ((n.type = "Object"), c && (n.attrs.typename = c.name))
-      : ((n.type = "Array"),
-        (n.elementType = o),
-        u
-          ? ((n.elementType = "cc.Asset"), (n.attrs.assetType = l.type))
-          : d
-          ? ((n.elementType = "cc.Node"),
-            (n.attrs.typeid = l.type),
-            c && (n.attrs.typename = c.name))
-          : p || (n.elementType = "Object")),
-    (n.compType = "cc-prop");
-  let _ = !1;
-  "Object" !== n.type || (null !== n.value && void 0 !== n.value) || (_ = !0);
-  let m = !1;
-  if (
-    (!1 === _ &&
-      n.attrs.type &&
-      o !== n.attrs.type &&
-      (c && c.extends
-        ? -1 === c.extends.indexOf(n.attrs.type) && (m = !0)
-        : (m = !0)),
-    _)
-  )
-    (c = i[n.attrs.type]),
-      (n.attrs.typename = c ? c.name : n.attrs.type),
-      (n.compType = "cc-null-prop");
-  else if (m) n.compType = "cc-type-error-prop";
-  else if ("Array" === n.type) {
-    n.compType = "cc-array-prop";
-    for (let e = 0; e < s.length; ++e) {
-      t(`${a}.${e}`, `[${e}]`, s[e], l, i);
+  let s = n.value;
+  let o = n.type;
+  n.name = l.displayName ? l.displayName : Editor.UI.toHumanText(r);
+  n.path = a;
+  n.attrs = Object.assign({}, l);
+
+  if (o) {
+    if ("visible" in n) {
+      n.attrs.visible = n.visible;
     }
-  } else if ("Object" === n.type) {
-    let r = e[o];
-    n.compType = r || "cc-object-prop";
-    let l = i[o];
-    for (let e in n.value) {
-      let r = n.value[e],
-        s = l.properties[e];
-      r && s ? t(`${a}.${e}`, e, r, s, i) : delete n.value[e];
+  } else {
+    n.attrs.visible = false;
+  }
+
+  let c = i[o];
+  let u = false;
+  let d = false;
+  let p = Editor.UI.getProperty(o);
+
+  if (c &&
+    c.extends) {
+    u = "cc.Asset" === o || -1 !== c.extends.indexOf("cc.Asset");
+    d = -1 !== c.extends.indexOf("cc.Object");
+  }
+
+  if (!Array.isArray(n.value) || ("default" in l && !Array.isArray(l.default))) {
+    if (u) {
+      n.type = "cc.Asset";
+      n.attrs.assetType = l.type;
+    } else {
+      if (d) {
+        n.type = "cc.Node";
+        n.attrs.typeid = l.type;
+
+        if (c) {
+          n.attrs.typename = c.name;
+        }
+      } else {
+        if (!p) {
+          n.type = "Object";
+
+          if (c) {
+            n.attrs.typename = c.name;
+          }
+        }
+      }
+    }
+  } else {
+    n.type = "Array";
+    n.elementType = o;
+
+    if (u) {
+      n.elementType = "cc.Asset";
+      n.attrs.assetType = l.type;
+    } else {
+      if (d) {
+        n.elementType = "cc.Node";
+        n.attrs.typeid = l.type;
+
+        if (c) {
+          n.attrs.typename = c.name;
+        }
+      } else {
+        if (!p) {
+          n.elementType = "Object";
+        }
+      }
+    }
+  }
+
+  n.compType = "cc-prop";
+  let _ = false;
+
+  if (!("Object" !== n.type || (null !== n.value && void 0 !== n.value))) {
+    _ = true;
+  }
+
+  let m = false;
+
+  if (false === _ &&
+      n.attrs.type &&
+      o !== n.attrs.type) {
+    if (c && c.extends) {
+      if (-1 === c.extends.indexOf(n.attrs.type)) {
+        m = true;
+      }
+    } else {
+      m = true;
+    }
+  }
+
+  if (_) {
+    c = i[n.attrs.type];
+    n.attrs.typename = c ? c.name : n.attrs.type;
+    n.compType = "cc-null-prop";
+  } else {
+    if (m) {
+      n.compType = "cc-type-error-prop";
+    } else {
+      if ("Array" === n.type) {
+        n.compType = "cc-array-prop";
+        for (let e = 0; e < s.length; ++e) {
+          t(`${a}.${e}`, `[${e}]`, s[e], l, i);
+        }
+      } else {
+        if ("Object" === n.type) {
+          let r = e[o];
+          n.compType = r || "cc-object-prop";
+          let l = i[o];
+          for (let e in n.value) {
+            let r = n.value[e];
+            let s = l.properties[e];
+
+            if (r && s) {
+              t(`${a}.${e}`, e, r, s, i);
+            } else {
+              delete n.value[e];
+            }
+          }
+        }
+      }
     }
   }
 }
 function a(e, a, r) {
   let n = a.type;
-  if (!n) return Editor.warn("Type can not be null"), void 0;
+  if (!n) {
+    Editor.warn("Type can not be null");
+    return;
+  }
   let l = r[n];
-  l &&
-    (l.editor && (a.__editor__ = l.editor),
-    (a.__displayName__ = l.name ? l.name : n));
+
+  if (l) {
+    if (l.editor) {
+      a.__editor__ = l.editor;
+    }
+
+    a.__displayName__ = l.name ? l.name : n;
+  }
+
   for (let n in a.value) {
-    let i = a.value[n],
-      s = l.properties[n];
-    i && s ? t(`${e}.${n}`, n, i, s, r) : delete a.value[n];
+    let i = a.value[n];
+    let s = l.properties[n];
+
+    if (i && s) {
+      t(`${e}.${n}`, n, i, s, r);
+    } else {
+      delete a.value[n];
+    }
   }
 }
 let r = /^target\.__comps__\.(\d+)/;
-const n = require("fire-url"),
-  { promisify: l } = require("util");
+const n = require("fire-url");
+const { promisify: l } = require("util");
+
 module.exports = {
   buildNode: function (e, t, r) {
     let n = t.__type__;
-    if (!n) return Editor.warn("Type can not be null"), void 0;
+    if (!n) {
+      Editor.warn("Type can not be null");
+      return;
+    }
     let l = r[n];
-    l &&
-      (l.editor && (t.__editor__ = l.editor),
-      l.name && (t.__displayName__ = l.name));
+
+    if (l) {
+      if (l.editor) {
+        t.__editor__ = l.editor;
+      }
+
+      if (l.name) {
+        t.__displayName__ = l.name;
+      }
+    }
+
     for (let n in t) {
-      if ("__type__" === n || "__displayName__" === n || "uuid" === n) continue;
+      if ("__type__" === n || "__displayName__" === n || "uuid" === n) {
+        continue;
+      }
       if ("__comps__" === n) {
         let l = t[n];
-        for (let t = 0; t < l.length; ++t) a(`${e}.__comps__.${t}`, l[t], r);
+        for (let t = 0; t < l.length; ++t) {
+          a(`${e}.__comps__.${t}`, l[t], r);
+        }
         continue;
       }
       let i = t[n];
-      (i.path = `${e}.${n}`), (i.readonly = !1);
+      i.path = `${e}.${n}`;
+      i.readonly = false;
       let s = l.properties[n];
-      s && (t[n].readonly = !!s.readonly);
+
+      if (s) {
+        t[n].readonly = !!s.readonly;
+      }
     }
   },
   compPath: function (e) {
@@ -141,8 +233,10 @@ module.exports = {
       c < s.length;
       c++
     ) {
-      if (null == o)
-        return cc.warn('Failed to parse "%s", %s is nil', t, s[c]), null;
+      if (null == o) {
+        cc.warn('Failed to parse "%s", %s is nil', t, s[c]);
+        return null;
+      }
       o = n = o[s[c]];
     }
     Editor.Ipc.sendToPanel("scene", "scene:set-property", {
@@ -154,24 +248,28 @@ module.exports = {
   },
   checkDuplicateNameForBuiltinBundle: async function (e) {
     try {
-      if ("folder" !== e.__assetType__ || !e.isBundle) return !1;
-      let t,
-        a = Object.values(cc.AssetManager.BuiltinBundleName),
-        r = {},
-        i = await l(Editor.remote.assetdb.queryMetas)("db://**", "folder"),
-        s = e.multiValues.uuid;
+      if ("folder" !== e.__assetType__ || !e.isBundle) {
+        return false;
+      }
+      let t;
+      let a = Object.values(cc.AssetManager.BuiltinBundleName);
+      let r = {};
+      let i = await l(Editor.remote.assetdb.queryMetas)("db://**", "folder");
+      let s = e.multiValues.uuid;
+
       i.forEach((e) => {
         if (e.isBundle && !s.includes(e.uuid)) {
-          let t = Editor.assetdb.remote.uuidToUrl(e.uuid),
-            a = e.bundleName || n.basename(t);
+          let t = Editor.assetdb.remote.uuidToUrl(e.uuid);
+          let a = e.bundleName || n.basename(t);
           r[a] = t;
         }
-      }),
-        e.metas.bundleName;
+      });
+
+      e.metas.bundleName;
       for (let l = 0; l < e.metas.length; ++l) {
-        let i = e.metas[l],
-          s = Editor.assetdb.remote.uuidToUrl(i.uuid),
-          o = i.bundleName || n.basename(s);
+        let i = e.metas[l];
+        let s = Editor.assetdb.remote.uuidToUrl(i.uuid);
+        let o = i.bundleName || n.basename(s);
         if (a.includes(o)) {
           t = Editor.T(
             "MESSAGE.asset_bundle.duplicate_reserved_keyword_message",
@@ -202,23 +300,25 @@ module.exports = {
             break;
           }
         }
-        if (t) break;
+        if (t) {
+          break;
+        }
       }
-      if (t)
-        return (
-          Editor.Dialog.messageBox({
-            type: "warning",
-            title: " ",
-            buttons: [Editor.T("MESSAGE.sure")],
-            message: t,
-            noLink: !0,
-            defaultId: 0,
-          }),
-          !0
-        );
+      if (t) {
+        Editor.Dialog.messageBox({
+          type: "warning",
+          title: " ",
+          buttons: [Editor.T("MESSAGE.sure")],
+          message: t,
+          noLink: true,
+          defaultId: 0,
+        });
+
+        return true;
+      }
     } catch (e) {
       console.log(e);
     }
-    return !1;
+    return false;
   },
 };

@@ -9,10 +9,16 @@ Editor.Panel.extend({
       this.resize();
     },
     "panel-hide"() {
-      this._enable(!1);
+      this._enable(false);
     },
     "panel-show"() {
-      this._inited ? this._enable(!0) : this._init(), this.resize();
+      if (this._inited) {
+        this._enable(true);
+      } else {
+        this._init();
+      }
+
+      this.resize();
     },
   },
   messages: {
@@ -20,7 +26,8 @@ Editor.Panel.extend({
       this._init();
     },
     "scene:panel-unload"() {
-      (this._inited = !1), clearInterval(this._intervalID);
+      this._inited = false;
+      clearInterval(this._intervalID);
     },
   },
   ready() {
@@ -28,37 +35,54 @@ Editor.Panel.extend({
       "scene",
       "scene:is-ready",
       (e, i) => {
-        i && this._init();
+        if (i) {
+          this._init();
+        }
       },
       -1
     );
   },
   _init() {
-    "none" !== this.style.display &&
-      (this._inited ||
-        ((this._inited = !0),
-        (this._isInMainWindow = !!cc.engine),
-        (this._renderElement = null),
+    if ("none" !== this.style.display) {
+      if (!this._inited) {
+        this._inited = true;
+        this._isInMainWindow = !!cc.engine;
+        this._renderElement = null;
+
         Editor.Scene.callSceneScript("game-window", "initPreviewCamera", () => {
-          this._isInMainWindow ? this._initMainWindow() : this._initPopup();
-        })));
+          if (this._isInMainWindow) {
+            this._initMainWindow();
+          } else {
+            this._initPopup();
+          }
+        });
+      }
+    }
   },
   _initMainWindow() {
     Editor.require("packages://game-window/scene-script").setCanvas(
       this.$canvas
-    ),
-      (this._renderElement = this.$canvas),
-      (this.$image.style.display = "none"),
-      this.resize();
+    );
+
+    this._renderElement = this.$canvas;
+    this.$image.style.display = "none";
+    this.resize();
   },
   _initPopup() {
-    (this._renderElement = this.$image), (this.$canvas.style.display = "none");
-    let e = !0;
+    this._renderElement = this.$image;
+    this.$canvas.style.display = "none";
+    let e = true;
+
     this._intervalID = setInterval(() => {
       Editor.Scene.callSceneScript("game-window", "getBase64Data", (i, t) => {
-        t &&
-          ((this.$image.src = t),
-          0 !== this.$image.width && e && (this.resize(), (e = !1)));
+        if (t) {
+          this.$image.src = t;
+
+          if (0 !== this.$image.width && e) {
+            this.resize();
+            e = false;
+          }
+        }
       });
     }, 30);
   },
@@ -67,14 +91,18 @@ Editor.Panel.extend({
   },
   resize() {
     let e = this._renderElement;
-    e &&
-      (e.width / e.height >
-      this.$container.clientWidth / this.$container.clientHeight
-        ? ((e.style.height = ""),
-          (e.style.width = "100%"),
-          (this.$container.className = "layout horizontal center"))
-        : ((e.style.height = "100%"),
-          (e.style.width = ""),
-          (this.$container.className = "layout vertical center")));
+
+    if (e) {
+      if (e.width / e.height >
+        this.$container.clientWidth / this.$container.clientHeight) {
+        e.style.height = "";
+        e.style.width = "100%";
+        this.$container.className = "layout horizontal center";
+      } else {
+        e.style.height = "100%";
+        e.style.width = "";
+        this.$container.className = "layout vertical center";
+      }
+    }
   },
 });

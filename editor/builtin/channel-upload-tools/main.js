@@ -1,5 +1,6 @@
-let o = require("fire-fs"),
-  r = require("fire-path");
+let o = require("fire-fs");
+let r = require("fire-path");
+
 module.exports = {
   platforms: {},
   load() {

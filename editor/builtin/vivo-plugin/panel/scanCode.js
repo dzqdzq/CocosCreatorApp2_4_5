@@ -10,7 +10,9 @@ Editor.Panel.extend({
   $: { qrCode: "#qrCode" },
   messages: {},
   run(n) {
-    (e.options = n), e.setOptions(n), (this.ops = n);
+    e.options = n;
+    e.setOptions(n);
+    this.ops = n;
   },
   ready() {
     window.abc = this._vm = new window.Vue({
@@ -21,15 +23,19 @@ Editor.Panel.extend({
     });
     let n = this;
     process.nextTick(() => {
-      if (!e.options) return Editor.Panel.close("vivo-runtime.qrcode"), void 0;
+      if (!e.options) {
+        Editor.Panel.close("vivo-runtime.qrcode");
+        return;
+      }
       n._vm.$root._data.msg = Editor.T("vivo-runtime.qr_code_generating");
       e.npmRunServer(
         function (e) {
-          (n._vm.$root._data.msg = Editor.T("vivo-runtime.debug_scan_qr_code")),
-            new (require(Editor.url("packages://vivo-runtime/lib/qrcode")))(
-              n.$qrCode,
-              { text: e, width: 200, height: 200 }
-            );
+          n._vm.$root._data.msg = Editor.T("vivo-runtime.debug_scan_qr_code");
+
+          new (require(Editor.url("packages://vivo-runtime/lib/qrcode")))(
+            n.$qrCode,
+            { text: e, width: 200, height: 200 }
+          );
         },
         function (e, n) {
           Editor.error("npm run server errror:", e);

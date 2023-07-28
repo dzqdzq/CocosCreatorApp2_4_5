@@ -10,7 +10,9 @@ module.exports = class extends Editor.metas.asset {
     return "skeleton";
   }
   import(e, t) {
-    if (this._assetdb.isSubAssetByPath(e)) return t();
+    if (this._assetdb.isSubAssetByPath(e)) {
+      return t();
+    }
     t();
   }
   async importGltf(e, t, s) {
@@ -23,9 +25,9 @@ module.exports = class extends Editor.metas.asset {
     ))();
     o._uuid = t;
     let r = new n();
-    (r._model = o),
-      (r._jointIndices = i),
-      (r._skinIndex = s),
-      this._assetdb.saveAssetToLibrary(this.uuid, r);
+    r._model = o;
+    r._jointIndices = i;
+    r._skinIndex = s;
+    this._assetdb.saveAssetToLibrary(this.uuid, r);
   }
 };

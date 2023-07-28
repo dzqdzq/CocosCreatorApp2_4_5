@@ -33,11 +33,11 @@ Vue.component("cc-meta-header", {
   props: { icon: String, target: Object },
   methods: {
     revert() {
-      Editor.UI.fire(this.$el, "meta-revert", { bubbles: !0 });
+      Editor.UI.fire(this.$el, "meta-revert", { bubbles: true });
     },
     apply() {
       Editor.UI.fire(this.$el, "meta-apply", {
-        bubbles: !0,
+        bubbles: true,
         detail: { target: this.target },
       });
     },

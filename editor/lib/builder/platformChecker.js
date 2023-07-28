@@ -10,8 +10,10 @@ let a = {
     huaweigame: "huawei",
     jkw: "jkw-game",
     jkwgame: "jkw-game",
-  },
-  e = { cocosplay: "jkw-game" };
+  };
+
+let e = { cocosplay: "jkw-game" };
+
 module.exports = {
   check(e) {
     if (e in a) {

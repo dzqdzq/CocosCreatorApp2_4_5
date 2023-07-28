@@ -3,7 +3,7 @@
   Editor.Panel.extend({
     dependencies: ["packages://inspector/share/meta-header.js"],
     data: {
-      tabs: { model: { active: !0 }, animation: { active: !1 } },
+      tabs: { model: { active: true }, animation: { active: false } },
       currentTab: null,
     },
     template:
@@ -13,9 +13,12 @@
     },
     methods: {
       changeSection(t) {
-        this.currentTab && (this.currentTab.active = !1),
-          (this.currentTab = t),
-          (this.currentTab.active = !0);
+        if (this.currentTab) {
+          this.currentTab.active = false;
+        }
+
+        this.currentTab = t;
+        this.currentTab.active = true;
       },
       activeTab: (t) => (t.active ? "active" : ""),
       isActive(t) {

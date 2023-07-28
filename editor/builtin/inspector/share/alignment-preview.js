@@ -41,24 +41,24 @@ Vue.component("cc-alignment-preview", {
     cssHCLine: { top: "0", left: "50%", zIndex: "1" },
     cssVCLine: { top: "50%", left: "0", zIndex: "1" },
   }),
-  props: { target: { twoWay: !0, type: Object } },
+  props: { target: { twoWay: true, type: Object } },
   methods: {
     T: Editor.T,
     _alignStyle() {
-      let n = this.target.isAlignTop.value,
-        i = this.target.isAlignLeft.value,
-        t = this.target.isAlignRight.value,
-        o = this.target.isAlignBottom.value;
-      const e = 12,
-        s = 84 - e - 42,
-        r = 21;
+      let n = this.target.isAlignTop.value;
+      let i = this.target.isAlignLeft.value;
+      let t = this.target.isAlignRight.value;
+      let o = this.target.isAlignBottom.value;
+      const e = 12;
+      const s = 84 - e - 42;
+      const r = 21;
       function a(n, i) {
         return n ? e : i ? s : r;
       }
-      let d = a(n, o),
-        l = a(o, n),
-        p = a(i, t),
-        v = a(t, i);
+      let d = a(n, o);
+      let l = a(o, n);
+      let p = a(i, t);
+      let v = a(t, i);
       return {
         width: `${84 - p - v}px`,
         height: `${84 - d - l}px`,

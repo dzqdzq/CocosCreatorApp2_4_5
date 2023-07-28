@@ -1,8 +1,8 @@
 "use strict";
-const e = Editor.Profile.load("global://features.json").get("cloud-function"),
-  t = require("fire-fs"),
-  a = Editor.require("packages://node-library/panel/component/home"),
-  o = Editor.require("packages://node-library/panel/utils/data");
+const e = Editor.Profile.load("global://features.json").get("cloud-function");
+const t = require("fire-fs");
+const a = Editor.require("packages://node-library/panel/component/home");
+const o = Editor.require("packages://node-library/panel/utils/data");
 let r = {
   style: t.readFileSync(
     Editor.url("packages://node-library/panel/style/home.css"),
@@ -16,11 +16,13 @@ let r = {
         Editor.warn("The console settings are problematic");
       },
     };
+
     o.set({
       global: this.profiles.global || e,
       local: this.profiles.local || e,
-    }),
-      (this._vm = new Vue({
+    });
+
+    this._vm = new Vue({
         el: this.shadowRoot,
         data: a.data(a),
         components: a.components,
@@ -28,14 +30,17 @@ let r = {
         methods: a.methods,
         created: a.created,
         destroyed: a.destroyed,
-      }));
+      });
   },
   messages: {
     "store:cloud-component-installation-completed"() {
-      e && this._vm.changeTab(1);
+      if (e) {
+        this._vm.changeTab(1);
+      }
     },
     "node-library:delete-prefab"(e, t) {
-      o.deleteUserPrefab(t.id), o.deleteIcon(t.id);
+      o.deleteUserPrefab(t.id);
+      o.deleteIcon(t.id);
     },
     "node-library:rename-prefab"(e, t) {
       o.event.emit("start-rename", t.id);

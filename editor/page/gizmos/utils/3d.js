@@ -1,9 +1,11 @@
 "use strict";
-const e = require("./utils-interface"),
-  t = require("../../operation");
+const e = require("./utils-interface");
+const t = require("../../operation");
+
 module.exports = new (class extends e {
   constructor() {
-    super(), (this.baseDist = 600);
+    super();
+    this.baseDist = 600;
   }
   requestPointerLock() {
     t.requestPointerLock();
@@ -13,7 +15,8 @@ module.exports = new (class extends e {
   }
   broadcastMessage(e, t) {
     let r = t;
-    Manager.Node.emit("changed", r), Manager.Ipc.send("broadcast", e, r.uuid);
+    Manager.Node.emit("changed", r);
+    Manager.Ipc.send("broadcast", e, r.uuid);
   }
   getGizmoRoot() {
     return Manager.foregroundNode.getChildByName("gizmoRoot");

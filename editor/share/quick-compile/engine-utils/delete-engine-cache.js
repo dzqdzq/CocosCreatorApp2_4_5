@@ -1,27 +1,39 @@
-const e = require("del"),
-  r = require("globby");
+const e = require("del");
+const r = require("globby");
 let n = "undefined" != typeof Editor;
+
 module.exports = function (o) {
-  let i = !1;
+  let i = false;
   return {
     transform() {
-      i = !0;
+      i = true;
     },
     async compileFinished(t) {
       if (i) {
         let t = [o("bin/.cache/*"), "!" + o("bin/.cache/dev")];
-        if (0 == r.sync(t).length) return;
-        n
-          ? Editor.log(Editor.T("QUICK_COMPILER.engine_modified_info"))
-          : console.log(
-              "JavaScript Engine changes detected and the build cache was deleted."
-            );
-        try {
-          (t = t.map((e) => e.replace(/\\/g, "/"))), e.sync(t, { force: !0 });
-        } catch (e) {
-          n ? Editor.error(e) : console.error(e);
+        if (0 == r.sync(t).length) {
+          return;
         }
-        i = !1;
+
+        if (n) {
+          Editor.log(Editor.T("QUICK_COMPILER.engine_modified_info"));
+        } else {
+          console.log(
+                "JavaScript Engine changes detected and the build cache was deleted."
+              );
+        }
+
+        try {
+          t = t.map((e) => e.replace(/\\/g, "/"));
+          e.sync(t, { force: true });
+        } catch (e) {
+          if (n) {
+            Editor.error(e);
+          } else {
+            console.error(e);
+          }
+        }
+        i = false;
       }
     },
   };

@@ -1,5 +1,5 @@
-let t = require("fire-fs"),
-  o = require("fire-path");
+let t = require("fire-fs");
+let o = require("fire-path");
 const e = Editor.require("packages://channel-upload-tools/ui/info/list.js");
 Editor.Panel.extend({
   _vm: null,
@@ -20,17 +20,22 @@ Editor.Panel.extend({
     },
   },
   run(t) {
-    t &&
-      ((this.args = t),
-      this.args &&
-        this.args.platform &&
-        (this._vm.page = `${this.args.platform}-upload`));
+    if (t) {
+      this.args = t;
+
+      if (this.args &&
+        this.args.platform) {
+        this._vm.page = `${this.args.platform}-upload`;
+      }
+    }
   },
   ready() {
-    (this.components = []), this.loadComponents();
+    this.components = [];
+    this.loadComponents();
     let t = this.components.map((t) => t.platform);
-    this.components.push(e),
-      (this._vm = new Vue({
+    this.components.push(e);
+
+    this._vm = new Vue({
         el: this.shadowRoot,
         components: this.components,
         data: function () {
@@ -42,16 +47,17 @@ Editor.Panel.extend({
             handler(t) {
               this.save();
             },
-            deep: !0,
+            deep: true,
           },
         },
         methods: {
           save() {
-            this.profile.set("", this.config), this.profile.save();
+            this.profile.set("", this.config);
+            this.profile.save();
           },
           t: (t) => Editor.T(`channel-upload-tools.${t}`),
         },
-      }));
+      });
   },
   loadComponents() {
     try {

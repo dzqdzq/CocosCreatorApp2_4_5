@@ -1,13 +1,15 @@
 "use strict";
 var e = require("path");
 const { promisify: t } = require("util");
-var r = require("fire-fs"),
-  i = require("del"),
-  s = require("globby");
+var r = require("fire-fs");
+var i = require("del");
+var s = require("globby");
 const a = t(r.outputFile);
+
 module.exports = class {
   constructor(e, t) {
-    (this.dest = e), (this.jsonSpace = t ? 2 : 0);
+    this.dest = e;
+    this.jsonSpace = t ? 2 : 0;
   }
   getUuidPathNoExt(t) {
     return e.join(this.dest, t.slice(0, 2), t);
@@ -19,7 +21,9 @@ module.exports = class {
     r.outputFile(e, t, i);
   }
   writeJsonByUuidNoCache(e, t, i) {
-    if (!i) return a(this.getJsonPath(e), t);
+    if (!i) {
+      return a(this.getJsonPath(e), t);
+    }
     r.outputFile(this.getJsonPath(e), t, i);
   }
   writeJsonByUuid(e, t, r) {
@@ -32,25 +36,29 @@ module.exports = class {
   readJsonByUuid(e, t) {
     var i = this.getJsonPath(e);
     r.readFile(i, "utf8", function (e, r) {
-      if (e) return t(e);
+      if (e) {
+        return t(e);
+      }
       var s;
       try {
         s = JSON.parse(r);
       } catch (e) {
-        return (e.message = i + ": " + e.message), t(e);
+        e.message = i + ": " + e.message;
+        return t(e);
       }
       t(null, s);
     });
   }
   delete(e, t) {
-    (e = Array.isArray(e)
+    e = Array.isArray(e)
       ? e.map((e) => e.replace(/\\/g, "/"))
-      : e.replace(/\\/g, "/")),
-      i(e, { force: !0 })
-        .then((e) => {
-          t();
-        })
-        .catch(t);
+      : e.replace(/\\/g, "/");
+
+    i(e, { force: true })
+      .then((e) => {
+        t();
+      })
+      .catch(t);
   }
   deleteJsonsByUuid(e, t) {
     var r = e.map(this.getJsonPath.bind(this));
@@ -59,11 +67,16 @@ module.exports = class {
   flush(t) {
     var i = e.join(this.dest, "??/");
     s(i, (e, i) => {
-      if (e) return t(e);
+      if (e) {
+        return t(e);
+      }
       try {
         for (var s = 0; s < i.length; s++) {
           var a = i[s];
-          0 === r.readdirSync(a).length && r.rmdirSync(a);
+
+          if (0 === r.readdirSync(a).length) {
+            r.rmdirSync(a);
+          }
         }
       } catch (e) {
         return t(e);

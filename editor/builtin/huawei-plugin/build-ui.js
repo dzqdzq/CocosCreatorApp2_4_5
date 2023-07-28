@@ -1,9 +1,10 @@
 "use strict";
-let e = require("path"),
-  t = require("fs"),
-  i = Editor.Profile.load("project://huawei-runtime.json"),
-  n = i.getSelfData();
-(exports.template = `\n        <ui-prop name="${Editor.T(
+let e = require("path");
+let t = require("fs");
+let i = Editor.Profile.load("project://huawei-runtime.json");
+let n = i.getSelfData();
+
+exports.template = `\n        <ui-prop name="${Editor.T(
   "huawei-runtime.pack_res_to_first_pack"
 )}" >\n             <ui-checkbox v-value="runtimeSetting.packFirstScreenRes"></ui-checkbox>\n        </ui-prop>\n        <ui-prop name="${Editor.T(
   "huawei-runtime.package"
@@ -67,66 +68,90 @@ let e = require("path"),
   "huawei-runtime.custom_npm_path"
 )}" v-show="runtimeSetting.showNpmPath">\n            <ui-input v-value="runtimeSetting.npmPath" class="flex-1" placeholder="${Editor.T(
   "huawei-runtime.custom_npm_path_hint"
-)}"></ui-input>\n        <ui-button class="tiny" v-on:confirm="onChooseNpmPath">···</ui-button>\n        </ui-prop>\n`),
-  (exports.name = "huawei"),
-  (exports.data = function () {
-    return { runtimeSetting: n, originEncryptJs: !1, profile: null };
-  }),
-  (exports.watch = {
+)}"></ui-input>\n        <ui-button class="tiny" v-on:confirm="onChooseNpmPath">···</ui-button>\n        </ui-prop>\n`;
+
+exports.name = "huawei";
+
+exports.data = function () {
+    return { runtimeSetting: n, originEncryptJs: false, profile: null };
+  };
+
+exports.watch = {
     runtimeSetting: {
       handler(e) {
         Object.keys(this.runtimeSetting).forEach((e) => {
           i.set(e, this.runtimeSetting[e]);
-        }),
-          i.save();
+        });
+
+        i.save();
       },
-      deep: !0,
+      deep: true,
     },
-  });
+  };
+
 const r = require(Editor.url("packages://builder/utils/event"));
-(exports.created = function () {
-  (this.originEncryptJs = this.project.encryptJs),
-    (this.includeSDKBox = this.project.includeSDKBox),
-    (this.project.encryptJs = !1),
-    (this.project.includeSDKBox = !1),
-    r.on("certificate-created", this._onCertificateCreated),
-    r.on("npmPath-show", this._onNpmPathShow);
-}),
-  (exports.directives = {}),
-  (exports.beforeDestroy = function () {
-    r.removeListener("certificate-created", this._onCertificateCreated),
-      r.removeListener("npmPath-show", this._onNpmPathShow),
-      (this.project.encryptJs = this.originEncryptJs),
-      (this.project.includeSDKBox = this.includeSDKBox);
-  }),
-  (exports.methods = {
+
+exports.created = function () {
+  this.originEncryptJs = this.project.encryptJs;
+  this.includeSDKBox = this.project.includeSDKBox;
+  this.project.encryptJs = false;
+  this.project.includeSDKBox = false;
+  r.on("certificate-created", this._onCertificateCreated);
+  r.on("npmPath-show", this._onNpmPathShow);
+};
+
+exports.directives = {};
+
+exports.beforeDestroy = function () {
+  r.removeListener("certificate-created", this._onCertificateCreated);
+  r.removeListener("npmPath-show", this._onNpmPathShow);
+  this.project.encryptJs = this.originEncryptJs;
+  this.project.includeSDKBox = this.includeSDKBox;
+};
+
+exports.methods = {
     _getProjectPath: () => Editor.Project.path,
     _onCertificateCreated(...i) {
-      if ((console.log("parsms ", ...i), !i || -1 === i)) return;
-      let n = i[0],
-        r = e.join(n, "certificate.pem");
-      t.existsSync(r) && (this.runtimeSetting.certificatePath = r);
+      console.log("parsms ", ...i);
+      if (!i || -1 === i) {
+        return;
+      }
+      let n = i[0];
+      let r = e.join(n, "certificate.pem");
+
+      if (t.existsSync(r)) {
+        this.runtimeSetting.certificatePath = r;
+      }
+
       let o = e.join(n, "private.pem");
-      t.existsSync(o) && (this.runtimeSetting.privatePath = o);
+
+      if (t.existsSync(o)) {
+        this.runtimeSetting.privatePath = o;
+      }
     },
     _onNpmPathShow(...e) {
-      this.runtimeSetting.showNpmPath = !0;
+      this.runtimeSetting.showNpmPath = true;
     },
     _onNewKeystoreClick() {
       Editor.Panel.open("huawei-runtime");
     },
     _onViewFingerPrintClick(e) {
-      if (!this.runtimeSetting.certificatePath)
-        return (
-          Editor.error(
-            new Error(Editor.T("huawei-runtime.select_certificate_path"))
-          ),
-          void 0
+      if (!this.runtimeSetting.certificatePath) {
+        Editor.error(
+          new Error(Editor.T("huawei-runtime.select_certificate_path"))
         );
+
+        return;
+      }
       var t = {};
-      this.runtimeSetting.npmPath
-        ? (t.Path = this.runtimeSetting.npmPath)
-        : (require("fix-path")(), (t = process.env));
+
+      if (this.runtimeSetting.npmPath) {
+        t.Path = this.runtimeSetting.npmPath;
+      } else {
+        require("fix-path")();
+        t = process.env;
+      }
+
       let i = this;
       this._isInstallNodejs(t, function () {
         i._printFinger(t);
@@ -158,15 +183,17 @@ const r = require(Editor.url("packages://builder/utils/event"));
     },
     _printFinger(e) {
       let t = require("child_process").exec;
+
       var i = Editor.url(
           "packages://runtime-adapters/package/print-cert-fp.js"
-        ),
-        n = Editor.url("packages://runtime-adapters/package");
+        );
+
+      var n = Editor.url("packages://runtime-adapters/package");
       t(
         `node ${i}  ${this.runtimeSetting.certificatePath}`,
         { env: e, cwd: n },
         (e, t) => {
-          if (!e)
+          if (!e) {
             return t
               ? (Editor.log(
                   Editor.T("huawei-runtime.certificate_fingerprint"),
@@ -181,27 +208,33 @@ const r = require(Editor.url("packages://builder/utils/event"));
                   )
                 ),
                 void 0);
-          "win32" === process.platform
-            ? Editor.log(
-                new Error(
-                  Editor.T(
-                    "huawei-runtime.certificate_fingerprint_window_error"
-                  ) + e
-                )
-              )
-            : Editor.log(
-                new Error(
-                  Editor.T("huawei-runtime.certificate_fingerprint_mac_error") +
-                    e
-                )
-              );
+          }
+
+          if ("win32" === process.platform) {
+            Editor.log(
+                  new Error(
+                    Editor.T(
+                      "huawei-runtime.certificate_fingerprint_window_error"
+                    ) + e
+                  )
+                );
+          } else {
+            Editor.log(
+                  new Error(
+                    Editor.T("huawei-runtime.certificate_fingerprint_mac_error") +
+                      e
+                  )
+                );
+          }
         }
       );
     },
     onChangeMode() {
-      this.runtimeSetting.useDebugKey
-        ? (this.runtimeSetting.disabledMode = "disabled is-disabled")
-        : (this.runtimeSetting.disabledMode = "");
+      if (this.runtimeSetting.useDebugKey) {
+        this.runtimeSetting.disabledMode = "disabled is-disabled";
+      } else {
+        this.runtimeSetting.disabledMode = "";
+      }
     },
     onChooseIconPath(e) {
       e.stopPropagation();
@@ -215,7 +248,10 @@ const r = require(Editor.url("packages://builder/utils/event"));
           },
         ],
       });
-      t && t[0] && (this.runtimeSetting.icon = t[0]);
+
+      if (t && t[0]) {
+        this.runtimeSetting.icon = t[0];
+      }
     },
     onChooseNpmPath(e) {
       e.stopPropagation();
@@ -223,7 +259,10 @@ const r = require(Editor.url("packages://builder/utils/event"));
         defaultPath: require("path").join(this._getProjectPath(), "asserts"),
         properties: ["openDirectory"],
       });
-      t && t[0] && (this.runtimeSetting.npmPath = t[0]);
+
+      if (t && t[0]) {
+        this.runtimeSetting.npmPath = t[0];
+      }
     },
     onChooseMainfestPath(e) {
       e.stopPropagation();
@@ -237,7 +276,10 @@ const r = require(Editor.url("packages://builder/utils/event"));
           },
         ],
       });
-      t && t[0] && (this.runtimeSetting.manifestPath = t[0]);
+
+      if (t && t[0]) {
+        this.runtimeSetting.manifestPath = t[0];
+      }
     },
     onCertificatePath(i) {
       i.stopPropagation();
@@ -254,10 +296,10 @@ const r = require(Editor.url("packages://builder/utils/event"));
       if (n && n[0]) {
         this.runtimeSetting.certificatePath = n[0];
         var r = e.join(e.dirname(n[0]), "private.pem");
-        ("" !== this.runtimeSetting.privatePath &&
-          t.existsSync(this.runtimeSetting.privatePath)) ||
-          !t.existsSync(r) ||
-          (this.runtimeSetting.privatePath = r);
+
+        if (!(("" !== this.runtimeSetting.privatePath && t.existsSync(this.runtimeSetting.privatePath)) || !t.existsSync(r))) {
+          this.runtimeSetting.privatePath = r;
+        }
       }
     },
     onPrivatePath(i) {
@@ -275,10 +317,10 @@ const r = require(Editor.url("packages://builder/utils/event"));
       if (n && n[0]) {
         this.runtimeSetting.privatePath = n[0];
         var r = e.join(e.dirname(n[0]), "certificate.pem");
-        ("" !== this.runtimeSetting.certificatePath &&
-          t.existsSync(this.runtimeSetting.certificatePath)) ||
-          !t.existsSync(r) ||
-          (this.runtimeSetting.certificatePath = r);
+
+        if (!(("" !== this.runtimeSetting.certificatePath && t.existsSync(this.runtimeSetting.certificatePath)) || !t.existsSync(r))) {
+          this.runtimeSetting.certificatePath = r;
+        }
       }
     },
-  });
+  };

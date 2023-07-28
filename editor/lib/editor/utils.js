@@ -1,2 +1,3 @@
 "use strict";
-require("fire-path"), require("fire-fs");
+require("fire-path");
+require("fire-fs");

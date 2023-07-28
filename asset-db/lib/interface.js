@@ -1,8 +1,9 @@
 "use strict";
-const t = require("./tasks"),
-  s = require("./meta"),
-  e = require("fire-path"),
-  a = require("fire-fs");
+const t = require("./tasks");
+const s = require("./meta");
+const e = require("fire-path");
+const a = require("fire-fs");
+
 module.exports = {
   urlToUuid(t) {
     let s = this._fspath(t);
@@ -42,7 +43,7 @@ module.exports = {
     let s = this.uuidToFspath(t);
     return !!s && this.isSubAssetByPath(s);
   },
-  isSubAssetByPath: (t) => !1 === a.isDirSync(e.dirname(t)),
+  isSubAssetByPath: (t) => false === a.isDirSync(e.dirname(t)),
   containsSubAssets(t) {
     let s = this._fspath(t);
     return !!s && this.containsSubAssetsByPath(s);
@@ -52,14 +53,18 @@ module.exports = {
     return !!s && this.containsSubAssetsByPath(s);
   },
   containsSubAssetsByPath(t) {
-    if ("" === e.extname(t)) return !1;
-    let s = this._allPaths(),
-      a = s.indexOf(t);
+    if ("" === e.extname(t)) {
+      return false;
+    }
+    let s = this._allPaths();
+    let a = s.indexOf(t);
     if (a >= 0) {
       let i = s[++a];
-      if (i && e.contains(t, i)) return !0;
+      if (i && e.contains(t, i)) {
+        return true;
+      }
     }
-    return !1;
+    return false;
   },
   assetInfo(t) {
     let s = this._fspath(t);
@@ -72,10 +77,11 @@ module.exports = {
   assetInfoByPath(t, e) {
     let a = this._url(t);
     e = e || this.fspathToUuid(t);
-    let i,
-      u = s.get(this, e);
-    if (u) i = u.assetType();
-    else {
+    let i;
+    let u = s.get(this, e);
+    if (u) {
+      i = u.assetType();
+    } else {
       i = s.findCtor(this, t).defaultType();
     }
     return {
@@ -97,13 +103,16 @@ module.exports = {
   subAssetInfosByPath(t) {
     let s = [];
     if ("string" == typeof t && "" !== e.extname(t)) {
-      let a = this._allPaths(),
-        i = a.indexOf(t);
+      let a = this._allPaths();
+      let i = a.indexOf(t);
       if (i >= 0) {
-        let u,
+        let u;
+        let h = a[++i];
+        for (; h && e.contains(t, h); ) {
+          u = this.assetInfoByPath(h);
+          s.push(u);
           h = a[++i];
-        for (; h && e.contains(t, h); )
-          (u = this.assetInfoByPath(h)), s.push(u), (h = a[++i]);
+        }
       }
     }
     return s;
@@ -139,23 +148,41 @@ module.exports = {
     return this.mountInfoByPath(s);
   },
   mountInfoByPath(t) {
-    if (!t) return null;
+    if (!t) {
+      return null;
+    }
     for (let s in this._mounts) {
       let a = this._mounts[s];
-      if (e.contains(a.path, t)) return a;
+      if (e.contains(a.path, t)) {
+        return a;
+      }
     }
     return null;
   },
   mount(s, e, a, i) {
-    "function" == typeof a && ((i = a), (a = {})),
-      this._tasks.push({ name: "mount", run: t.mount, params: [s, e, a] }, i);
+    if ("function" == typeof a) {
+      i = a;
+      a = {};
+    }
+
+    this._tasks.push({ name: "mount", run: t.mount, params: [s, e, a] }, i);
   },
   attachMountPath(s, e) {
     this._tasks.push(
       { name: "attachMountPath", run: t.attachMountPath, params: [s] },
       (t, s) => {
-        if (t) return e && e(t), void 0;
-        this._handleRefreshResults(s), e && e(null, s);
+        if (t) {
+          if (e) {
+            e(t);
+          }
+
+          return;
+        }
+        this._handleRefreshResults(s);
+
+        if (e) {
+          e(null, s);
+        }
       }
     );
   },
@@ -163,8 +190,18 @@ module.exports = {
     this._tasks.push(
       { name: "unattachMountPath", run: t.unattachMountPath, params: [s] },
       (t, s) => {
-        if (t) return e && e(t), void 0;
-        this._handleRefreshResults(s), e && e(null, s);
+        if (t) {
+          if (e) {
+            e(t);
+          }
+
+          return;
+        }
+        this._handleRefreshResults(s);
+
+        if (e) {
+          e(null, s);
+        }
       }
     );
   },
@@ -179,55 +216,77 @@ module.exports = {
     this._tasks.push(
       { name: "refresh", run: t.refresh, params: [a] },
       (t, s) => {
-        if (t) return e && e(t), void 0;
-        this._handleRefreshResults(s), e && e(null, s);
+        if (t) {
+          if (e) {
+            e(t);
+          }
+
+          return;
+        }
+        this._handleRefreshResults(s);
+
+        if (e) {
+          e(null, s);
+        }
       }
     );
   },
   deepQuery(s) {
     this._tasks.push(
-      { name: "deep-query", run: t.deepQuery, params: [], silent: !0 },
+      { name: "deep-query", run: t.deepQuery, params: [], silent: true },
       s
     );
   },
   queryAssets(s, e, a) {
     let i = this._fspath(s);
     this._tasks.push(
-      { name: "query-assets", run: t.queryAssets, params: [i, e], silent: !0 },
+      { name: "query-assets", run: t.queryAssets, params: [i, e], silent: true },
       a
     );
   },
   queryMetas(s, e, a) {
     let i;
     if (s.startsWith("db://*")) {
-      if ("db://**" !== s && "db://**/*" !== s)
+      if ("db://**" !== s && "db://**/*" !== s) {
         return a(new Error(`Unsupported pattern "${s}"`));
+      }
       i = null;
-    } else i = this._fspath(s);
+    } else {
+      i = this._fspath(s);
+    }
     this._tasks.push(
-      { name: "query-metas", run: t.queryMetas, params: [i, e], silent: !0 },
+      { name: "query-metas", run: t.queryMetas, params: [i, e], silent: true },
       a
     );
   },
   move(s, e, a) {
-    let i = this._fspath(s),
-      u = this._fspath(e);
+    let i = this._fspath(s);
+    let u = this._fspath(e);
     this._tasks.push({ name: "move", run: t.move, params: [i, u] }, (t, s) => {
-      if (t) return a && a(t), void 0;
-      let e = [],
-        i = [];
+      if (t) {
+        if (a) {
+          a(t);
+        }
+
+        return;
+      }
+      let e = [];
+      let i = [];
       for (let t = 0; t < s.length; ++t) {
         let a = s[t].subMetas;
-        a &&
-          ((e = e.concat(a.deleted)),
-          (i = i.concat(a.added)),
-          delete s[t].diff);
+
+        if (a) {
+          e = e.concat(a.deleted);
+          i = i.concat(a.added);
+          delete s[t].diff;
+        }
       }
       for (let t = e.length - 1; t >= 0; --t) {
         let a = e[t];
         for (let u = i.length - 1; u >= 0; --u) {
           let h = i[u];
-          a.uuid === h.uuid &&
+
+          if (a.uuid === h.uuid) {
             s.push({
               uuid: h.uuid,
               type: h.type,
@@ -236,22 +295,38 @@ module.exports = {
               srcPath: a.path,
               destPath: h.path,
               isSubAsset: h.isSubAsset,
-            }),
-            i.splice(u, 1),
-            e.splice(t, 1);
+            });
+          }
+
+          i.splice(u, 1);
+          e.splice(t, 1);
           break;
         }
       }
-      this._dispatchEvent("asset-db:assets-moved", s),
-        e.length > 0 && this._dispatchEvent("asset-db:assets-deleted", e),
-        i.length > 0 && this._dispatchEvent("asset-db:assets-created", i),
-        a && a(null, s);
+      this._dispatchEvent("asset-db:assets-moved", s);
+
+      if (e.length > 0) {
+        this._dispatchEvent("asset-db:assets-deleted", e);
+      }
+
+      if (i.length > 0) {
+        this._dispatchEvent("asset-db:assets-created", i);
+      }
+
+      if (a) {
+        a(null, s);
+      }
     });
   },
   delete(s, e) {
     this._tasks.push({ name: "delete", run: t.delete, params: [s] }, (t, s) => {
-      s && s.length > 0 && this._dispatchEvent("asset-db:assets-deleted", s),
-        e && e(t, s);
+      if (s && s.length > 0) {
+        this._dispatchEvent("asset-db:assets-deleted", s);
+      }
+
+      if (e) {
+        e(t, s);
+      }
     });
   },
   create(s, e, a) {
@@ -259,13 +334,20 @@ module.exports = {
     this._tasks.push(
       { name: "create", run: t.create, params: [i, e] },
       (t, e) => {
-        if (t)
-          return (
-            this.error("Failed to create asset %s, messages: %s", s, t.stack),
-            a && a(t),
-            void 0
-          );
-        this._dispatchEvent("asset-db:assets-created", e), a && a(null, e);
+        if (t) {
+          this.error("Failed to create asset %s, messages: %s", s, t.stack);
+
+          if (a) {
+            a(t);
+          }
+
+          return;
+        }
+        this._dispatchEvent("asset-db:assets-created", e);
+
+        if (a) {
+          a(null, e);
+        }
       }
     );
   },
@@ -274,26 +356,43 @@ module.exports = {
     this._tasks.push(
       { name: "update", run: t.saveExists, params: [i, e] },
       (t, e) => {
-        if (t)
-          return (
-            this.error(`Failed to update asset ${s}, messages: ${t.stack}`),
-            e && this._handleRefreshResults([e]),
-            a && a(t),
-            void 0
-          );
-        let i = e.meta,
-          u = e.subMetas;
+        if (t) {
+          this.error(`Failed to update asset ${s}, messages: ${t.stack}`);
+
+          if (e) {
+            this._handleRefreshResults([e]);
+          }
+
+          if (a) {
+            a(t);
+          }
+
+          return;
+        }
+        let i = e.meta;
+        let u = e.subMetas;
+
         this._dispatchEvent("asset-db:asset-changed", {
           uuid: i.uuid,
           type: i.assetType(),
-        }),
-          u.deleted.length > 0 &&
-            this._dispatchEvent("asset-db:assets-deleted", u.deleted),
-          u.added.length > 0 &&
-            this._dispatchEvent("asset-db:assets-created", u.added),
-          e.meta._assetdb &&
-            ((e.meta = Object.assign({}, i)), delete e.meta._assetdb),
-          a && a(null, e);
+        });
+
+        if (u.deleted.length > 0) {
+          this._dispatchEvent("asset-db:assets-deleted", u.deleted);
+        }
+
+        if (u.added.length > 0) {
+          this._dispatchEvent("asset-db:assets-created", u.added);
+        }
+
+        if (e.meta._assetdb) {
+          e.meta = Object.assign({}, i);
+          delete e.meta._assetdb;
+        }
+
+        if (a) {
+          a(null, e);
+        }
       }
     );
   },
@@ -302,23 +401,40 @@ module.exports = {
     this._tasks.push(
       { name: "import", run: t.import, params: [s, i] },
       (t, s) => {
-        if (t)
-          return (
-            this.error(
-              "Failed to import assets to %s, messages: %s",
-              e,
-              t.stack
-            ),
-            a && a(t),
-            void 0
+        if (t) {
+          this.error(
+            "Failed to import assets to %s, messages: %s",
+            e,
+            t.stack
           );
-        let i = [],
-          u = [];
-        for (var h = 0; h < s.length; h++)
-          s[h].command ? u.push(s[h]) : i.push(s[h]);
-        i && i.length > 0 && this._dispatchEvent("asset-db:assets-created", i),
-          u && u.length > 0 && this._handleRefreshResults(u),
-          a && a(null, s);
+
+          if (a) {
+            a(t);
+          }
+
+          return;
+        }
+        let i = [];
+        let u = [];
+        for (var h = 0; h < s.length; h++) {
+          if (s[h].command) {
+            u.push(s[h]);
+          } else {
+            i.push(s[h]);
+          }
+        }
+
+        if (i && i.length > 0) {
+          this._dispatchEvent("asset-db:assets-created", i);
+        }
+
+        if (u && u.length > 0) {
+          this._handleRefreshResults(u);
+        }
+
+        if (a) {
+          a(null, s);
+        }
       }
     );
   },
@@ -326,34 +442,49 @@ module.exports = {
     this._tasks.push(
       { name: "save-meta", run: t.saveMeta, params: [s, e] },
       (t, e) => {
-        if (t)
-          return (
-            this.error(`Failed to save meta ${t.stack}`), a && a(t), void 0
-          );
-        let i = e.meta,
-          u = e.subMetas;
+        if (t) {
+          this.error(`Failed to save meta ${t.stack}`);
+
+          if (a) {
+            a(t);
+          }
+
+          return;
+        }
+        let i = e.meta;
+        let u = e.subMetas;
+
         this._dispatchEvent("asset-db:asset-changed", {
           uuid: s,
           type: i.assetType(),
-        }),
-          u.remained.length > 0 &&
-            u.remained.forEach((t) => {
-              this._dispatchEvent("asset-db:asset-changed", {
-                uuid: t.uuid,
-                type: t.type,
-              });
-            }),
-          u.deleted.length > 0 &&
-            this._dispatchEvent("asset-db:assets-deleted", u.deleted),
-          u.added.length > 0 &&
-            this._dispatchEvent("asset-db:assets-created", u.added),
-          a && a(null, e);
+        });
+
+        if (u.remained.length > 0) {
+          u.remained.forEach((t) => {
+            this._dispatchEvent("asset-db:asset-changed", {
+              uuid: t.uuid,
+              type: t.type,
+            });
+          });
+        }
+
+        if (u.deleted.length > 0) {
+          this._dispatchEvent("asset-db:assets-deleted", u.deleted);
+        }
+
+        if (u.added.length > 0) {
+          this._dispatchEvent("asset-db:assets-created", u.added);
+        }
+
+        if (a) {
+          a(null, e);
+        }
       }
     );
   },
   exchangeUuid(s, e, a) {
-    let i = this._fspath(s),
-      u = this._fspath(e);
+    let i = this._fspath(s);
+    let u = this._fspath(e);
     this._tasks.push(
       { name: "exchange-uuid", run: t.exchangeUuid, params: [i, u] },
       a
@@ -387,9 +518,13 @@ module.exports = {
     return s;
   },
   getAssetBackupPath(t) {
-    if (!this.assetBackupPath) return null;
+    if (!this.assetBackupPath) {
+      return null;
+    }
     let s = this.mountInfoByPath(t);
-    if (!s) return null;
+    if (!s) {
+      return null;
+    }
     let a = e.relative(s.path, t);
     return e.join(this.assetBackupPath, s.mountPath, a);
   },

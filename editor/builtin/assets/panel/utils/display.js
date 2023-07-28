@@ -2,12 +2,21 @@
 const e = require("./cache");
 let n = e.queryNodes();
 e.queryCache();
-(exports.point = function (t) {
+
+exports.point = function (t) {
   for (let o = n.length - 1; o >= 0; o--) {
     let r = n[o];
     if (r.show) {
       let n = r.showIndex * e.lineHeight + e.lineHeight;
-      t < 0 ? (t = 0) : t > n && (t = n);
+
+      if (t < 0) {
+        t = 0;
+      } else {
+        if (t > n) {
+          t = n;
+        }
+      }
+
       break;
     }
   }
@@ -17,24 +26,31 @@ e.queryCache();
     node: e.queryShowNodes()[o] || null,
     remaining: t - o * e.lineHeight,
   };
-}),
-  (exports.info = function (n) {
+};
+
+exports.info = function (n) {
     let t = e.queryNode(n);
-    if (!t) return null;
+    if (!t) {
+      return null;
+    }
     let o = function (e) {
       let n = 0;
-      return (
-        e.show &&
-          e.children &&
-          e.children.forEach((e) => {
-            e.show && ((n += 1), (n += o(e)));
-          }),
-        n
-      );
+
+      if (e.show &&
+        e.children) {
+        e.children.forEach((e) => {
+          if (e.show) {
+            n += 1;
+            n += o(e);
+          }
+        });
+      }
+
+      return n;
     };
     return {
       offset: e.queryShowNodes().findIndex((e) => e === t),
       count: o(t) + 1,
       node: t,
     };
-  });
+  };

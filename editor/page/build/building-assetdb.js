@@ -1,7 +1,8 @@
 const { promisify: s } = require("util");
 module.exports = class {
   constructor(s) {
-    (this.parent = s), (this._assetInfos = Object.create(null));
+    this.parent = s;
+    this._assetInfos = Object.create(null);
   }
   addGeneratedAsset(s, t, e, n) {
     this._assetInfos[s] = {
@@ -14,13 +15,16 @@ module.exports = class {
   }
   queryInfoByUuid(s, t) {
     var e = this._assetInfos[s];
-    e
-      ? process.nextTick(function () {
-          return t(null, e);
-        })
-      : this.parent.queryInfoByUuid(
-          s,
-          (e, n) => (n && (this._assetInfos[s] = n), t(null, n || null))
-        );
+
+    if (e) {
+      process.nextTick(function () {
+            return t(null, e);
+          });
+    } else {
+      this.parent.queryInfoByUuid(
+            s,
+            (e, n) => (n && (this._assetInfos[s] = n), t(null, n || null))
+          );
+    }
   }
 };

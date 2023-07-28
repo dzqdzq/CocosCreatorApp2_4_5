@@ -1,8 +1,8 @@
 "use strict";
-const e = require("fs"),
-  t = Editor.require("packages://console/panel/utils/cache"),
-  s = Editor.require("packages://console/panel/utils/event"),
-  o = Editor.require("packages://console/panel/component/console");
+const e = require("fs");
+const t = Editor.require("packages://console/panel/utils/cache");
+const s = Editor.require("packages://console/panel/utils/event");
+const o = Editor.require("packages://console/panel/component/console");
 Editor.Panel.extend({
   style: e.readFileSync(Editor.url("packages://console/panel/style/index.css")),
   template: o.template,
@@ -37,9 +37,11 @@ Editor.Panel.extend({
       t.clear(s, o);
     },
     "console:query-last-error-log"(e) {
-      if (!e.reply) return;
-      let s = t.query({ collapse: this._vm.collapse, type: "error" }),
-        o = null;
+      if (!e.reply) {
+        return;
+      }
+      let s = t.query({ collapse: this._vm.collapse, type: "error" });
+      let o = null;
       if (s.length) {
         let e = s[0];
         o = { type: e.type, message: `${e.message}\n${e.info.join("\n")}` };
@@ -47,48 +49,63 @@ Editor.Panel.extend({
       e.reply(null, o);
     },
     "editor:console-on-device-play"() {
-      this._vm.aclear &&
-        Editor.Ipc.sendToMain("console:clear", "^(?!.*?SyntaxError)", !0);
+      if (this._vm.aclear) {
+        Editor.Ipc.sendToMain("console:clear", "^(?!.*?SyntaxError)", true);
+      }
     },
   },
   ready() {
     let e = this.profiles.local;
-    (this._vm = new Vue({
+
+    this._vm = new Vue({
       el: this.shadowRoot.querySelector(".console"),
       data: o.data(),
       components: o.components,
       methods: o.methods,
       created: o.created,
-    })),
-      Editor.Ipc.sendToMain("editor:console-query", (e, s) => {
-        s.forEach(t.add);
-      }),
-      (this._vm.fsize = e.get("fontsize")),
-      (this._vm.collapse = e.get("collapse")),
-      (this._vm.aclear = e.get("aclear")),
-      t.changeHeight(2 * e.get("fontsize"));
+    });
+
+    Editor.Ipc.sendToMain("editor:console-query", (e, s) => {
+      s.forEach(t.add);
+    });
+
+    this._vm.fsize = e.get("fontsize");
+    this._vm.collapse = e.get("collapse");
+    this._vm.aclear = e.get("aclear");
+    t.changeHeight(2 * e.get("fontsize"));
     let l = () => {
       let e = this.clientHeight;
-      if (e < 20) return requestAnimationFrame(l);
+      if (e < 20) {
+        return requestAnimationFrame(l);
+      }
       this._vm.length = (e - 56) / 20 + 3;
     };
     requestAnimationFrame(l);
-    let a = null,
-      n = function () {
-        clearTimeout(a),
-          (a = setTimeout(() => {
-            e.save();
-          }, 300));
-      };
+    let a = null;
+
+    let n = function () {
+      clearTimeout(a);
+
+      a = setTimeout(() => {
+          e.save();
+        }, 300);
+    };
+
     s.on("font-size-changed", (s) => {
-      e.set("fontsize", s), t.changeHeight(2 * s), n();
-    }),
-      s.on("collapse-changed", (t) => {
-        e.set("collapse", t), n();
-      }),
-      s.on("auto-clear-changed", (t) => {
-        e.set("aclear", t), n();
-      });
+      e.set("fontsize", s);
+      t.changeHeight(2 * s);
+      n();
+    });
+
+    s.on("collapse-changed", (t) => {
+      e.set("collapse", t);
+      n();
+    });
+
+    s.on("auto-clear-changed", (t) => {
+      e.set("aclear", t);
+      n();
+    });
   },
   selectAll() {},
   clear() {},

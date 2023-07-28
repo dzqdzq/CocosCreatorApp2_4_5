@@ -1,52 +1,81 @@
 "use strict";
-const e = require("fire-path"),
-  t = require("fire-fs"),
-  r = require("./meta/raw-asset");
+const e = require("fire-path");
+const t = require("fire-fs");
+const r = require("./meta/raw-asset");
 let a = {
   RawAssetMeta: r,
   AssetMeta: require("./meta/asset"),
   FolderMeta: require("./meta/folder"),
   defaultMetaType: r,
   create(r, i, n) {
-    if (".meta" !== e.extname(i))
-      return r.error("Invalid metapath %s, must use .meta as suffix", i), null;
+    if (".meta" !== e.extname(i)) {
+      r.error("Invalid metapath %s, must use .meta as suffix", i);
+      return null;
+    }
     let u = a.findCtor(r, r._metaToAssetPath(i));
-    if (!u) return null;
-    if (!n && t.existsSync(i))
+    if (!u) {
+      return null;
+    }
+    if (!n && t.existsSync(i)) {
       try {
         n = JSON.parse(t.readFileSync(i)).uuid;
       } catch (e) {
         n = null;
       }
+    }
     let s = new u(r);
-    return n && (s.uuid = n), s;
+
+    if (n) {
+      s.uuid = n;
+    }
+
+    return s;
   },
   createSubMeta(e, t, r) {
-    if ("function" != typeof t)
-      return e.error("Invalid constructor for sub meta"), null;
+    if ("function" != typeof t) {
+      e.error("Invalid constructor for sub meta");
+      return null;
+    }
     let a = new t(e);
-    return r && (a.uuid = r), a;
+
+    if (r) {
+      a.uuid = r;
+    }
+
+    return a;
   },
   findCtor(r, i) {
-    if (".meta" === e.extname(i))
-      return r.error("Invalid assetpath, must not use .meta as suffix"), null;
-    let n = e.extname(i),
-      u = t.existsSync(i);
-    if (!n && !1 === u) return a.FolderMeta;
+    if (".meta" === e.extname(i)) {
+      r.error("Invalid assetpath, must not use .meta as suffix");
+      return null;
+    }
+    let n = e.extname(i);
+    let u = t.existsSync(i);
+    if (!n && false === u) {
+      return a.FolderMeta;
+    }
     n = n.toLowerCase();
-    let s = t.isDirSync(i),
-      l = r._extname2infos[n];
-    if (l)
+    let s = t.isDirSync(i);
+    let l = r._extname2infos[n];
+    if (l) {
       for (let e = 0; e < l.length; ++e) {
         let t = l[e];
-        if ((s && !t.folder) || (!s && t.folder)) continue;
+        if ((s && !t.folder) || (!s && t.folder)) {
+          continue;
+        }
         let r = t.ctor;
-        if (!r.validate) return r;
-        if (u)
+        if (!r.validate) {
+          return r;
+        }
+        if (u) {
           try {
-            if (r.validate(i)) return r;
+            if (r.validate(i)) {
+              return r;
+            }
           } catch (e) {}
+        }
       }
+    }
     return s ? a.FolderMeta : a.defaultMetaType;
   },
   register: (e, t, r, i) => (
@@ -56,11 +85,13 @@ let a = {
       if (e && t) {
         let r = Object.getPrototypeOf(e.prototype);
         for (; r; ) {
-          if ((e = r.constructor) === t) return !0;
+          if ((e = r.constructor) === t) {
+            return true;
+          }
           r = Object.getPrototypeOf(e.prototype);
         }
       }
-      return !1;
+      return false;
     })(i, a.RawAssetMeta)
       ? "string" != typeof t || "." !== t[0]
         ? (e.warn(
@@ -78,8 +109,9 @@ let a = {
         void 0)
   ),
   unregister(e, t) {
-    for (let r in e._extname2infos)
-      e._extname2infos[r].ctor === t && delete e._extname2infos[r];
+    for (let r in e._extname2infos) if (e._extname2infos[r].ctor === t) {
+      delete e._extname2infos[r];
+    }
   },
   reset(e) {
     e._extname2infos = Object.create(null);
@@ -87,47 +119,62 @@ let a = {
   isInvalid: (e, t, r) => t.uuid !== r.uuid,
   get: (e, t) => e._uuid2meta[t],
   load(r, i) {
-    if (".meta" !== e.extname(i))
-      return r.error("Invalid metapath, must use .meta as suffix"), null;
+    if (".meta" !== e.extname(i)) {
+      r.error("Invalid metapath, must use .meta as suffix");
+      return null;
+    }
     if (r.isSubAssetByPath(i)) {
-      let t = a.load(r, e.dirname(i) + ".meta"),
-        n = e.basenameNoExt(i);
-      if (!t) return null;
+      let t = a.load(r, e.dirname(i) + ".meta");
+      let n = e.basenameNoExt(i);
+      if (!t) {
+        return null;
+      }
       let u = t.getSubMetas();
       return u && u[n] ? u[n] : null;
     }
-    if (!t.existsSync(i)) return null;
+    if (!t.existsSync(i)) {
+      return null;
+    }
     let n;
     try {
       n = JSON.parse(t.readFileSync(i));
     } catch (e) {
-      return (
-        r.failed("Failed to load meta %s, message: %s", i, e.message), null
-      );
+      r.failed("Failed to load meta %s, message: %s", i, e.message);
+      return null;
     }
     let u = a.create(r, i, n.uuid);
-    if (!u) return null;
-    if (a.isInvalid(r, u, n)) return null;
-    u.deserialize(n), (r._uuid2meta[u.uuid] = u);
+    if (!u) {
+      return null;
+    }
+    if (a.isInvalid(r, u, n)) {
+      return null;
+    }
+    u.deserialize(n);
+    r._uuid2meta[u.uuid] = u;
     let s = u.getSubMetas();
-    if (s)
+    if (s) {
       for (let e in s) {
         let t = s[e];
         r._uuid2meta[t.uuid] = t;
       }
+    }
     return u;
   },
   save(r, a, i) {
-    if (".meta" !== e.extname(a))
-      return r.error("Invalid metapath, must use .meta as suffix"), null;
+    if (".meta" !== e.extname(a)) {
+      r.error("Invalid metapath, must use .meta as suffix");
+      return null;
+    }
     let n = i.serialize();
-    t.writeFileSync(a, JSON.stringify(n, null, 2)), (r._uuid2meta[i.uuid] = i);
+    t.writeFileSync(a, JSON.stringify(n, null, 2));
+    r._uuid2meta[i.uuid] = i;
     let u = i.getSubMetas();
-    if (u)
+    if (u) {
       for (let e in u) {
         let t = u[e];
         r._uuid2meta[t.uuid] = t;
       }
+    }
   },
 };
 module.exports = a;

@@ -1,28 +1,37 @@
 "use strict";
-const e = require("fs"),
-  t = require("path"),
-  i = (require("fire-url"), require("../utils/cache")),
-  s = require("../utils/operation"),
-  o = require("../utils/event"),
-  l = (require("../utils/display"), require("../utils/communication")),
-  r = (require("../utils/utils"), require("../../selection"));
-(exports.template = e.readFileSync(
+const e = require("fs");
+const t = require("path");
+const i = (require("fire-url"), require("../utils/cache"));
+const s = require("../utils/operation");
+const o = require("../utils/event");
+const l = (require("../utils/display"), require("../utils/communication"));
+const r = (require("../utils/utils"), require("../../selection"));
+
+exports.template = e.readFileSync(
   t.join(__dirname, "../template/nodes.html"),
   "utf-8"
-)),
-  (exports.props = ["length"]),
-  (exports.components = {
+);
+
+exports.props = ["length"];
+
+exports.components = {
     node: require("./node"),
     highlight: require("./highlight"),
-  }),
-  (exports.created = function () {
+  };
+
+exports.created = function () {
     o.on("nodes_focus", (e) => {
-      (this.focused = e), e && this.$el && this.$el.parentElement.focus();
+      this.focused = e;
+
+      if (e && this.$el) {
+        this.$el.parentElement.focus();
+      }
     });
-  }),
-  (exports.data = function () {
+  };
+
+exports.data = function () {
     return {
-      focused: !1,
+      focused: false,
       start: 0,
       nodes: i.queryShowNodes(),
       list: [],
@@ -31,8 +40,9 @@ const e = require("fs"),
       y: -999,
       highlight: { node: null, state: 0 },
     };
-  }),
-  (exports.watch = {
+  };
+
+exports.watch = {
     start() {
       this.reset();
     },
@@ -42,30 +52,36 @@ const e = require("fs"),
     nodes() {
       this.reset();
     },
-  }),
-  (exports.methods = {
+  };
+
+exports.methods = {
     reset() {
-      this._updateLock ||
-        ((this._updateLock = !0),
+      if (!this._updateLock) {
+        this._updateLock = true;
+
         requestAnimationFrame(() => {
-          (this._updateLock = !1), this.updateShowList();
-        }));
+          this._updateLock = false;
+          this.updateShowList();
+        });
+      }
     },
     updateShowList() {
       let e = i.queryShowNodes();
-      (this.uh.height = 0), this.list.splice(0);
+      this.uh.height = 0;
+      this.list.splice(0);
       let t = this.start + Math.ceil(this.length);
       t = t > e.length ? e.length : t;
-      for (let i = this.start; i < t; i++) this.list.push(e[i]);
+      for (let i = this.start; i < t; i++) {
+        this.list.push(e[i]);
+      }
       this.uh.height = e.length * i.lineHeight + 4;
     },
     onMouseDown(e) {
-      if (2 === e.button)
-        return (
-          r.setContext("cloud-function", null),
-          l.popup("context", { x: e.clientX, y: e.clientY }),
-          void 0
-        );
+      if (2 === e.button) {
+        r.setContext("cloud-function", null);
+        l.popup("context", { x: e.clientX, y: e.clientY });
+        return;
+      }
       r.select("cloud-function");
     },
     onScroll(e) {
@@ -73,40 +89,53 @@ const e = require("fs"),
       this.start = (t / i.lineHeight) | 0;
     },
     onFocus() {
-      this.focused = !0;
+      this.focused = true;
     },
     onBlur() {
-      this.focused = !1;
+      this.focused = false;
     },
     scrollIfNeeded(e) {
       let t = i.queryNode(e);
-      if (!t) return;
+      if (!t) {
+        return;
+      }
       let s = i.queryShowNodes().indexOf(t);
-      if (-1 === s) return;
-      let o = s * i.lineHeight,
-        l = this.$el.scrollTop + this.$el.clientHeight - i.lineHeight - 2;
-      o < this.$el.scrollTop - 2
-        ? (this.$el.scrollTop -= this.$el.scrollTop - 2 - o)
-        : o >= l && (this.$el.scrollTop += o - l);
+      if (-1 === s) {
+        return;
+      }
+      let o = s * i.lineHeight;
+      let l = this.$el.scrollTop + this.$el.clientHeight - i.lineHeight - 2;
+
+      if (o < this.$el.scrollTop - 2) {
+        this.$el.scrollTop -= this.$el.scrollTop - 2 - o;
+      } else {
+        if (o >= l) {
+          this.$el.scrollTop += o - l;
+        }
+      }
     },
     scrollToItem(e) {
       let t = i.queryNode(e);
-      if (!t) return;
-      s.recParentNodes(e, !1);
+      if (!t) {
+        return;
+      }
+      s.recParentNodes(e, false);
       let o = i.queryShowNodes();
       setTimeout(() => {
         let l = o.indexOf(t);
-        l > -1 &&
-          ((this.$el.scrollTop =
-            i.lineHeight * l - (i.lineHeight * this.length) / 2),
-          s.hint(e));
+
+        if (l > -1) {
+          this.$el.scrollTop = i.lineHeight * l - (i.lineHeight * this.length) / 2;
+          s.hint(e);
+        }
       }, 50);
     },
-  }),
-  (exports.directives = {
+  };
+
+exports.directives = {
     init(e, t) {
       requestAnimationFrame(() => {
         this.vm.reset();
       });
     },
-  });
+  };

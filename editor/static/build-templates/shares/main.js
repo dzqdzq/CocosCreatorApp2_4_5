@@ -35,8 +35,10 @@ window.boot = function () {
     if (cc.sys.isMobile) {
       if (settings.orientation === "landscape") {
         cc.view.setOrientation(cc.macro.ORIENTATION_LANDSCAPE);
-      } else if (settings.orientation === "portrait") {
-        cc.view.setOrientation(cc.macro.ORIENTATION_PORTRAIT);
+      } else {
+        if (settings.orientation === "portrait") {
+          cc.view.setOrientation(cc.macro.ORIENTATION_PORTRAIT);
+        }
       }
       cc.view.enableAutoFullScreen(
         [
@@ -99,15 +101,22 @@ window.boot = function () {
   });
 
   var bundleRoot = [INTERNAL];
-  settings.hasResourcesBundle && bundleRoot.push(RESOURCES);
+
+  if (settings.hasResourcesBundle) {
+    bundleRoot.push(RESOURCES);
+  }
 
   var count = 0;
   function cb(err) {
-    if (err) return console.error(err.message, err.stack);
+    if (err) {
+      return console.error(err.message, err.stack);
+    }
     count++;
     if (count === bundleRoot.length + 1) {
       cc.assetManager.loadBundle(MAIN, function (err) {
-        if (!err) cc.game.run(option, onStart);
+        if (!err) {
+          cc.game.run(option, onStart);
+        }
       });
     }
   }

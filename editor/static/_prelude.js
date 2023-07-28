@@ -6,8 +6,12 @@
         b = b[b.length - 1];
         if (!t[b]) {
           var a = "function" == typeof __require && __require;
-          if (!u && a) return a(b, !0);
-          if (i) return i(b, !0);
+          if (!u && a) {
+            return a(b, true);
+          }
+          if (i) {
+            return i(b, true);
+          }
           throw new Error("Cannot find module '" + o + "'");
         }
         o = b;
@@ -32,6 +36,8 @@
     return n[o].exports;
   }
   var i = "function" == typeof __require && __require;
-  for (var o = 0; o < r.length; o++) s(r[o]);
+  for (var o = 0; o < r.length; o++) {
+    s(r[o]);
+  }
   return s;
 });

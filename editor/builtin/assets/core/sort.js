@@ -9,9 +9,9 @@ module.exports = () => {
       type: "radio",
       checked: "name" === s,
       click() {
-        t.set("assets-sort-type", "name"),
-          t.save(),
-          Editor.Ipc.sendToPanel(e.name, "assets:sort");
+        t.set("assets-sort-type", "name");
+        t.save();
+        Editor.Ipc.sendToPanel(e.name, "assets:sort");
       },
     },
     {
@@ -19,9 +19,9 @@ module.exports = () => {
       type: "radio",
       checked: "ext" === s,
       click() {
-        t.set("assets-sort-type", "ext"),
-          t.save(),
-          Editor.Ipc.sendToPanel(e.name, "assets:sort");
+        t.set("assets-sort-type", "ext");
+        t.save();
+        Editor.Ipc.sendToPanel(e.name, "assets:sort");
       },
     },
   ];

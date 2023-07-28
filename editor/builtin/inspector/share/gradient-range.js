@@ -28,8 +28,8 @@ Vue.component("cc-gradient-range", {
       );
     },
     _onChangeMode(t) {
-      (this.mode = parseInt(t.detail.value)),
-        e(this.$root, this.target.value.mode.path, "Enum", this.mode);
+      this.mode = parseInt(t.detail.value);
+      e(this.$root, this.target.value.mode.path, "Enum", this.mode);
     },
   },
   data: () => ({

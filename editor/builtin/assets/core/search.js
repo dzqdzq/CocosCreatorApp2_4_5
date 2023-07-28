@@ -18,8 +18,9 @@ module.exports = () => [
             },
           },
           { type: "separator" },
-        ],
-        l = Object.keys(Editor.assets);
+        ];
+
+      let l = Object.keys(Editor.assets);
       l.sort();
       for (let a = 0; a < l.length; ++a) {
         let n = l[a];

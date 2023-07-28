@@ -1,9 +1,10 @@
 "use strict";
-let t = require("path"),
-  e = require("fs"),
-  i = Editor.Profile.load("project://vivo-runtime.json"),
-  n = i.getSelfData();
-(exports.template = `\n        <ui-prop name="${Editor.T(
+let t = require("path");
+let e = require("fs");
+let i = Editor.Profile.load("project://vivo-runtime.json");
+let n = i.getSelfData();
+
+exports.template = `\n        <ui-prop name="${Editor.T(
   "vivo-runtime.pack_res_to_first_pack"
 )}" >\n             <ui-checkbox v-value="runtimeSetting.packFirstScreenRes"></ui-checkbox>\n        </ui-prop>\n        <ui-prop name="${Editor.T(
   "vivo-runtime.package"
@@ -61,61 +62,82 @@ let t = require("path"),
   "vivo-runtime.custom_npm_path_hint"
 )}"></ui-input>\n        <ui-button class="tiny" v-on:confirm="onChooseNpmPath">···</ui-button>\n        </ui-prop>\n\n          <ui-prop name="${Editor.T(
   "vivo-runtime.separate_engine"
-)}" auto-height>\n            <ui-checkbox v-value="runtimeSetting.separateEngineMode"></ui-checkbox>\n        </ui-prop>\n\n`),
-  (exports.name = "qgame"),
-  (exports.data = function () {
-    return { runtimeSetting: n, originEncryptJs: !1, profile: null };
-  }),
-  (exports.watch = {
+)}" auto-height>\n            <ui-checkbox v-value="runtimeSetting.separateEngineMode"></ui-checkbox>\n        </ui-prop>\n\n`;
+
+exports.name = "qgame";
+
+exports.data = function () {
+    return { runtimeSetting: n, originEncryptJs: false, profile: null };
+  };
+
+exports.watch = {
     runtimeSetting: {
       handler(t) {
         Object.keys(this.runtimeSetting).forEach((t) => {
           i.set(t, this.runtimeSetting[t]);
-        }),
-          i.save();
+        });
+
+        i.save();
       },
-      deep: !0,
+      deep: true,
     },
-  });
+  };
+
 const o = require(Editor.url("packages://builder/utils/event"));
-(exports.created = function () {
-  (this.originEncryptJs = this.project.encryptJs),
-    (this.includeSDKBox = this.project.includeSDKBox),
-    (this.project.includeSDKBox = !1),
-    (this.project.encryptJs = !1),
-    o.on("certificate-created", this._onCertificateCreated),
-    o.on("npmPath-show", this._onNpmPathShow);
-}),
-  (exports.directives = {}),
-  (exports.beforeDestroy = function () {
-    o.removeListener("certificate-created", this._onCertificateCreated),
-      o.removeListener("npmPath-show", this._onNpmPathShow),
-      (this.project.encryptJs = this.originEncryptJs),
-      (this.project.includeSDKBox = this.includeSDKBox);
-  }),
-  (exports.methods = {
+
+exports.created = function () {
+  this.originEncryptJs = this.project.encryptJs;
+  this.includeSDKBox = this.project.includeSDKBox;
+  this.project.includeSDKBox = false;
+  this.project.encryptJs = false;
+  o.on("certificate-created", this._onCertificateCreated);
+  o.on("npmPath-show", this._onNpmPathShow);
+};
+
+exports.directives = {};
+
+exports.beforeDestroy = function () {
+  o.removeListener("certificate-created", this._onCertificateCreated);
+  o.removeListener("npmPath-show", this._onNpmPathShow);
+  this.project.encryptJs = this.originEncryptJs;
+  this.project.includeSDKBox = this.includeSDKBox;
+};
+
+exports.methods = {
     _getProjectPath: () =>
       Editor.Project && Editor.Project.path
         ? Editor.Project.path
         : Editor.projectInfo.path,
     _onCertificateCreated(...i) {
-      if ((console.log("parsms ", ...i), !i || -1 === i)) return;
-      let n = i[0],
-        o = t.join(n, "certificate.pem");
-      e.existsSync(o) && (this.runtimeSetting.certificatePath = o);
+      console.log("parsms ", ...i);
+      if (!i || -1 === i) {
+        return;
+      }
+      let n = i[0];
+      let o = t.join(n, "certificate.pem");
+
+      if (e.existsSync(o)) {
+        this.runtimeSetting.certificatePath = o;
+      }
+
       let r = t.join(n, "private.pem");
-      e.existsSync(r) && (this.runtimeSetting.privatePath = r);
+
+      if (e.existsSync(r)) {
+        this.runtimeSetting.privatePath = r;
+      }
     },
     _onNpmPathShow(...t) {
-      this.runtimeSetting.showNpmPath = !0;
+      this.runtimeSetting.showNpmPath = true;
     },
     _onNewKeystoreClick() {
       Editor.Panel.open("vivo-runtime");
     },
     onChangeMode() {
-      this.runtimeSetting.useDebugKey
-        ? (this.runtimeSetting.disabledMode = "disabled is-disabled")
-        : (this.runtimeSetting.disabledMode = "");
+      if (this.runtimeSetting.useDebugKey) {
+        this.runtimeSetting.disabledMode = "disabled is-disabled";
+      } else {
+        this.runtimeSetting.disabledMode = "";
+      }
     },
     onChooseIconPath(t) {
       t.stopPropagation();
@@ -126,7 +148,10 @@ const o = require(Editor.url("packages://builder/utils/event"));
           { name: Editor.T("vivo-runtime.select_pic"), extensions: ["png"] },
         ],
       });
-      e && e[0] && (this.runtimeSetting.icon = e[0]);
+
+      if (e && e[0]) {
+        this.runtimeSetting.icon = e[0];
+      }
     },
     onChooseNpmPath(t) {
       t.stopPropagation();
@@ -134,7 +159,10 @@ const o = require(Editor.url("packages://builder/utils/event"));
         defaultPath: require("path").join(this._getProjectPath(), "asserts"),
         properties: ["openDirectory"],
       });
-      e && e[0] && (this.runtimeSetting.npmPath = e[0]);
+
+      if (e && e[0]) {
+        this.runtimeSetting.npmPath = e[0];
+      }
     },
     onCertificatePath(i) {
       i.stopPropagation();
@@ -151,10 +179,10 @@ const o = require(Editor.url("packages://builder/utils/event"));
       if (n && n[0]) {
         this.runtimeSetting.certificatePath = n[0];
         var o = t.join(t.dirname(n[0]), "private.pem");
-        ("" !== this.runtimeSetting.privatePath &&
-          e.existsSync(this.runtimeSetting.privatePath)) ||
-          !e.existsSync(o) ||
-          (this.runtimeSetting.privatePath = o);
+
+        if (!(("" !== this.runtimeSetting.privatePath && e.existsSync(this.runtimeSetting.privatePath)) || !e.existsSync(o))) {
+          this.runtimeSetting.privatePath = o;
+        }
       }
     },
     onPrivatePath(i) {
@@ -172,10 +200,10 @@ const o = require(Editor.url("packages://builder/utils/event"));
       if (n && n[0]) {
         this.runtimeSetting.privatePath = n[0];
         var o = t.join(t.dirname(n[0]), "certificate.pem");
-        ("" !== this.runtimeSetting.certificatePath &&
-          e.existsSync(this.runtimeSetting.certificatePath)) ||
-          !e.existsSync(o) ||
-          (this.runtimeSetting.certificatePath = o);
+
+        if (!(("" !== this.runtimeSetting.certificatePath && e.existsSync(this.runtimeSetting.certificatePath)) || !e.existsSync(o))) {
+          this.runtimeSetting.certificatePath = o;
+        }
       }
     },
-  });
+  };

@@ -1,12 +1,11 @@
 "use strict";
-const e = require("fs"),
-  t = require("electron"),
-  { promisify: i } = require("util"),
-  a = require(Editor.url("packages://builder/panel/platform/common")),
-  o = require("electron").remote.dialog,
-  r =
-    (require("fire-path"),
-    require(Editor.url("app://editor/share/build-utils")));
+const e = require("fs");
+const t = require("electron");
+const { promisify: i } = require("util");
+const a = require(Editor.url("packages://builder/panel/platform/common"));
+const o = require("electron").remote.dialog;
+const r = (require("fire-path"), require(Editor.url("app://editor/share/build-utils")));
+
 exports.template = `\n    <ui-prop name="${Editor.T(
   "BUILDER.template"
 )}">\n        <ui-select class="flex-1" v-value="local.template">\n            <template v-for="item in templates">\n                <option v-bind:value="item">{{item}}</option>\n            </template>\n        </ui-select>\n    </ui-prop>\n    \n    <ui-prop name="${Editor.T(
@@ -40,45 +39,56 @@ exports.template = `\n    <ui-prop name="${Editor.T(
 )}">\n        <ui-checkbox class="item" v-value="project.appBundle"></ui-checkbox>\n    </ui-prop>\n\n    ${
   a.native.xxtea
 }\n`;
+
 const n = (exports.name = "android");
-(exports.props = { local: null, project: null, anysdk: null }),
-  (exports.data = function () {
-    var e = this.project.orientation,
-      t = this.project[n];
-    return {
-      portrait: e.portrait,
-      upsideDown: e.upsideDown,
-      landscapeLeft: e.landscapeLeft,
-      landscapeRight: e.landscapeRight,
-      templates: [],
-      apiLevels: [],
-      armeabi: this.local.appABIs.indexOf("armeabi") >= 0,
-      armeabiV7a: this.local.appABIs.indexOf("armeabi-v7a") >= 0,
-      arm64V8a: this.local.appABIs.indexOf("arm64-v8a") >= 0,
-      x86: this.local.appABIs.indexOf("x86") >= 0,
-      x86_64: this.local.appABIs.indexOf("x86_64") >= 0,
-      packageName: t.packageName,
-    };
-  }),
-  (exports.watch = {
+exports.props = { local: null, project: null, anysdk: null };
+
+exports.data = function () {
+  var e = this.project.orientation;
+  var t = this.project[n];
+  return {
+    portrait: e.portrait,
+    upsideDown: e.upsideDown,
+    landscapeLeft: e.landscapeLeft,
+    landscapeRight: e.landscapeRight,
+    templates: [],
+    apiLevels: [],
+    armeabi: this.local.appABIs.indexOf("armeabi") >= 0,
+    armeabiV7a: this.local.appABIs.indexOf("armeabi-v7a") >= 0,
+    arm64V8a: this.local.appABIs.indexOf("arm64-v8a") >= 0,
+    x86: this.local.appABIs.indexOf("x86") >= 0,
+    x86_64: this.local.appABIs.indexOf("x86_64") >= 0,
+    packageName: t.packageName,
+  };
+};
+
+exports.watch = {
     portrait: {
       handler(e) {
-        this.project && (this.project.orientation.portrait = e);
+        if (this.project) {
+          this.project.orientation.portrait = e;
+        }
       },
     },
     upsideDown: {
       handler(e) {
-        this.project && (this.project.orientation.upsideDown = e);
+        if (this.project) {
+          this.project.orientation.upsideDown = e;
+        }
       },
     },
     landscapeLeft: {
       handler(e) {
-        this.project && (this.project.orientation.landscapeLeft = e);
+        if (this.project) {
+          this.project.orientation.landscapeLeft = e;
+        }
       },
     },
     landscapeRight: {
       handler(e) {
-        this.project && (this.project.orientation.landscapeRight = e);
+        if (this.project) {
+          this.project.orientation.landscapeRight = e;
+        }
       },
     },
     armeabi: {
@@ -109,113 +119,144 @@ const n = (exports.name = "android");
     packageName: {
       handler(e) {
         let t = this.project[n];
-        t && (t.packageName = e);
+
+        if (t) {
+          t.packageName = e;
+        }
       },
     },
-  }),
-  (exports.created = function () {
-    Editor.Ipc.sendToMain("app:query-cocos-templates", (e, t) => {
-      if (e) return Editor.warn(e);
-      if (
-        (t.forEach((e) => {
-          this.templates.push(e);
-        }),
-        this.local)
-      ) {
-        var i = this.local.template;
-        if (t.length <= 0) return (this.local.template = "");
-        -1 === t.indexOf(i) && (this.local.template = t[0]);
-      }
-    }),
-      Editor.Ipc.sendToMain("app:query-android-apilevels", (e, t) => {
-        if (e) return Editor.warn(e);
-        if (
-          (t.forEach((e) => {
-            this.apiLevels.push(e);
-          }),
-          this.local)
-        ) {
-          var i = this.local.apiLevel;
-          if (t.length <= 0) return (this.local.apiLevel = "");
-          -1 === t.indexOf(i) && (this.local.apiLevel = t[t.length - 1]);
-        }
+  };
+
+exports.created = function () {
+  Editor.Ipc.sendToMain("app:query-cocos-templates", (e, t) => {
+    if (e) {
+      return Editor.warn(e);
+    }
+
+    t.forEach((e) => {
+        this.templates.push(e);
       });
-  }),
-  (exports.directives = {}),
-  (exports.methods = {
+
+    if (
+      (this.local)
+    ) {
+      var i = this.local.template;
+      if (t.length <= 0) {
+        return (this.local.template = "");
+      }
+
+      if (-1 === t.indexOf(i)) {
+        this.local.template = t[0];
+      }
+    }
+  });
+
+  Editor.Ipc.sendToMain("app:query-android-apilevels", (e, t) => {
+    if (e) {
+      return Editor.warn(e);
+    }
+
+    t.forEach((e) => {
+        this.apiLevels.push(e);
+      });
+
+    if (
+      (this.local)
+    ) {
+      var i = this.local.apiLevel;
+      if (t.length <= 0) {
+        return (this.local.apiLevel = "");
+      }
+
+      if (-1 === t.indexOf(i)) {
+        this.local.apiLevel = t[t.length - 1];
+      }
+    }
+  });
+};
+
+exports.directives = {};
+
+exports.methods = {
     async checkParams(e) {
       let t = r.getAbsoluteBuildPath(this.local.buildPath);
-      if (Editor.isWin32 && t.length > 58)
-        return (
-          o.showErrorBox(
-            Editor.T("BUILDER.error.path_too_long_title"),
-            Editor.T("BUILDER.error.path_too_long_desc", { max_length: 58 })
-          ),
-          !1
+      if (Editor.isWin32 && t.length > 58) {
+        o.showErrorBox(
+          Editor.T("BUILDER.error.path_too_long_title"),
+          Editor.T("BUILDER.error.path_too_long_desc", { max_length: 58 })
         );
+
+        return false;
+      }
       let i = this._getAPILevel(this.local.apiLevel);
-      if ("binary" === this.local.template && i < 22)
-        return (
-          o.showErrorBox(
-            Editor.T("BUILDER.error.build_error"),
-            Editor.T("BUILDER.error.binary_api_level")
-          ),
-          !1
+      if ("binary" === this.local.template && i < 22) {
+        o.showErrorBox(
+          Editor.T("BUILDER.error.build_error"),
+          Editor.T("BUILDER.error.binary_api_level")
         );
+
+        return false;
+      }
       let a = this.packageName;
-      if (!/^[a-zA-Z0-9_.]*$/.test(a))
-        return (
-          o.showErrorBox(
-            Editor.T("BUILDER.error.build_error"),
-            Editor.T("BUILDER.error.package_name_not_legal")
-          ),
-          !1
+      if (!/^[a-zA-Z0-9_.]*$/.test(a)) {
+        o.showErrorBox(
+          Editor.T("BUILDER.error.build_error"),
+          Editor.T("BUILDER.error.package_name_not_legal")
         );
+
+        return false;
+      }
       let n = a.split(".");
-      for (let e = 0; e < n.length; e++)
-        if (!isNaN(n[e][0]))
-          return (
-            o.showErrorBox(
-              Editor.T("BUILDER.error.build_error"),
-              Editor.T("BUILDER.error.package_name_start_with_number")
-            ),
-            !1
-          );
-      if (
-        e.appABIs.find((e) => {
-          if ("arm64-v8a" === e) return e;
-        }) &&
-        parseInt(e.apiLevel.split("-")[1]) < 21
-      )
-        return (
+      for (let e = 0; e < n.length; e++) {
+        if (!isNaN(n[e][0])) {
           o.showErrorBox(
             Editor.T("BUILDER.error.build_error"),
-            Editor.T("BUILDER.error.arm64_not_support", {
-              current_api: e.apiLevel,
-              min_version: 21,
-            })
-          ),
-          !1
+            Editor.T("BUILDER.error.package_name_start_with_number")
+          );
+
+          return false;
+        }
+      }
+      if (e.appABIs.find((e) => {
+        if ("arm64-v8a" === e) {
+          return e;
+        }
+      }) &&
+      parseInt(e.apiLevel.split("-")[1]) < 21) {
+        o.showErrorBox(
+          Editor.T("BUILDER.error.build_error"),
+          Editor.T("BUILDER.error.arm64_not_support", {
+            current_api: e.apiLevel,
+            min_version: 21,
+          })
         );
+
+        return false;
+      }
       if (i < 26) {
         let e = Editor.Profile.load("project://project.json").get("facebook");
-        if (e && e.enable)
-          return (
-            o.showErrorBox(
-              Editor.T("BUILDER.error.build_error"),
-              Editor.T("BUILDER.error.facebook_min_compile_version", {
-                version: 26,
-              })
-            ),
-            !1
+        if (e && e.enable) {
+          o.showErrorBox(
+            Editor.T("BUILDER.error.build_error"),
+            Editor.T("BUILDER.error.facebook_min_compile_version", {
+              version: 26,
+            })
           );
+
+          return false;
+        }
       }
-      return !0;
+      return true;
     },
     _getAPILevel(e) {
-      let t = e.match("android-([0-9]+)$"),
-        i = -1;
-      return t && (i = parseInt(t[1])), i;
+      let t = e.match("android-([0-9]+)$");
+      let i = -1;
+
+      if (t) {
+        i = parseInt(t[1]);
+      }
+
+      return i;
     },
     _onChooseKeystoreClick(e) {
       e.stopPropagation();
@@ -225,22 +266,37 @@ const n = (exports.name = "android");
         filters: [{ name: "Keystore", extensions: ["keystore"] }],
         title: "Open Keystore",
       });
-      t && t[0] && (this.local.keystorePath = t[0]);
+
+      if (t && t[0]) {
+        this.local.keystorePath = t[0];
+      }
     },
     _onShowKeystoreClick(i) {
-      if ((i.stopPropagation(), !e.existsSync(this.local.keystorePath)))
-        return Editor.warn("%s not exists!", this.local.keystorePath), void 0;
-      t.shell.showItemInFolder(this.local.keystorePath), t.shell.beep();
+      i.stopPropagation();
+      if (!e.existsSync(this.local.keystorePath)) {
+        Editor.warn("%s not exists!", this.local.keystorePath);
+        return;
+      }
+      t.shell.showItemInFolder(this.local.keystorePath);
+      t.shell.beep();
     },
     _onNewKeystoreClick: function (e) {
-      e.stopPropagation(), Editor.Ipc.sendToMain("keystore:open");
+      e.stopPropagation();
+      Editor.Ipc.sendToMain("keystore:open");
     },
     _abiValueChanged: function (e, t) {
       if (this.local.appABIs) {
         var i = this.local.appABIs.indexOf(e);
-        t
-          ? i < 0 && this.local.appABIs.push(e)
-          : i >= 0 && this.local.appABIs.splice(i, 1);
+
+        if (t) {
+          if (i < 0) {
+            this.local.appABIs.push(e);
+          }
+        } else {
+          if (i >= 0) {
+            this.local.appABIs.splice(i, 1);
+          }
+        }
       }
     },
-  });
+  };

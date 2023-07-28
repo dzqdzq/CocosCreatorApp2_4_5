@@ -1,43 +1,66 @@
-var { exec: t, execSync: n } = require("child_process"),
-  e = require("path"),
-  i = require("fire-fs"),
-  o = require("fix-path"),
-  r = require("net");
+var { exec: t, execSync: n } = require("child_process");
+var e = require("path");
+var i = require("fire-fs");
+var o = require("fix-path");
+var r = require("net");
 function s(t) {
-  var n = new r.Socket(),
-    e = !1;
+  var n = new r.Socket();
+  var e = false;
+
   n.connect("443", "www.google-analytics.com", () => {
-    n.end(), !1 === e && ((e = !0), t(!0));
-  }),
-    setTimeout(function () {
-      n.end(), !1 === e && ((e = !0), t(!1));
-    }, 1e3);
+    n.end();
+
+    if (false === e) {
+      e = true;
+      t(true);
+    }
+  });
+
+  setTimeout(function () {
+    n.end();
+
+    if (false === e) {
+      e = true;
+      t(false);
+    }
+  }, 1e3);
 }
 let a = {
   init: function (t, n, e) {
-    (this.options = t), this.initEnvironmentPath(n, e);
+    this.options = t;
+    this.initEnvironmentPath(n, e);
   },
   initVivoProject: function (n) {
-    Editor.log(Editor.T("vivo-runtime.installing_npm_network")),
-      t(
-        "mg init qgame --force",
-        { env: this.environmentPath, cwd: e.join(this.options.dest, "..") },
-        (t) => {
-          n(t);
-        }
-      );
+    Editor.log(Editor.T("vivo-runtime.installing_npm_network"));
+
+    t(
+      "mg init qgame --force",
+      { env: this.environmentPath, cwd: e.join(this.options.dest, "..") },
+      (t) => {
+        n(t);
+      }
+    );
   },
   initEnvironmentPath: function (t, n) {
-    (this.environmentPath = {}),
-      t
-        ? (Editor.log(Editor.T("vivo-runtime.custom_npm_path_config"), t),
-          "win32" === process.platform
-            ? (this.environmentPath.Path = t)
-            : ((this.environmentPath.PATH = t),
-              (this.environmentPath.PATH += ":/usr/bin:/bin:/usr/sbin:/sbin")))
-        : (n && Editor.log(Editor.T("vivo-runtime.custom_npm_path_not_config")),
-          o(),
-          (this.environmentPath = process.env));
+    this.environmentPath = {};
+
+    if (t) {
+      Editor.log(Editor.T("vivo-runtime.custom_npm_path_config"), t);
+
+      if ("win32" === process.platform) {
+        this.environmentPath.Path = t;
+      } else {
+        this.environmentPath.PATH = t;
+        this.environmentPath.PATH += ":/usr/bin:/bin:/usr/sbin:/sbin";
+      }
+    } else {
+      if (n) {
+        Editor.log(Editor.T("vivo-runtime.custom_npm_path_not_config"));
+      }
+
+      o();
+      this.environmentPath = process.env;
+    }
   },
   isInitVivoProject: function () {
     return !(
@@ -49,9 +72,9 @@ let a = {
     try {
       result = n("mg -v", { env: this.environmentPath });
     } catch (t) {
-      return !1;
+      return false;
     }
-    return !0;
+    return true;
   },
   isCliProject: function () {
     return !!i.existsSync(
@@ -77,9 +100,9 @@ let a = {
                 Editor.T("vivo-runtime.not_install_nodejs_windows_error")
               )
             : Editor.log(Editor.T("vivo-runtime.not_install_nodejs_mac_error")),
-          !1);
+          false);
     }
-    return !0;
+    return true;
   },
   isInstallQGameAdapter: function () {
     return !!i.existsSync(this.getQGameAdapterPath());
@@ -87,7 +110,10 @@ let a = {
   installQGameAdapter: function (n) {
     var e = this;
     s(function (i) {
-      if (!1 === i) return n("no internet"), void 0;
+      if (false === i) {
+        n("no internet");
+        return;
+      }
       var o = "win32" === process.platform ? "npm.cmd" : "npm";
       t(
         `${o} i -S @qgame/adapter@latest`,
@@ -101,31 +127,48 @@ let a = {
   isLatestVersion: function (n) {
     let o = this;
     s(function (r) {
-      if (!1 === r) return n(!1), void 0;
-      if (!o.isInstallQGameAdapter()) return n(!1), void 0;
+      if (false === r) {
+        n(false);
+        return;
+      }
+      if (!o.isInstallQGameAdapter()) {
+        n(false);
+        return;
+      }
+
       var s = e.join(
           o.options.dest,
           "node_modules",
           "@qgame",
           "adapter",
           "package.json"
-        ),
-        a = i.readJsonSync(s, { throws: !1 });
-      if (null === a) return n(!1), void 0;
+        );
+
+      var a = i.readJsonSync(s, { throws: false });
+      if (null === a) {
+        n(false);
+        return;
+      }
       Editor.log("the current version @qgame/adapter is:", a.version);
       var d = "win32" === process.platform ? "npm.cmd" : "npm";
       t(
         `${d} view @qgame/adapter@latest version`,
         { env: o.environmentPath, cwd: o.options.dest },
         (t, e) => {
-          if (t) return n && n(o.isInstallQGameAdapter(), t), void 0;
+          if (t) {
+            if (n) {
+              n(o.isInstallQGameAdapter(), t);
+            }
+
+            return;
+          }
           let i = e.toString().trim();
-          if (
-            (Editor.log("the latest version of @qgame/adapter is:", i),
-            a && a.version === i)
-          )
-            return n(!0), void 0;
-          n(!1);
+          Editor.log("the latest version of @qgame/adapter is:", i);
+          if (a && a.version === i) {
+            n(true);
+            return;
+          }
+          n(false);
         }
       );
     });
@@ -141,10 +184,12 @@ let a = {
     );
   },
   isSupportSeparateEngine: function (t) {
-    var n = e.join(this.options.dest, "package.json"),
-      o = i.readJsonSync(n, { throws: !1 }).devDependencies[
-        "@vivo-minigame/cli-service"
-      ];
+    var n = e.join(this.options.dest, "package.json");
+
+    var o = i.readJsonSync(n, { throws: false }).devDependencies[
+      "@vivo-minigame/cli-service"
+    ];
+
     return (
       parseInt(o.replace(/[^\d]/g, "")) >=
       parseInt("1.3.0".replace(/[^\d]/g, ""))

@@ -1,11 +1,12 @@
 "use strict";
-const e = require("fs"),
-  t = require("fire-path"),
-  i = require("url"),
-  o = require("electron"),
-  r = require(Editor.url("packages://builder/panel/platform/common")),
-  a = require("electron").remote.dialog;
+const e = require("fs");
+const t = require("fire-path");
+const i = require("url");
+const o = require("electron");
+const r = require(Editor.url("packages://builder/panel/platform/common"));
+const a = require("electron").remote.dialog;
 require(Editor.url("app://editor/share/build-utils"));
+
 exports.template = `\n    <ui-prop name="${Editor.T(
   "BUILDER.template"
 )}">\n        <ui-select class="flex-1" v-value="local.template">\n            <template v-for="item in templates">\n                <option v-bind:value="item">{{item}}</option>\n            </template>\n        </ui-select>\n    </ui-prop>\n    \n    <ui-prop name="${Editor.T(
@@ -47,45 +48,56 @@ exports.template = `\n    <ui-prop name="${Editor.T(
 )}">\n        <ui-checkbox class="item" v-value="project.appBundle"></ui-checkbox>\n    </ui-prop>\n\n    ${
   r.native.xxtea
 }\n`;
+
 const n = (exports.name = "android-instant");
-(exports.props = { local: null, project: null, anysdk: null }),
-  (exports.data = function () {
-    var e = this.project.orientation,
-      t = this.project[n];
-    return {
-      portrait: e.portrait,
-      upsideDown: e.upsideDown,
-      landscapeLeft: e.landscapeLeft,
-      landscapeRight: e.landscapeRight,
-      templates: [],
-      apiLevels: [],
-      armeabiV7a: this.local.appABIs.indexOf("armeabi-v7a") >= 0,
-      arm64V8a: this.local.appABIs.indexOf("arm64-v8a") >= 0,
-      x86: this.local.appABIs.indexOf("x86") >= 0,
-      x86_64: this.local.appABIs.indexOf("x86_64") >= 0,
-      default_url: "",
-      packageName: t.packageName,
-    };
-  }),
-  (exports.watch = {
+exports.props = { local: null, project: null, anysdk: null };
+
+exports.data = function () {
+  var e = this.project.orientation;
+  var t = this.project[n];
+  return {
+    portrait: e.portrait,
+    upsideDown: e.upsideDown,
+    landscapeLeft: e.landscapeLeft,
+    landscapeRight: e.landscapeRight,
+    templates: [],
+    apiLevels: [],
+    armeabiV7a: this.local.appABIs.indexOf("armeabi-v7a") >= 0,
+    arm64V8a: this.local.appABIs.indexOf("arm64-v8a") >= 0,
+    x86: this.local.appABIs.indexOf("x86") >= 0,
+    x86_64: this.local.appABIs.indexOf("x86_64") >= 0,
+    default_url: "",
+    packageName: t.packageName,
+  };
+};
+
+exports.watch = {
     portrait: {
       handler(e) {
-        this.project && (this.project.orientation.portrait = e);
+        if (this.project) {
+          this.project.orientation.portrait = e;
+        }
       },
     },
     upsideDown: {
       handler(e) {
-        this.project && (this.project.orientation.upsideDown = e);
+        if (this.project) {
+          this.project.orientation.upsideDown = e;
+        }
       },
     },
     landscapeLeft: {
       handler(e) {
-        this.project && (this.project.orientation.landscapeLeft = e);
+        if (this.project) {
+          this.project.orientation.landscapeLeft = e;
+        }
       },
     },
     landscapeRight: {
       handler(e) {
-        this.project && (this.project.orientation.landscapeRight = e);
+        if (this.project) {
+          this.project.orientation.landscapeRight = e;
+        }
       },
     },
     armeabiV7a: {
@@ -110,122 +122,160 @@ const n = (exports.name = "android-instant");
     },
     default_url: {
       handler(e) {
-        let t = this.project["android-instant"],
-          o = i.parse(e),
-          r = o.protocol;
-        (t.scheme = r ? r.substr(0, r.length - 1) : ""),
-          (t.host = o.host || ""),
-          (t.pathPattern = o.pathname || "");
+        let t = this.project["android-instant"];
+        let o = i.parse(e);
+        let r = o.protocol;
+        t.scheme = r ? r.substr(0, r.length - 1) : "";
+        t.host = o.host || "";
+        t.pathPattern = o.pathname || "";
       },
     },
     packageName: {
       handler(e) {
         let t = this.project[n];
-        t && (t.packageName = e);
+
+        if (t) {
+          t.packageName = e;
+        }
       },
     },
-  }),
-  (exports.created = function () {
-    this._load_default(),
-      (this.originIncludeAnySDK = this.project.includeAnySDK),
-      (this.project.includeAnySDK = !1),
-      Editor.Ipc.sendToMain("app:query-cocos-templates", (e, t) => {
-        if (e) return Editor.warn(e);
-        if (
-          (t.forEach((e) => {
-            this.templates.push(e);
-          }),
-          !this.local)
-        )
-          return;
-        let i = this.local.template;
-        if (t.length <= 0) return (this.local.template = "");
-        -1 === t.indexOf(i) && (this.local.template = t[0]);
-      }),
-      Editor.Ipc.sendToMain("app:query-android-instant-apilevels", (e, t) => {
-        if (e) return Editor.warn(e);
-        if (
-          (t.forEach((e) => {
-            this.apiLevels.push(e);
-          }),
-          this.local)
-        ) {
-          var i = this.local.apiLevel;
-          if (t.length <= 0) return (this.local.apiLevel = "");
-          -1 === t.indexOf(i) && (this.local.apiLevel = t[0]);
-        }
+  };
+
+exports.created = function () {
+  this._load_default();
+  this.originIncludeAnySDK = this.project.includeAnySDK;
+  this.project.includeAnySDK = false;
+
+  Editor.Ipc.sendToMain("app:query-cocos-templates", (e, t) => {
+    if (e) {
+      return Editor.warn(e);
+    }
+
+    t.forEach((e) => {
+        this.templates.push(e);
       });
-  }),
-  (exports.directives = {}),
-  (exports.beforeDestroy = function () {
+
+    if (!this.local) {
+      return;
+    }
+    let i = this.local.template;
+    if (t.length <= 0) {
+      return (this.local.template = "");
+    }
+
+    if (-1 === t.indexOf(i)) {
+      this.local.template = t[0];
+    }
+  });
+
+  Editor.Ipc.sendToMain("app:query-android-instant-apilevels", (e, t) => {
+    if (e) {
+      return Editor.warn(e);
+    }
+
+    t.forEach((e) => {
+        this.apiLevels.push(e);
+      });
+
+    if (
+      (this.local)
+    ) {
+      var i = this.local.apiLevel;
+      if (t.length <= 0) {
+        return (this.local.apiLevel = "");
+      }
+
+      if (-1 === t.indexOf(i)) {
+        this.local.apiLevel = t[0];
+      }
+    }
+  });
+};
+
+exports.directives = {};
+
+exports.beforeDestroy = function () {
     this.project.includeAnySDK = this.originIncludeAnySDK;
-  }),
-  (exports.methods = {
+  };
+
+exports.methods = {
     checkParams(i) {
       let o = this.project["android-instant"].recordPath || "";
-      if (
-        ((o = o.trim()),
-        !(
-          this.project["android-instant"].skipRecord ||
-          (o && e.existsSync(t.join(o, "packageInfo.json")))
-        ))
-      )
-        return (
-          a.showErrorBox(
-            Editor.T("BUILDER.error.build_error"),
-            Editor.T("BUILDER.error.refactor_info_not_found")
-          ),
-          !1
-        );
-      let r = this.packageName;
-      if (!/^[a-zA-Z0-9_.]*$/.test(r))
-        return (
-          a.showErrorBox(
-            Editor.T("BUILDER.error.build_error"),
-            Editor.T("BUILDER.error.package_name_not_legal")
-          ),
-          !1
-        );
-      let n = r.split(".");
-      for (let e = 0; e < n.length; e++)
-        if (!isNaN(n[e][0]))
-          return (
-            a.showErrorBox(
-              Editor.T("BUILDER.error.build_error"),
-              Editor.T("BUILDER.error.package_name_start_with_number")
-            ),
-            !1
-          );
-      return (
-        !(
-          i.appABIs.find((e) => {
-            if ("arm64-v8a" === e) return e;
-          }) && parseInt(i.apiLevel.split("-")[1]) < 21
-        ) ||
-        (a.showErrorBox(
+      o = o.trim();
+      if (!(
+        this.project["android-instant"].skipRecord ||
+        (o && e.existsSync(t.join(o, "packageInfo.json")))
+      )) {
+        a.showErrorBox(
           Editor.T("BUILDER.error.build_error"),
-          Editor.T("BUILDER.error.arm64_not_support", {
-            current_api: i.apiLevel,
-            min_version: 21,
-          })
-        ),
-        !1)
-      );
+          Editor.T("BUILDER.error.refactor_info_not_found")
+        );
+
+        return false;
+      }
+      let r = this.packageName;
+      if (!/^[a-zA-Z0-9_.]*$/.test(r)) {
+        a.showErrorBox(
+          Editor.T("BUILDER.error.build_error"),
+          Editor.T("BUILDER.error.package_name_not_legal")
+        );
+
+        return false;
+      }
+      let n = r.split(".");
+      for (let e = 0; e < n.length; e++) {
+        if (!isNaN(n[e][0])) {
+          a.showErrorBox(
+            Editor.T("BUILDER.error.build_error"),
+            Editor.T("BUILDER.error.package_name_start_with_number")
+          );
+
+          return false;
+        }
+      }
+      return (!(
+        i.appABIs.find((e) => {
+          if ("arm64-v8a" === e) {
+            return e;
+          }
+        }) && parseInt(i.apiLevel.split("-")[1]) < 21
+      ) || (a.showErrorBox(
+        Editor.T("BUILDER.error.build_error"),
+        Editor.T("BUILDER.error.arm64_not_support", {
+          current_api: i.apiLevel,
+          min_version: 21,
+        })
+      ), false));
     },
     _load_default() {
       process.nextTick(() => {
         let e = this.project["android-instant"];
-        e.recordPath || (e.recordPath = ""),
-          e.REMOTE_SERVER_ROOT ||
-            (e.REMOTE_SERVER_ROOT = `http://${Editor.remote.Network.ip}:${Editor.remote.PreviewServer.previewPort}/preview-android-instant/`),
-          e.hasOwnProperty("host") ||
-            (e.host = `org.cocos2d.${this.project.title}`),
-          e.hasOwnProperty("pathPattern") || (e.pathPattern = "/game"),
-          e.hasOwnProperty("scheme") || (e.scheme = "https"),
-          e.host &&
-            e.scheme &&
-            e.pathPattern &&
-            (this.default_url = `${e.scheme}://${e.host}${e.pathPattern}`);
+
+        if (!e.recordPath) {
+          e.recordPath = "";
+        }
+
+        if (!e.REMOTE_SERVER_ROOT) {
+          e.REMOTE_SERVER_ROOT = `http://${Editor.remote.Network.ip}:${Editor.remote.PreviewServer.previewPort}/preview-android-instant/`;
+        }
+
+        if (!e.hasOwnProperty("host")) {
+          e.host = `org.cocos2d.${this.project.title}`;
+        }
+
+        if (!e.hasOwnProperty("pathPattern")) {
+          e.pathPattern = "/game";
+        }
+
+        if (!e.hasOwnProperty("scheme")) {
+          e.scheme = "https";
+        }
+
+        if (e.host &&
+          e.scheme &&
+          e.pathPattern) {
+          this.default_url = `${e.scheme}://${e.host}${e.pathPattern}`;
+        }
       });
     },
     _onChooseKeystoreClick(e) {
@@ -236,33 +286,48 @@ const n = (exports.name = "android-instant");
         filters: [{ name: "Keystore", extensions: ["keystore"] }],
         title: "Open Keystore",
       });
-      t && t[0] && (this.local.keystorePath = t[0]);
+
+      if (t && t[0]) {
+        this.local.keystorePath = t[0];
+      }
     },
     _onShowKeystoreClick(t) {
-      if ((t.stopPropagation(), !e.existsSync(this.local.keystorePath)))
-        return Editor.warn("%s not exists!", this.local.keystorePath), void 0;
-      o.shell.showItemInFolder(this.local.keystorePath), o.shell.beep();
+      t.stopPropagation();
+      if (!e.existsSync(this.local.keystorePath)) {
+        Editor.warn("%s not exists!", this.local.keystorePath);
+        return;
+      }
+      o.shell.showItemInFolder(this.local.keystorePath);
+      o.shell.beep();
     },
     _onNewKeystoreClick: function (e) {
-      e.stopPropagation(), Editor.Ipc.sendToMain("keystore:open");
+      e.stopPropagation();
+      Editor.Ipc.sendToMain("keystore:open");
     },
     _abiValueChanged: function (e, t) {
       if (this.local.appABIs) {
         var i = this.local.appABIs.indexOf(e);
-        t
-          ? i < 0 && this.local.appABIs.push(e)
-          : i >= 0 && this.local.appABIs.splice(i, 1);
+
+        if (t) {
+          if (i < 0) {
+            this.local.appABIs.push(e);
+          }
+        } else {
+          if (i >= 0) {
+            this.local.appABIs.splice(i, 1);
+          }
+        }
       }
     },
     _onRefactorClick(e) {
-      if (!this.project["android-instant"].recordPath)
-        return (
-          a.showErrorBox(
-            Editor.T("BUILDER.error.build_error"),
-            Editor.T("BUILDER.error.instant_record_empty")
-          ),
-          void 0
+      if (!this.project["android-instant"].recordPath) {
+        a.showErrorBox(
+          Editor.T("BUILDER.error.build_error"),
+          Editor.T("BUILDER.error.instant_record_empty")
         );
+
+        return;
+      }
       Editor.Panel.open("google-instant-games", {
         recordPath: this.project["android-instant"].recordPath,
       });
@@ -280,4 +345,4 @@ const n = (exports.name = "android-instant");
         this.project["android-instant"].recordPath = i[0];
       }
     },
-  });
+  };

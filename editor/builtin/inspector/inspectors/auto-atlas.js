@@ -45,7 +45,7 @@
           return [];
         },
       },
-      generating: !1,
+      generating: false,
     },
     ready() {
       this._getInfo();
@@ -53,22 +53,23 @@
     watch: { target: "_getInfo" },
     methods: {
       _onPreviewClick() {
-        (this.generating = !0),
-          Editor.Ipc.sendToPanel(
-            "scene",
-            "scene:generate-texture-packer-preview-files",
-            this.target.uuid,
-            (e) => {
-              if (((this.generating = !1), e))
-                return (
-                  (this.packedTextures = []),
-                  (this.unpackedTextures = []),
-                  void 0
-                );
-              this._getInfo();
-            },
-            -1
-          );
+        this.generating = true;
+
+        Editor.Ipc.sendToPanel(
+          "scene",
+          "scene:generate-texture-packer-preview-files",
+          this.target.uuid,
+          (e) => {
+            this.generating = false;
+            if (e) {
+              this.packedTextures = [];
+              this.unpackedTextures = [];
+              return;
+            }
+            this._getInfo();
+          },
+          -1
+        );
       },
       _getInfo() {
         Editor.Ipc.sendToPanel(
@@ -76,16 +77,21 @@
           "scene:query-texture-packer-preview-files",
           this.target.uuid,
           (e, n) => {
-            n
-              ? (n.packedTextures.forEach((e) => {
-                  e.path += "?time=" + Date.now();
-                }),
-                n.unpackedTextures.forEach((e) => {
-                  e.path += "?time=" + Date.now();
-                }),
-                (this.packedTextures = n.packedTextures),
-                (this.unpackedTextures = n.unpackedTextures))
-              : ((this.packedTextures = []), (this.unpackedTextures = []));
+            if (n) {
+              n.packedTextures.forEach((e) => {
+                    e.path += "?time=" + Date.now();
+                  });
+
+              n.unpackedTextures.forEach((e) => {
+                e.path += "?time=" + Date.now();
+              });
+
+              this.packedTextures = n.packedTextures;
+              this.unpackedTextures = n.unpackedTextures;
+            } else {
+              this.packedTextures = [];
+              this.unpackedTextures = [];
+            }
           }
         );
       },

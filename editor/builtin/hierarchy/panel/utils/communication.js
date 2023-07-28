@@ -5,9 +5,9 @@ let e = {
   search: "popup-search-menu",
 };
 exports.popup = function (o, c) {
-  const n = require("./cache"),
-    t = Editor.Selection.contexts("node"),
-    p = n.queryRoots();
+  const n = require("./cache");
+  const t = Editor.Selection.contexts("node");
+  const p = n.queryRoots();
   Editor.Ipc.sendToMain(
     `hierarchy:${e[o]}`,
     c.x,

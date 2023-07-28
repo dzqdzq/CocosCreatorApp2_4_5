@@ -1,11 +1,12 @@
 "use strict";
 const t = Editor.remote.Profile.load("global://features.json");
 require("electron").remote.dialog;
-let e = require("path"),
-  i = require("fs"),
-  n = Editor.Profile.load("project://oppo-runtime.json"),
-  o = n.getSelfData();
-(exports.template = `\n        <ui-prop name="${Editor.T(
+let e = require("path");
+let i = require("fs");
+let n = Editor.Profile.load("project://oppo-runtime.json");
+let o = n.getSelfData();
+
+exports.template = `\n        <ui-prop name="${Editor.T(
   "oppo-runtime.pack_res_to_first_pack"
 )}">\n             <ui-checkbox v-value="runtimeSetting.packFirstScreenRes"></ui-checkbox>\n        </ui-prop>\n        <ui-prop name="${Editor.T(
   "oppo-runtime.package"
@@ -61,61 +62,82 @@ let e = require("path"),
   "oppo-runtime.custom_npm_path_hint"
 )}"></ui-input>\n        <ui-button class="tiny" v-on:confirm="onChooseNpmPath">···</ui-button>\n        </ui-prop>\n\n          <ui-prop name="${Editor.T(
   "oppo-runtime.separate_engine"
-)}"  v-if="!local.debug && showSeparateEngine()" auto-height>\n            <ui-checkbox v-value="runtimeSetting.separateEngineMode"></ui-checkbox>\n        </ui-prop>\n\n`),
-  (exports.name = "quickgame"),
-  (exports.data = function () {
-    return { runtimeSetting: o, originEncryptJs: !1, profile: null };
-  }),
-  (exports.watch = {
+)}"  v-if="!local.debug && showSeparateEngine()" auto-height>\n            <ui-checkbox v-value="runtimeSetting.separateEngineMode"></ui-checkbox>\n        </ui-prop>\n\n`;
+
+exports.name = "quickgame";
+
+exports.data = function () {
+    return { runtimeSetting: o, originEncryptJs: false, profile: null };
+  };
+
+exports.watch = {
     runtimeSetting: {
       handler(t) {
         Object.keys(this.runtimeSetting).forEach((t) => {
           n.set(t, this.runtimeSetting[t]);
-        }),
-          n.save();
+        });
+
+        n.save();
       },
-      deep: !0,
+      deep: true,
     },
-  });
+  };
+
 const r = require(Editor.url("packages://builder/utils/event"));
-(exports.created = function () {
-  (this.originEncryptJs = this.project.encryptJs),
-    (this.includeSDKBox = this.project.includeSDKBox),
-    (this.project.encryptJs = !1),
-    (this.project.includeSDKBox = !1),
-    r.on("certificate-created", this._onCertificateCreated),
-    r.on("npmPath-show", this._onNpmPathShow);
-}),
-  (exports.directives = {}),
-  (exports.beforeDestroy = function () {
-    r.removeListener("certificate-created", this._onCertificateCreated),
-      r.removeListener("npmPath-show", this._onNpmPathShow),
-      (this.project.encryptJs = this.originEncryptJs),
-      (this.project.includeSDKBox = this.includeSDKBox);
-  }),
-  (exports.methods = {
+
+exports.created = function () {
+  this.originEncryptJs = this.project.encryptJs;
+  this.includeSDKBox = this.project.includeSDKBox;
+  this.project.encryptJs = false;
+  this.project.includeSDKBox = false;
+  r.on("certificate-created", this._onCertificateCreated);
+  r.on("npmPath-show", this._onNpmPathShow);
+};
+
+exports.directives = {};
+
+exports.beforeDestroy = function () {
+  r.removeListener("certificate-created", this._onCertificateCreated);
+  r.removeListener("npmPath-show", this._onNpmPathShow);
+  this.project.encryptJs = this.originEncryptJs;
+  this.project.includeSDKBox = this.includeSDKBox;
+};
+
+exports.methods = {
     _getProjectPath: () =>
       Editor.Project && Editor.Project.path
         ? Editor.Project.path
         : Editor.projectInfo.path,
     _onCertificateCreated(...t) {
-      if ((console.log("parsms ", ...t), !t || -1 === t)) return;
-      let n = t[0],
-        o = e.join(n, "certificate.pem");
-      i.existsSync(o) && (this.runtimeSetting.certificatePath = o);
+      console.log("parsms ", ...t);
+      if (!t || -1 === t) {
+        return;
+      }
+      let n = t[0];
+      let o = e.join(n, "certificate.pem");
+
+      if (i.existsSync(o)) {
+        this.runtimeSetting.certificatePath = o;
+      }
+
       let r = e.join(n, "private.pem");
-      i.existsSync(r) && (this.runtimeSetting.privatePath = r);
+
+      if (i.existsSync(r)) {
+        this.runtimeSetting.privatePath = r;
+      }
     },
     _onNpmPathShow(...t) {
-      this.runtimeSetting.showNpmPath = !0;
+      this.runtimeSetting.showNpmPath = true;
     },
     _onNewKeystoreClick() {
       Editor.Panel.open("oppo-runtime");
     },
     onChangeMode() {
-      this.runtimeSetting.useDebugKey
-        ? (this.runtimeSetting.disabledMode = "disabled is-disabled")
-        : (this.runtimeSetting.disabledMode = "");
+      if (this.runtimeSetting.useDebugKey) {
+        this.runtimeSetting.disabledMode = "disabled is-disabled";
+      } else {
+        this.runtimeSetting.disabledMode = "";
+      }
     },
     onChooseIconPath(t) {
       t.stopPropagation();
@@ -126,7 +148,10 @@ const r = require(Editor.url("packages://builder/utils/event"));
           { name: Editor.T("oppo-runtime.select_pic"), extensions: ["png"] },
         ],
       });
-      e && e[0] && (this.runtimeSetting.icon = e[0]);
+
+      if (e && e[0]) {
+        this.runtimeSetting.icon = e[0];
+      }
     },
     onChooseNpmPath(t) {
       t.stopPropagation();
@@ -134,7 +159,10 @@ const r = require(Editor.url("packages://builder/utils/event"));
         defaultPath: require("path").join(this._getProjectPath(), "asserts"),
         properties: ["openDirectory"],
       });
-      e && e[0] && (this.runtimeSetting.npmPath = e[0]);
+
+      if (e && e[0]) {
+        this.runtimeSetting.npmPath = e[0];
+      }
     },
     onCertificatePath(t) {
       t.stopPropagation();
@@ -151,10 +179,10 @@ const r = require(Editor.url("packages://builder/utils/event"));
       if (n && n[0]) {
         this.runtimeSetting.certificatePath = n[0];
         var o = e.join(e.dirname(n[0]), "private.pem");
-        ("" !== this.runtimeSetting.privatePath &&
-          i.existsSync(this.runtimeSetting.privatePath)) ||
-          !i.existsSync(o) ||
-          (this.runtimeSetting.privatePath = o);
+
+        if (!(("" !== this.runtimeSetting.privatePath && i.existsSync(this.runtimeSetting.privatePath)) || !i.existsSync(o))) {
+          this.runtimeSetting.privatePath = o;
+        }
       }
     },
     onPrivatePath(t) {
@@ -172,11 +200,11 @@ const r = require(Editor.url("packages://builder/utils/event"));
       if (n && n[0]) {
         this.runtimeSetting.privatePath = n[0];
         var o = e.join(e.dirname(n[0]), "certificate.pem");
-        ("" !== this.runtimeSetting.certificatePath &&
-          i.existsSync(this.runtimeSetting.certificatePath)) ||
-          !i.existsSync(o) ||
-          (this.runtimeSetting.certificatePath = o);
+
+        if (!(("" !== this.runtimeSetting.certificatePath && i.existsSync(this.runtimeSetting.certificatePath)) || !i.existsSync(o))) {
+          this.runtimeSetting.certificatePath = o;
+        }
       }
     },
-    showSeparateEngine: () => (t && t.get("quickgame-separation-engine")) || !1,
-  });
+    showSeparateEngine: () => (t && t.get("quickgame-separation-engine")) || false,
+  };

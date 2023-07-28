@@ -12,10 +12,12 @@ if (e.existsSync(r)) {
   } catch (e) {
     t = null;
   } finally {
-    (t && t.version) ||
-      (Editor.warn(
-        "Invalid layout profile, remove old profile and init a new one at: " + r
-      ),
-      e.removeSync(r));
+    if (!(t && t.version)) {
+      Editor.warn(
+          "Invalid layout profile, remove old profile and init a new one at: " + r
+        );
+
+      e.removeSync(r);
+    }
   }
 }

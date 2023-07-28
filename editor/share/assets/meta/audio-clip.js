@@ -1,31 +1,45 @@
 "use strict";
-const e = require("./native-asset"),
-  { EventEmitter: t } = require("events"),
-  o = new t(),
-  r = 5e3;
-let i, n;
+const e = require("./native-asset");
+const { EventEmitter: t } = require("events");
+const o = new t();
+const r = 5e3;
+let i;
+let n;
 function d() {
-  n && (clearTimeout(n), (n = void 0));
+  if (n) {
+    clearTimeout(n);
+    n = void 0;
+  }
 }
 let s = (function () {
-  let e = !1;
+  let e = false;
   return function (t) {
-    i
-      ? t(i)
-      : (o.once("worker-spawned", t),
-        e ||
-          ((e = !0),
-          Editor.App.spawnWorker(
-            "app://editor/page/worker/load-audio-duration.js",
-            (t, r) => {
-              (e = !1), (i = t), o.emit("worker-spawned", t);
-            }
-          )));
+    if (i) {
+      t(i);
+    } else {
+      o.once("worker-spawned", t);
+
+      if (!e) {
+        e = true;
+
+        Editor.App.spawnWorker(
+          "app://editor/page/worker/load-audio-duration.js",
+          (t, r) => {
+            e = false;
+            i = t;
+            o.emit("worker-spawned", t);
+          }
+        );
+      }
+    }
   };
 })();
+
 module.exports = class extends e {
   constructor(e) {
-    super(e), (this.downloadMode = 0), (this.duration = 0);
+    super(e);
+    this.downloadMode = 0;
+    this.duration = 0;
   }
   static version() {
     return "2.0.1";
@@ -35,26 +49,34 @@ module.exports = class extends e {
   }
   createAsset() {
     let e = new cc.AudioClip();
-    return (e.loadMode = this.downloadMode), (e.duration = this.duration), e;
+    e.loadMode = this.downloadMode;
+    e.duration = this.duration;
+    return e;
   }
   import(e, t) {
-    d(),
-      (function (e, t) {
-        s((o) => {
-          o.send("app:load-audio-duration", e, t);
-        });
-      })(e, (o, s) => {
-        if (
-          ((function (e) {
-            d(),
-              (n = setTimeout(() => {
-                i && (i.close(), (i = void 0));
-              }, e));
-          })(r),
-          o)
-        )
-          return t(o);
-        (this.duration = s), super.import(e, t);
+    d();
+
+    (function (e, t) {
+      s((o) => {
+        o.send("app:load-audio-duration", e, t);
       });
+    })(e, (o, s) => {
+      (function (e) {
+        d();
+
+        n = setTimeout(() => {
+          if (i) {
+            i.close();
+            i = void 0;
+          }
+        }, e);
+      })(r);
+
+      if (o) {
+        return t(o);
+      }
+      this.duration = s;
+      super.import(e, t);
+    });
   }
 };

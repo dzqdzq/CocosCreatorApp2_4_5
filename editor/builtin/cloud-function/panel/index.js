@@ -1,61 +1,96 @@
-const e = require("fire-fs"),
-  t = require("fs"),
-  n = require("fire-path"),
-  i = Editor.require("packages://cloud-function/panel/utils/event"),
-  o = Editor.require("packages://cloud-function/panel/utils/cache"),
-  r = Editor.require("packages://cloud-function/panel/utils/operation"),
-  l = Editor.require("packages://cloud-function/panel/utils/utils"),
-  s = Editor.require("packages://cloud-function/selection"),
-  c = Editor.require("packages://cloud-function/panel/utils/tcb_utils");
+const e = require("fire-fs");
+const t = require("fs");
+const n = require("fire-path");
+const i = Editor.require("packages://cloud-function/panel/utils/event");
+const o = Editor.require("packages://cloud-function/panel/utils/cache");
+const r = Editor.require("packages://cloud-function/panel/utils/operation");
+const l = Editor.require("packages://cloud-function/panel/utils/utils");
+const s = Editor.require("packages://cloud-function/selection");
+const c = Editor.require("packages://cloud-function/panel/utils/tcb_utils");
+
 let a = function (e) {
     return e.length <= 1 ? e[0] : e[e.length - 1];
-  },
-  d = function (e) {
-    let t = o.queryShowNodes(),
-      n = s.curSelection("cloud-function"),
-      i = a(n),
-      r = n.indexOf(i),
-      l = t.findIndex((e) => e.id === i),
-      c = t[l],
-      d = t[l + ("down" === e ? 1 : -1)];
-    d &&
-      (d.selected
-        ? ((c.selected = !c.selected), n.splice(r, 1))
-        : ((d.selected = !d.selected),
-          d.selected
-            ? n.push(d.id)
-            : n.forEach((e, t) => {
-                e === d.id && n.splice(t, 1);
-              })),
-      s.select("cloud-function", n, !0, !0));
-  },
-  u = async function (e) {
-    var t = c.switchEnv(e);
-    return t || l.printToConsole("warn", l.tr("env-not-exist")), t;
-  },
-  f = function (e) {
-    var t = l.getCurrentEnvId(),
-      n = Editor.isWin32
-        ? `serverless\\cloud-function\\${t}\\`
-        : `serverless/cloud-function/${t}/`,
-      i = e.split(n);
-    return { envPath: i[0] + n, func_name: i[1].split(/\/|\\+/)[0] };
-  },
-  p = function (e) {
-    var t = e.split(/serverless[\/|\\]+mgobe-server[\/|\\]*/);
-    return t[1] && t[1].split(/\/|\\+/)[0];
-  },
-  h = function (e) {
-    console.warn("tcbUtils", e), e.code.indexOf("AuthFailure") > -1 && g();
-  },
-  g = function () {
-    Editor.Ipc.sendToMain("cocos-services:tcb-get-temp-key", (e, t) => {
-      e ? g() : c.init(t);
-    });
-  },
-  v = function () {
-    l.printToConsole("warn", l.tr("not-env-tips"));
   };
+
+let d = function (e) {
+  let t = o.queryShowNodes();
+  let n = s.curSelection("cloud-function");
+  let i = a(n);
+  let r = n.indexOf(i);
+  let l = t.findIndex((e) => e.id === i);
+  let c = t[l];
+  let d = t[l + ("down" === e ? 1 : -1)];
+
+  if (d) {
+    if (d.selected) {
+      c.selected = !c.selected;
+      n.splice(r, 1);
+    } else {
+      d.selected = !d.selected;
+
+      if (d.selected) {
+        n.push(d.id);
+      } else {
+        n.forEach((e, t) => {
+          if (e === d.id) {
+            n.splice(t, 1);
+          }
+        });
+      }
+    }
+
+    s.select("cloud-function", n, true, true);
+  }
+};
+
+let u = async function (e) {
+  var t = c.switchEnv(e);
+
+  if (!t) {
+    l.printToConsole("warn", l.tr("env-not-exist"));
+  }
+
+  return t;
+};
+
+let f = function (e) {
+  var t = l.getCurrentEnvId();
+
+  var n = Editor.isWin32
+    ? `serverless\\cloud-function\\${t}\\`
+    : `serverless/cloud-function/${t}/`;
+
+  var i = e.split(n);
+  return { envPath: i[0] + n, func_name: i[1].split(/\/|\\+/)[0] };
+};
+
+let p = function (e) {
+  var t = e.split(/serverless[\/|\\]+mgobe-server[\/|\\]*/);
+  return t[1] && t[1].split(/\/|\\+/)[0];
+};
+
+let h = function (e) {
+  console.warn("tcbUtils", e);
+
+  if (e.code.indexOf("AuthFailure") > -1) {
+    g();
+  }
+};
+
+let g = function () {
+  Editor.Ipc.sendToMain("cocos-services:tcb-get-temp-key", (e, t) => {
+    if (e) {
+      g();
+    } else {
+      c.init(t);
+    }
+  });
+};
+
+let v = function () {
+  l.printToConsole("warn", l.tr("not-env-tips"));
+};
+
 Editor.Panel.extend({
   listeners: {
     "panel-resize"() {
@@ -65,7 +100,7 @@ Editor.Panel.extend({
       r.loadAssets();
     },
     focus() {
-      r.loadAssets(!1);
+      r.loadAssets(false);
     },
   },
   style: e.readFileSync(
@@ -75,14 +110,14 @@ Editor.Panel.extend({
     Editor.url("packages://cloud-function/panel/template/index.html")
   ),
   async ready() {
-    (this._vm = (function (e, t) {
+    this._vm = (function (e, t) {
       return new Vue({
         el: e,
         data: {
           length: 0,
           filter: "",
           currentPath: "serverless",
-          loading: !0,
+          loading: true,
           loadingTips: "loading...",
         },
         watch: {},
@@ -96,85 +131,107 @@ Editor.Panel.extend({
           ),
         },
         created() {
-          r.loadAssets(),
-            i.on("filter-changed", (e) => {
-              this.filter = e;
-            }),
-            i.on("start-loading", (e = "loading...") => {
-              (this.loadingTips = e), (this.loading = !0);
-            }),
-            i.on("finish-loading", () => {
-              (this.loading = !1),
-                s.curSelection("cloud-function").forEach((e) => {
-                  r.select(e, !0);
-                });
-            }),
-            i.on("empty-filter", () => {
-              let e = s.curSelection("cloud-function");
-              e.length > 0 && this.$refs.nodes.scrollToItem(e[0]);
-            }),
-            i.emit("env_changed", l.getCurrentEnvId());
+          r.loadAssets();
+
+          i.on("filter-changed", (e) => {
+            this.filter = e;
+          });
+
+          i.on("start-loading", (e = "loading...") => {
+            this.loadingTips = e;
+            this.loading = true;
+          });
+
+          i.on("finish-loading", () => {
+            this.loading = false;
+
+            s.curSelection("cloud-function").forEach((e) => {
+              r.select(e, true);
+            });
+          });
+
+          i.on("empty-filter", () => {
+            let e = s.curSelection("cloud-function");
+
+            if (e.length > 0) {
+              this.$refs.nodes.scrollToItem(e[0]);
+            }
+          });
+
+          i.emit("env_changed", l.getCurrentEnvId());
         },
       });
-    })(this.shadowRoot)),
-      (this._vm.length = (this.clientHeight - 56) / o.lineHeight + 3),
-      Editor.Ipc.sendToMain("cloud-function:panel-changed", !0),
-      (c.onTCBError = h),
-      g(),
-      (this._timer = setInterval(() => g(), 18e5)),
-      i.on("create-cloud-function", async (e, t) => {
-        if (!e.match(/^[A-Za-z]([A-Za-z0-9-_]*)[A-Za-z0-9]$/) || e.length > 45)
-          return (
-            l.printToConsole("warn", l.tr("func-name-not-standard")),
-            l.printToConsole("warn", l.tr("cloud-func-name-rule")),
-            r.loadAssets(),
-            void 0
-          );
-        i.emit("start-loading", l.tr("creating-cloud-func"));
-        var { res: o, isCreate: s } = await c.createFunction(
-          {
-            name: e,
-            timeout: 20,
-            envVariables: {},
-            runtime: "Nodejs10.15",
-            installDependency: !0,
-            isWaitInstall: !0,
-            triggers: [],
-            ignore: [],
-          },
-          n.dirname(t) + "/",
-          !0,
-          ""
-        );
-        r.loadAssets(!1),
-          i.emit("finish-loading"),
-          setTimeout(() => {
-            r.hint(`${n.dirname(t)}/${e}`);
-          }, 1e3),
-          s
-            ? l.printToConsole("info", l.tr("cloud-func-created"))
-            : l.printToConsole("info", l.tr("cloud-func-exist-info"));
-      });
+    })(this.shadowRoot);
+
+    this._vm.length = (this.clientHeight - 56) / o.lineHeight + 3;
+    Editor.Ipc.sendToMain("cloud-function:panel-changed", true);
+    c.onTCBError = h;
+    g();
+    this._timer = setInterval(() => g(), 18e5);
+
+    i.on("create-cloud-function", async (e, t) => {
+      if (!e.match(/^[A-Za-z]([A-Za-z0-9-_]*)[A-Za-z0-9]$/) || e.length > 45) {
+        l.printToConsole("warn", l.tr("func-name-not-standard"));
+        l.printToConsole("warn", l.tr("cloud-func-name-rule"));
+        r.loadAssets();
+        return;
+      }
+      i.emit("start-loading", l.tr("creating-cloud-func"));
+      var { res: o, isCreate: s } = await c.createFunction(
+        {
+          name: e,
+          timeout: 20,
+          envVariables: {},
+          runtime: "Nodejs10.15",
+          installDependency: true,
+          isWaitInstall: true,
+          triggers: [],
+          ignore: [],
+        },
+        n.dirname(t) + "/",
+        true,
+        ""
+      );
+      r.loadAssets(false);
+      i.emit("finish-loading");
+
+      setTimeout(() => {
+        r.hint(`${n.dirname(t)}/${e}`);
+      }, 1e3);
+
+      if (s) {
+        l.printToConsole("info", l.tr("cloud-func-created"));
+      } else {
+        l.printToConsole("info", l.tr("cloud-func-exist-info"));
+      }
+    });
   },
   close() {
-    Editor.Ipc.sendToMain("cloud-function:panel-changed", !1),
-      clearInterval(this._timer);
+    Editor.Ipc.sendToMain("cloud-function:panel-changed", false);
+    clearInterval(this._timer);
   },
   messages: {
     "cloud-function:selected"(e, t, n) {
-      if ("cloud-function" !== t || !n) return;
-      let i = a(n),
-        o = r.getRealUrl(i);
-      null !== o && (this._vm.currentPath = o),
-        n.forEach((e) => {
-          r.select(e, !0);
-        });
+      if ("cloud-function" !== t || !n) {
+        return;
+      }
+      let i = a(n);
+      let o = r.getRealUrl(i);
+
+      if (null !== o) {
+        this._vm.currentPath = o;
+      }
+
+      n.forEach((e) => {
+        r.select(e, true);
+      });
     },
     "cloud-function:unselected"(e, t, n) {
-      "cloud-function" === t &&
+      if ("cloud-function" === t) {
         n.forEach((e) => {
-          r.select(e, !1);
+          r.select(e, false);
         });
+      }
     },
     "change-filter"(e, t) {
       this._vm.filter = t;
@@ -204,7 +261,8 @@ Editor.Panel.extend({
       console.log(t);
       const i =
         s.contexts("cloud-function")[0] || s.curActivate("cloud-function");
-      console.log(i), console.log(s.contexts("cloud-function")[0]);
+      console.log(i);
+      console.log(s.contexts("cloud-function")[0]);
     },
     "cloud-function:custom-server-release-stop"(e, t, n) {
       Editor.Ipc.sendToMain(
@@ -221,77 +279,97 @@ Editor.Panel.extend({
       );
     },
     async "cloud-function:cloud-function-new"(e, t, i) {
-      if (!l.checkedCurrentEnvId() || !(await l.checkedEnableTCB())) return v();
+      if (!l.checkedCurrentEnvId() || !(await l.checkedEnableTCB())) {
+        return v();
+      }
       var o = t.assetUuid;
+
+      if (!(void 0 !== o && "" != o)) {
+        o = n.join(
+              Editor.Project.path,
+              "./serverless/cloud-function",
+              t.env_id
+            );
+      }
+
       if (
-        ((void 0 !== o && "" != o) ||
-          (o = n.join(
-            Editor.Project.path,
-            "./serverless/cloud-function",
-            t.env_id
-          )),
-        u(t.env_id))
+        (u(t.env_id))
       ) {
-        var s = r.add(`${o}/function`, !0);
+        var s = r.add(`${o}/function`, true);
         r.rename(s.id);
       }
     },
     async "cloud-function:cloud-function-list"(e, n, o) {
-      if (!l.checkedCurrentEnvId() || !(await l.checkedEnableTCB())) return v();
+      if (!l.checkedCurrentEnvId() || !(await l.checkedEnableTCB())) {
+        return v();
+      }
       if (u(n.env_id)) {
         i.emit("start-loading", l.tr("syncing-cloud-func-list"));
         var a = await c.listFunctions();
         for (var d of a) {
           var f = s.contexts("cloud-function")[0] + "/" + d.FunctionName;
-          t.existsSync(f) || t.mkdirSync(f);
+
+          if (!t.existsSync(f)) {
+            t.mkdirSync(f);
+          }
         }
-        r.loadAssets(),
-          i.emit("finish-loading"),
-          l.printToConsole("info", l.tr("cloud-func-synced"));
+        r.loadAssets();
+        i.emit("finish-loading");
+        l.printToConsole("info", l.tr("cloud-func-synced"));
       }
     },
     async "cloud-function:cloud-function-upload"(e, n, o) {
-      if (!l.checkedCurrentEnvId() || !(await l.checkedEnableTCB())) return v();
+      if (!l.checkedCurrentEnvId() || !(await l.checkedEnableTCB())) {
+        return v();
+      }
       if (u(n.env_id)) {
         var { envPath: r, func_name: s } = f(n.assetUuid);
-        if (
-          !t.existsSync(r + s + "/index.js") &&
-          !t.existsSync(r + s + "/index.php")
-        )
-          return (
-            l.printToConsole("warn", l.tr("cloud-func-format-error")), void 0
-          );
+        if (!t.existsSync(r + s + "/index.js") &&
+        !t.existsSync(r + s + "/index.php")) {
+          l.printToConsole("warn", l.tr("cloud-func-format-error"));
+          return;
+        }
         i.emit("start-loading", l.tr("uploading-cloud-func"));
         await c.updateFunctionCode(
           {
             name: s,
             runtime: t.existsSync(r + s + "/index.js") ? "Nodejs8.9" : "Php7",
-            installDependency: !0,
+            installDependency: true,
           },
           r,
           ""
         );
-        i.emit("finish-loading"),
-          l.printToConsole("info", l.tr("cloud-func-uploaded"));
+        i.emit("finish-loading");
+        l.printToConsole("info", l.tr("cloud-func-uploaded"));
       }
     },
     async "cloud-function:cloud-function-download"(e, t, n) {
-      if (!l.checkedCurrentEnvId() || !(await l.checkedEnableTCB())) return v();
+      if (!l.checkedCurrentEnvId() || !(await l.checkedEnableTCB())) {
+        return v();
+      }
       if (u(t.env_id)) {
         i.emit("start-loading", l.tr("donwloading-cloud-func"));
         var { envPath: o, func_name: s } = f(t.assetUuid);
-        0 ===
-        (await c.listFunctions()).filter((e) => e.FunctionName === s).length
-          ? l.printToConsole("warn", l.tr("cloud-func-not-exist"))
-          : (await c.downloadFunction(s, o),
-            l.printToConsole("info", l.tr("cloud-func-downloaded"))),
-          r.loadAssets(),
-          i.emit("finish-loading");
+
+        if (0 ===
+        (await c.listFunctions()).filter((e) => e.FunctionName === s).length) {
+          l.printToConsole("warn", l.tr("cloud-func-not-exist"));
+        } else {
+          await c.downloadFunction(s, o);
+          l.printToConsole("info", l.tr("cloud-func-downloaded"));
+        }
+
+        r.loadAssets();
+        i.emit("finish-loading");
       }
     },
     async "cloud-function:cloud-function-delete"(e, t, o) {
-      if (!l.checkedCurrentEnvId() || !(await l.checkedEnableTCB())) return v();
-      if (!u(t.env_id)) return;
+      if (!l.checkedCurrentEnvId() || !(await l.checkedEnableTCB())) {
+        return v();
+      }
+      if (!u(t.env_id)) {
+        return;
+      }
       let s = Editor.Dialog.messageBox({
         type: "warning",
         buttons: [
@@ -308,11 +386,18 @@ Editor.Panel.extend({
       if (0 != s) {
         i.emit("start-loading", l.tr("deleting-cloud-func"));
         var { envPath: a, func_name: d } = f(t.assetUuid);
-        2 === s && (await c.deleteFunction(d)),
-          0 !== s && l.removeDir(n.join(a, d)),
-          r.loadAssets(),
-          i.emit("finish-loading"),
-          l.printToConsole("info", l.tr("cloud-func-deleted"));
+
+        if (2 === s) {
+          (await c.deleteFunction(d));
+        }
+
+        if (0 !== s) {
+          l.removeDir(n.join(a, d));
+        }
+
+        r.loadAssets();
+        i.emit("finish-loading");
+        l.printToConsole("info", l.tr("cloud-func-deleted"));
       }
     },
     "cloud-function:find-usages"(e, t) {
@@ -328,140 +413,236 @@ Editor.Panel.extend({
       r.hint(t);
     },
     "cloud-function:env-changed"(e, t) {
-      i.emit("env_changed", t),
-        r.loadAssets(),
-        "undefinedenv" !== t &&
-          (c.inited || g(), c.switchEnv(t), e.reply && e.reply(null, !0));
+      i.emit("env_changed", t);
+      r.loadAssets();
+
+      if ("undefinedenv" !== t) {
+        if (!c.inited) {
+          g();
+        }
+
+        c.switchEnv(t);
+
+        if (e.reply) {
+          e.reply(null, true);
+        }
+      }
     },
     async "cloud-function:query-tcb-safety-source"(e, t, n) {
-      if (void 0 === t || null === t || "" === t)
+      if (void 0 === t || null === t || "" === t) {
         return e.reply && e.reply(new Error("envID is Empty"), null);
-      if (void 0 === n || null === n || "" === n)
+      }
+      if (void 0 === n || null === n || "" === n) {
         return e.reply && e.reply(new Error("appName is Empty"), null);
+      }
       try {
-        if ("undefinedenv" === t)
+        if ("undefinedenv" === t) {
           return e.reply && e.reply("envID is undefinedenv", null);
+        }
         var i = (await c.describeSafetySource(t)).Data.filter(
           (e) => e.AppName === n
         )[0];
-        void 0 === i && (i = await c.createSafetySource(n, t));
-        var o = await c.describeSafetySourceSecretKey(i.Id, t),
-          r = {
-            env: t,
-            appSign: n,
-            appAccessKeyId: i.AppSecretVersion,
-            appAccessKey: o.AppSecretKey,
-          };
-        e.reply && e.reply(null, r);
+
+        if (void 0 === i) {
+          i = await c.createSafetySource(n, t);
+        }
+
+        var o = await c.describeSafetySourceSecretKey(i.Id, t);
+
+        var r = {
+          env: t,
+          appSign: n,
+          appAccessKeyId: i.AppSecretVersion,
+          appAccessKey: o.AppSecretKey,
+        };
+
+        if (e.reply) {
+          e.reply(null, r);
+        }
       } catch (t) {
-        console.log(t), e.reply && e.reply(t, null);
+        console.log(t);
+
+        if (e.reply) {
+          e.reply(t, null);
+        }
       }
     },
     async "cloud-function:query-tcb-safety-source-available"(e, t) {
-      if (void 0 === t || null === t || "" === t)
+      if (void 0 === t || null === t || "" === t) {
         return e.reply && e.reply(new Error("envID is Empty"), null);
-      if ("undefinedenv" === t)
+      }
+      if ("undefinedenv" === t) {
         return e.reply && e.reply(new Error("envID is undefinedenv"), null);
+      }
       g();
       var n = await c.describeSafetySource(t);
-      e.reply && e.reply(null, n.Data ? n.Data : []);
+
+      if (e.reply) {
+        e.reply(null, n.Data ? n.Data : []);
+      }
     },
   },
   selectAll(e) {
-    e && (e.stopPropagation(), e.preventDefault());
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
     let t = o.queryShowNodes().map((e) => e.id);
-    s.select("cloud-function", t, !0, !0);
+    s.select("cloud-function", t, true, true);
   },
   showLoaderAfter(e) {
-    this._vm.loading ||
-      this._loaderID ||
-      (this._loaderID = setTimeout(() => {
-        (this._vm.loading = !0), (this._loaderID = null);
-      }, e));
+    if (!(this._vm.loading || this._loaderID)) {
+      this._loaderID = setTimeout(() => {
+        this._vm.loading = true;
+        this._loaderID = null;
+      }, e);
+    }
   },
   hideLoader() {
-    (this._vm.loading = !1), clearTimeout(this._loaderID);
+    this._vm.loading = false;
+    clearTimeout(this._loaderID);
   },
   find(e) {},
   delete(e) {
-    e && (e.stopPropagation(), e.preventDefault());
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
     let t = s.curSelection("cloud-function");
     this._delete(t);
   },
   f2(e) {},
   left(e) {
-    e && (e.stopPropagation(), e.preventDefault());
-    let t = s.curSelection("cloud-function"),
-      n = a(t);
-    r.fold(n, !0);
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    let t = s.curSelection("cloud-function");
+    let n = a(t);
+    r.fold(n, true);
   },
   right(e) {
-    e && (e.stopPropagation(), e.preventDefault());
-    let t = s.curSelection("cloud-function"),
-      n = a(t);
-    r.fold(n, !1);
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    let t = s.curSelection("cloud-function");
+    let n = a(t);
+    r.fold(n, false);
   },
   async copyFile(e) {
-    e && (e.stopPropagation(), e.preventDefault()), (this._copyUuids = null);
-    let t = [],
-      n = s.curSelection("cloud-function");
-    for (let e = 0; e < n.length; e++)
-      (await l.isReadOnly(n[e])) || t.push(n[e]);
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    this._copyUuids = null;
+    let t = [];
+    let n = s.curSelection("cloud-function");
+    for (let e = 0; e < n.length; e++) {
+      if (!(await l.isReadOnly(n[e]))) {
+        t.push(n[e]);
+      }
+    }
     this._copyUuids = t.length > 0 ? t : null;
   },
   async pasteFile(e) {
-    e && (e.stopPropagation(), e.preventDefault());
-    let t = s.curActivate("cloud-function"),
-      i = "";
-    if (
-      ("mount-assets" === t
-        ? (i = Editor.url("db://assets"))
-        : Editor.Utils.UuidUtils.isUuid(t) && (i = await l.uuid2path(t)),
-      !(await l.isDir(i)) && ((i = n.dirname(i)), !(await l.isDir(i))))
-    )
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    let t = s.curActivate("cloud-function");
+    let i = "";
+
+    if ("mount-assets" === t) {
+      i = Editor.url("db://assets");
+    } else {
+      if (Editor.Utils.UuidUtils.isUuid(t)) {
+        i = await l.uuid2path(t);
+      }
+    }
+
+    if (!(await l.isDir(i)) && ((i = n.dirname(i)), !(await l.isDir(i)))) {
       return Editor.warn("The selected location is not a folder.");
-    if (this._copyUuids && (await l.exists(i)))
+    }
+    if (this._copyUuids && (await l.exists(i))) {
       for (let e = 0; e < this._copyUuids.length; e++) {
         let t = this._copyUuids[e];
-        if (await l.isReadOnly(t)) return;
+        if (await l.isReadOnly(t)) {
+          return;
+        }
         let o = await l.uuid2path(t);
-        if (!o) return Editor.warn(`File is missing - ${t}`);
-        let r = n.basename(o),
-          s = n.join(i, r);
-        if (l.isSubDir(n.dirname(s), n.dirname(o)))
+        if (!o) {
+          return Editor.warn(`File is missing - ${t}`);
+        }
+        let r = n.basename(o);
+        let s = n.join(i, r);
+        if (l.isSubDir(n.dirname(s), n.dirname(o))) {
           return Editor.warn(`Cannot place directory into itself - ${t}`);
-        if (!(s = await l.copy(o, s))) return;
+        }
+        if (!(s = await l.copy(o, s))) {
+          return;
+        }
         let c = n.relative(Editor.url("db://assets"), s);
         Editor.assetdb.refresh(`db://assets/${c}`);
       }
+    }
   },
   shiftUp(e) {
-    e && (e.stopPropagation(), e.preventDefault()), d("up");
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    d("up");
   },
   shiftDown(e) {
-    e && (e.stopPropagation(), e.preventDefault()), d("down");
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    d("down");
   },
   up(e) {
-    e && (e.stopPropagation(), e.preventDefault());
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
   },
   down(e) {
-    e && (e.stopPropagation(), e.preventDefault());
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
   },
   _delete(e) {
-    let t = e.map((e) => r.getRealUrl(e)),
-      n = t;
-    n.length > 3 && (n = n.slice(0, 3)).push("..."),
-      (n = n.join("\n")),
-      0 ===
-        Editor.Dialog.messageBox({
-          type: "warning",
-          buttons: [Editor.T("MESSAGE.delete"), Editor.T("MESSAGE.cancel")],
-          title: Editor.T("MESSAGE.assets.delete_title"),
-          message: Editor.T("MESSAGE.assets.delete_message") + "\n" + n,
-          detail: Editor.T("MESSAGE.assets.delete_detail"),
-          defaultId: 0,
-          cancelId: 1,
-          noLink: !0,
-        }) && Editor.assetdb.delete(t);
+    let t = e.map((e) => r.getRealUrl(e));
+    let n = t;
+
+    if (n.length > 3) {
+      (n = n.slice(0, 3)).push("...");
+    }
+
+    n = n.join("\n");
+
+    if (0 ===
+      Editor.Dialog.messageBox({
+        type: "warning",
+        buttons: [Editor.T("MESSAGE.delete"), Editor.T("MESSAGE.cancel")],
+        title: Editor.T("MESSAGE.assets.delete_title"),
+        message: Editor.T("MESSAGE.assets.delete_message") + "\n" + n,
+        detail: Editor.T("MESSAGE.assets.delete_detail"),
+        defaultId: 0,
+        cancelId: 1,
+        noLink: true,
+      })) {
+      Editor.assetdb.delete(t);
+    }
   },
 });

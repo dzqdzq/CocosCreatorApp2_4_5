@@ -1,6 +1,7 @@
 "use strict";
-const e = require("electron").BrowserWindow,
-  n = Editor.require("app://editor/share/prefab-defs").Deep;
+const e = require("electron").BrowserWindow;
+const n = Editor.require("app://editor/share/prefab-defs").Deep;
+
 module.exports = {
   load() {
     Editor.Menu.register(
@@ -25,52 +26,53 @@ module.exports = {
           params: [],
         },
       ],
-      !0
-    ),
-      Editor.Menu.register("component-inspector", () => [
-        {
-          label: "Remove",
-          message: "scene:remove-component",
-          panel: "scene",
-          params: [],
-        },
-        { type: "separator" },
-        {
-          label: "Reset",
-          message: "scene:reset-component",
-          panel: "scene",
-          params: [],
-        },
-        {
-          label: "Move Up",
-          message: "scene:move-up-component",
-          panel: "scene",
-          params: [],
-        },
-        {
-          label: "Move Down",
-          message: "scene:move-down-component",
-          panel: "scene",
-          params: [],
-        },
-        { type: "separator" },
-        {
-          label: "Copy Component",
-          message: "scene:copy-component",
-          panel: "scene",
-          params: [],
-        },
-        {
-          label: "Paste Component",
-          message: "scene:paste-component",
-          panel: "scene",
-          params: [],
-        },
-      ]);
+      true
+    );
+
+    Editor.Menu.register("component-inspector", () => [
+      {
+        label: "Remove",
+        message: "scene:remove-component",
+        panel: "scene",
+        params: [],
+      },
+      { type: "separator" },
+      {
+        label: "Reset",
+        message: "scene:reset-component",
+        panel: "scene",
+        params: [],
+      },
+      {
+        label: "Move Up",
+        message: "scene:move-up-component",
+        panel: "scene",
+        params: [],
+      },
+      {
+        label: "Move Down",
+        message: "scene:move-down-component",
+        panel: "scene",
+        params: [],
+      },
+      { type: "separator" },
+      {
+        label: "Copy Component",
+        message: "scene:copy-component",
+        panel: "scene",
+        params: [],
+      },
+      {
+        label: "Paste Component",
+        message: "scene:paste-component",
+        panel: "scene",
+        params: [],
+      },
+    ]);
   },
   unload() {
-    Editor.Menu.unregister("node-inspector"),
-      Editor.Menu.unregister("component-inspector");
+    Editor.Menu.unregister("node-inspector");
+    Editor.Menu.unregister("component-inspector");
   },
   messages: {
     open() {
@@ -79,74 +81,102 @@ module.exports = {
     "popup-node-inspector-menu"(n, s) {
       let o = Editor.Menu.getMenu("node-inspector");
       Editor.Menu.walk(o, (e) => {
-        e.params && e.params.unshift(s.uuids),
-          "scene:paste-component" === e.message && (e.enabled = s.hasCopyComp);
+        if (e.params) {
+          e.params.unshift(s.uuids);
+        }
+
+        if ("scene:paste-component" === e.message) {
+          e.enabled = s.hasCopyComp;
+        }
       });
-      let p = new Editor.Menu(o, n.sender),
-        a = Math.floor(s.x),
-        t = Math.floor(s.y);
-      p.nativeMenu.popup(e.fromWebContents(n.sender), a, t), p.dispose();
+      let p = new Editor.Menu(o, n.sender);
+      let a = Math.floor(s.x);
+      let t = Math.floor(s.y);
+      p.nativeMenu.popup(e.fromWebContents(n.sender), a, t);
+      p.dispose();
     },
     "popup-multiple-prefab-menu"(s, o) {
       let p = o.nestedInfo;
-      if (0 === p.length) return;
+      if (0 === p.length) {
+        return;
+      }
+
       let a = (function (e) {
-          let s = [];
-          e.forEach((e) => {
-            s.push({
-              label: e.path,
-              message: `scene:${o.type}-prefab`,
-              panel: "scene",
-              params: [e.uuid, n.SelfAsset],
-            });
+        let s = [];
+        e.forEach((e) => {
+          s.push({
+            label: e.path,
+            message: `scene:${o.type}-prefab`,
+            panel: "scene",
+            params: [e.uuid, n.SelfAsset],
           });
-          let p = e[0];
-          return (
-            s.push({ type: "separator" }),
-            s.push({
-              label: "All",
-              message: `scene:${o.type}-prefab`,
-              panel: "scene",
-              params: [p.uuid, n.AllAssets],
-            }),
-            s
-          );
-        })(p),
-        t = new Editor.Menu(a, s.sender);
-      t.nativeMenu.popup(e.fromWebContents(s.sender), o.x, o.y), t.dispose();
+        });
+        let p = e[0];
+        s.push({ type: "separator" });
+
+        s.push({
+          label: "All",
+          message: `scene:${o.type}-prefab`,
+          panel: "scene",
+          params: [p.uuid, n.AllAssets],
+        });
+
+        return s;
+      })(p);
+
+      let t = new Editor.Menu(a, s.sender);
+      t.nativeMenu.popup(e.fromWebContents(s.sender), o.x, o.y);
+      t.dispose();
     },
     "popup-component-inspector-menu"(n, s) {
       let o = Editor.Menu.getMenu("component-inspector");
       Editor.Menu.walk(o, (e) => {
-        e.params &&
-          ("scene:paste-component" === e.message
-            ? e.params.unshift(s.nodeUuids, s.compIndex + 1)
-            : "scene:copy-component" === e.message
-            ? e.params.unshift(s.compUuids)
-            : e.params.unshift(s.nodeUuids, s.compUuids)),
-          "scene:move-up-component" === e.message
-            ? (e.enabled = s.compIndex - 1 >= 0)
-            : "scene:move-down-component" === e.message
-            ? (e.enabled = s.compIndex + 1 < s.compCount)
-            : "scene:paste-component" === e.message
-            ? (e.enabled = s.hasCopyComp)
-            : "scene:copy-component" === e.message && (e.enabled = !s.multi);
+        if (e.params) {
+          if ("scene:paste-component" === e.message) {
+            e.params.unshift(s.nodeUuids, s.compIndex + 1);
+          } else {
+            if ("scene:copy-component" === e.message) {
+              e.params.unshift(s.compUuids);
+            } else {
+              e.params.unshift(s.nodeUuids, s.compUuids);
+            }
+          }
+        }
+
+        if ("scene:move-up-component" === e.message) {
+          e.enabled = s.compIndex - 1 >= 0;
+        } else {
+          if ("scene:move-down-component" === e.message) {
+            e.enabled = s.compIndex + 1 < s.compCount;
+          } else {
+            if ("scene:paste-component" === e.message) {
+              e.enabled = s.hasCopyComp;
+            } else {
+              if ("scene:copy-component" === e.message) {
+                e.enabled = !s.multi;
+              }
+            }
+          }
+        }
       });
-      let p = new Editor.Menu(o, n.sender),
-        a = Math.floor(s.x),
-        t = Math.floor(s.y);
-      p.nativeMenu.popup(e.fromWebContents(n.sender), a, t), p.dispose();
+      let p = new Editor.Menu(o, n.sender);
+      let a = Math.floor(s.x);
+      let t = Math.floor(s.y);
+      p.nativeMenu.popup(e.fromWebContents(n.sender), a, t);
+      p.dispose();
     },
     "popup-comp-menu"(n, s, o, p) {
       let a = Editor.Menu.getMenu("add-component");
       Editor.Menu.walk(a, (e) => {
-        e.params && (e.params[0] = p);
+        if (e.params) {
+          e.params[0] = p;
+        }
       });
       let t = new Editor.Menu(a, n.sender);
-      (s = Math.floor(s)),
-        (o = Math.floor(o)),
-        t.nativeMenu.popup(e.fromWebContents(n.sender), s, o),
-        t.dispose();
+      s = Math.floor(s);
+      o = Math.floor(o);
+      t.nativeMenu.popup(e.fromWebContents(n.sender), s, o);
+      t.dispose();
     },
   },
 };

@@ -1,9 +1,10 @@
 "use strict";
-let t = require("path"),
-  i = require("fs"),
-  e = Editor.Profile.load("project://xiaomi-runtime.json"),
-  n = e.getSelfData();
-(exports.template = `\n        <ui-prop name="${Editor.T(
+let t = require("path");
+let i = require("fs");
+let e = Editor.Profile.load("project://xiaomi-runtime.json");
+let n = e.getSelfData();
+
+exports.template = `\n        <ui-prop name="${Editor.T(
   "BUILDER.start_scene_asset_bundle"
 )}"\n            tooltip="${Editor.T(
   "BUILDER.start_scene_asset_bundle_tooltip"
@@ -57,53 +58,74 @@ let t = require("path"),
   "xiaomi-runtime.private_pem_path"
 )}"  v-disabled="runtimeSetting.disabledMode">\n        <ui-input v-value="runtimeSetting.privatePath" class="flex-1" placeholder="${Editor.T(
   "xiaomi-runtime.private_pem_path_hint"
-)}"></ui-input>\n        <ui-button class="tiny" v-on:confirm="onPrivatePath">···</ui-button>\n        </ui-prop>\n`),
-  (exports.name = "xiaomi"),
-  (exports.data = function () {
-    return { runtimeSetting: n, originEncryptJs: !1 };
-  }),
-  (exports.watch = {
+)}"></ui-input>\n        <ui-button class="tiny" v-on:confirm="onPrivatePath">···</ui-button>\n        </ui-prop>\n`;
+
+exports.name = "xiaomi";
+
+exports.data = function () {
+    return { runtimeSetting: n, originEncryptJs: false };
+  };
+
+exports.watch = {
     runtimeSetting: {
       handler(t) {
         Object.keys(this.runtimeSetting).forEach((t) => {
           e.set(t, this.runtimeSetting[t]);
-        }),
-          e.save();
+        });
+
+        e.save();
       },
-      deep: !0,
+      deep: true,
     },
-  });
+  };
+
 const o = require(Editor.url("packages://builder/utils/event"));
-(exports.created = function () {
-  (this.originEncryptJs = this.project.encryptJs),
-    (this.project.encryptJs = !1),
-    o.on("certificate-created", this._onCertificateCreated);
-}),
-  (exports.directives = {}),
-  (exports.beforeDestroy = function () {
-    o.removeListener("certificate-created", this._onCertificateCreated),
-      (this.project.encryptJs = this.originEncryptJs);
-  }),
-  (exports.methods = {
+
+exports.created = function () {
+  this.originEncryptJs = this.project.encryptJs;
+  this.project.encryptJs = false;
+  o.on("certificate-created", this._onCertificateCreated);
+};
+
+exports.directives = {};
+
+exports.beforeDestroy = function () {
+  o.removeListener("certificate-created", this._onCertificateCreated);
+  this.project.encryptJs = this.originEncryptJs;
+};
+
+exports.methods = {
     _getProjectPath: () =>
       Editor.Project && Editor.Project.path
         ? Editor.Project.path
         : Editor.projectInfo.path,
     _onCertificateCreated(...e) {
-      if ((console.log("parsms ", ...e), !e || -1 === e)) return;
-      let n = e[0],
-        o = t.join(n, "certificate.pem");
-      i.existsSync(o) && (this.runtimeSetting.certificatePath = o);
+      console.log("parsms ", ...e);
+      if (!e || -1 === e) {
+        return;
+      }
+      let n = e[0];
+      let o = t.join(n, "certificate.pem");
+
+      if (i.existsSync(o)) {
+        this.runtimeSetting.certificatePath = o;
+      }
+
       let r = t.join(n, "private.pem");
-      i.existsSync(r) && (this.runtimeSetting.privatePath = r);
+
+      if (i.existsSync(r)) {
+        this.runtimeSetting.privatePath = r;
+      }
     },
     _onNewKeystoreClick() {
       Editor.Panel.open("xiaomi-runtime");
     },
     onChangeMode() {
-      this.runtimeSetting.useDebugKey
-        ? (this.runtimeSetting.disabledMode = "disabled is-disabled")
-        : (this.runtimeSetting.disabledMode = "");
+      if (this.runtimeSetting.useDebugKey) {
+        this.runtimeSetting.disabledMode = "disabled is-disabled";
+      } else {
+        this.runtimeSetting.disabledMode = "";
+      }
     },
     onChooseIconPath(t) {
       t.stopPropagation();
@@ -114,7 +136,10 @@ const o = require(Editor.url("packages://builder/utils/event"));
           { name: Editor.T("xiaomi-runtime.select_pic"), extensions: ["png"] },
         ],
       });
-      i && i[0] && (this.runtimeSetting.icon = i[0]);
+
+      if (i && i[0]) {
+        this.runtimeSetting.icon = i[0];
+      }
     },
     onCertificatePath(e) {
       e.stopPropagation();
@@ -131,10 +156,10 @@ const o = require(Editor.url("packages://builder/utils/event"));
       if (n && n[0]) {
         this.runtimeSetting.certificatePath = n[0];
         var o = t.join(t.dirname(n[0]), "private.pem");
-        ("" !== this.runtimeSetting.privatePath &&
-          i.existsSync(this.runtimeSetting.privatePath)) ||
-          !i.existsSync(o) ||
-          (this.runtimeSetting.privatePath = o);
+
+        if (!(("" !== this.runtimeSetting.privatePath && i.existsSync(this.runtimeSetting.privatePath)) || !i.existsSync(o))) {
+          this.runtimeSetting.privatePath = o;
+        }
       }
     },
     onPrivatePath(e) {
@@ -152,10 +177,10 @@ const o = require(Editor.url("packages://builder/utils/event"));
       if (n && n[0]) {
         this.runtimeSetting.privatePath = n[0];
         var o = t.join(t.dirname(n[0]), "certificate.pem");
-        ("" !== this.runtimeSetting.certificatePath &&
-          i.existsSync(this.runtimeSetting.certificatePath)) ||
-          !i.existsSync(o) ||
-          (this.runtimeSetting.certificatePath = o);
+
+        if (!(("" !== this.runtimeSetting.certificatePath && i.existsSync(this.runtimeSetting.certificatePath)) || !i.existsSync(o))) {
+          this.runtimeSetting.certificatePath = o;
+        }
       }
     },
-  });
+  };

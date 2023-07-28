@@ -1,27 +1,29 @@
-const { Readable: e } = require("stream"),
-  r = require("insert-module-globals"),
-  { isNodeModulePath: o } = require("../utils");
+const { Readable: e } = require("stream");
+const r = require("insert-module-globals");
+const { isNodeModulePath: o } = require("../utils");
+
 module.exports = function () {
   return {
-    nodeModule: !0,
+    nodeModule: true,
     async transform(n, u) {
       let { src: s, source: t } = n;
       n.source = await new Promise((n, a) => {
-        var i = "",
-          d = new e();
-        d.push(t),
-          d.push(null),
-          d
-            .pipe(r(s, { debug: !o(s), basedir: u.root }))
-            .on("data", function (e) {
-              i += e.toString();
-            })
-            .on("end", () => {
-              n(i);
-            })
-            .on("error", (e) => {
-              a(e);
-            });
+        var i = "";
+        var d = new e();
+        d.push(t);
+        d.push(null);
+
+        d
+          .pipe(r(s, { debug: !o(s), basedir: u.root }))
+          .on("data", function (e) {
+            i += e.toString();
+          })
+          .on("end", () => {
+            n(i);
+          })
+          .on("error", (e) => {
+            a(e);
+          });
       });
     },
   };

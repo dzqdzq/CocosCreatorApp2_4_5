@@ -1,8 +1,9 @@
 "use strict";
-const e = Editor.remote.Profile.load("global://features.json"),
-  t = require("electron").remote.dialog,
-  a = /^v?[0-9.]*(?:-p.[0-9]+)?$/;
-(exports.template = `\n    <ui-prop name="${Editor.T(
+const e = Editor.remote.Profile.load("global://features.json");
+const t = require("electron").remote.dialog;
+const a = /^v?[0-9.]*(?:-p.[0-9]+)?$/;
+
+exports.template = `\n    <ui-prop name="${Editor.T(
   "BUILDER.start_scene_asset_bundle"
 )}"\n            tooltip="${Editor.T(
   "BUILDER.start_scene_asset_bundle_tooltip"
@@ -24,56 +25,68 @@ const e = Editor.remote.Profile.load("global://features.json"),
   "wechatgame.separate_engine"
 )}"\n             tooltip="${Editor.T(
   "wechatgame.separate_engine_tips"
-)}"\n             v-if="!local.debug && showSeparateEngine()">\n        <ui-checkbox v-value="wechatgame.separate_engine">\n        </ui-checkbox>\n    </ui-prop>\n`),
-  (exports.name = "wechatgame"),
-  (exports.props = { local: null, project: null, anysdk: null }),
-  (exports.created = function () {
-    (this.profile = Editor.Profile.load("project://wechatgame.json")),
-      Object.keys(this.wechatgame).forEach((e) => {
-        this.wechatgame[e] = this.profile.get(e);
-      });
-  }),
-  (exports.watch = {
+)}"\n             v-if="!local.debug && showSeparateEngine()">\n        <ui-checkbox v-value="wechatgame.separate_engine">\n        </ui-checkbox>\n    </ui-prop>\n`;
+
+exports.name = "wechatgame";
+exports.props = { local: null, project: null, anysdk: null };
+
+exports.created = function () {
+  this.profile = Editor.Profile.load("project://wechatgame.json");
+
+  Object.keys(this.wechatgame).forEach((e) => {
+    this.wechatgame[e] = this.profile.get(e);
+  });
+};
+
+exports.watch = {
     wechatgame: {
       handler(e) {
-        this.profile.set("", e), this.profile.save();
+        this.profile.set("", e);
+        this.profile.save();
       },
-      deep: !0,
+      deep: true,
     },
-  }),
-  (exports.data = function () {
+  };
+
+exports.data = function () {
     return {
       wechatgame: {
         appid: "wx6ac3f5090a6b99c5",
         orientation: "portrait",
         REMOTE_SERVER_ROOT: "",
         subContext: "",
-        separate_engine: !1,
-        startSceneAssetBundle: !1,
+        separate_engine: false,
+        startSceneAssetBundle: false,
       },
     };
-  }),
-  (exports.directives = {}),
-  (exports.methods = {
+  };
+
+exports.directives = {};
+
+exports.methods = {
     checkParams() {
       if (!this.local.debug && this.wechatgame.separate_engine) {
-        let e = Editor.remote.Profile.load("local://settings.json"),
-          o = Editor.remote.Profile.load("global://settings.json").get(
-            "use-default-js-engine"
-          );
-        !1 === e.get("use-global-engine-setting") &&
-          (o = !0 === e.get("use-default-js-engine"));
+        let e = Editor.remote.Profile.load("local://settings.json");
+
+        let o = Editor.remote.Profile.load("global://settings.json").get(
+          "use-default-js-engine"
+        );
+
+        if (false === e.get("use-global-engine-setting")) {
+          o = true === e.get("use-default-js-engine");
+        }
+
         let i = Editor.remote.versions.CocosCreator;
-        if (!o || !a.test(i))
-          return (
-            t.showErrorBox(
-              Editor.T("BUILDER.error.build_error"),
-              Editor.T("BUILDER.error.separate_engine")
-            ),
-            !1
+        if (!o || !a.test(i)) {
+          t.showErrorBox(
+            Editor.T("BUILDER.error.build_error"),
+            Editor.T("BUILDER.error.separate_engine")
           );
+
+          return false;
+        }
       }
-      return !0;
+      return true;
     },
-    showSeparateEngine: () => (e && e.get("wechat-separation-engine")) || !1,
-  });
+    showSeparateEngine: () => (e && e.get("wechat-separation-engine")) || false,
+  };

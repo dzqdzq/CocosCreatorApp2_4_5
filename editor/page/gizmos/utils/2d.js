@@ -1,9 +1,11 @@
 "use strict";
-const e = require("./utils-interface"),
-  t = Editor.require("scene://utils/animation");
+const e = require("./utils-interface");
+const t = Editor.require("scene://utils/animation");
+
 module.exports = new (class extends e {
   constructor() {
-    super(), (this.baseDist = 500);
+    super();
+    this.baseDist = 500;
   }
   requestPointerLock() {
     cc.game.canvas.requestPointerLock();
@@ -16,7 +18,9 @@ module.exports = new (class extends e {
     return _Scene.view.foregroundNode.getChildByName("gizmoRoot");
   }
   repaintEngine() {
-    cc.engine && cc.engine.repaintInEditMode();
+    if (cc.engine) {
+      cc.engine.repaintInEditMode();
+    }
   }
   recordChanges(e) {
     e.forEach((e) => {
@@ -24,7 +28,8 @@ module.exports = new (class extends e {
     });
   }
   commitChanges(e) {
-    t.recordNodeChanged(e), _Scene.Undo.commit();
+    t.recordNodeChanged(e);
+    _Scene.Undo.commit();
   }
   getSqrMagnitude(e) {
     return cc.Vec3.squaredMagnitude(e);

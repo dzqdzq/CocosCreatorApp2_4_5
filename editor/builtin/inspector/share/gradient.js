@@ -12,35 +12,36 @@ Vue.component("cc-gradient", {
   },
   methods: {
     _onGradientChanged(t) {
-      (this.target.value.alphaKeys.value = (t.target.value.alpha || []).map(
+      this.target.value.alphaKeys.value = (t.target.value.alpha || []).map(
         (e) => ({ time: e.progress, alpha: Math.round(255 * e.value) })
-      )),
-        (this.target.value.colorKeys.value = (t.target.value.color || []).map(
+      );
+
+      this.target.value.colorKeys.value = (t.target.value.color || []).map(
           (t) => {
             let a;
             try {
-              a =
-                "string" == typeof t.value
-                  ? e(t.value).rgb()
-                  : [t.value.r, t.value.g, t.value.b];
+              a = "string" == typeof t.value
+                ? e(t.value).rgb()
+                : [t.value.r, t.value.g, t.value.b];
             } catch (e) {
               a = [255, 255, 255];
             }
             return { time: t.progress, color: { r: a[0], g: a[1], b: a[2] } };
           }
-        )),
-        this.emitChange(this.target.value.colorKeys),
-        this.emitChange(this.target.value.alphaKeys);
+        );
+
+      this.emitChange(this.target.value.colorKeys);
+      this.emitChange(this.target.value.alphaKeys);
     },
     emitChange(e) {
       Editor.UI.fire(this.$el, "target-change", {
-        bubbles: !0,
+        bubbles: true,
         detail: { path: e.path, value: e.value },
       });
     },
     emitConfirm(e) {
       Editor.UI.fire(this.$el, "target-confirm", {
-        bubbles: !1,
+        bubbles: false,
         detail: { path: e.path, value: e.value },
       });
     },
@@ -48,30 +49,45 @@ Vue.component("cc-gradient", {
       const t = this;
       if (t.target.value) {
         const a = (t.target.value.alphaKeys.value || []).map((e) => {
-            let t = 0;
-            e.value.time && (t = e.value.time.value);
-            let a = 255;
-            return (
-              e.value.alpha && (a = e.value.alpha.value),
-              { progress: t, value: a / 255 }
-            );
-          }),
-          l = (t.target.value.colorKeys.value || []).map((t) => {
-            let a = 0;
-            t.value.time && (a = t.value.time.value);
-            let l = [255, 255, 255];
-            t.value.color &&
-              ((l[0] = t.value.color.value.r),
-              (l[1] = t.value.color.value.g),
-              (l[2] = t.value.color.value.b));
-            let r = "";
-            try {
-              r = e(l).hex();
-            } catch (e) {
-              r = "#ffffff";
-            }
-            return { progress: a, value: r };
-          });
+          let t = 0;
+
+          if (e.value.time) {
+            t = e.value.time.value;
+          }
+
+          let a = 255;
+
+          if (e.value.alpha) {
+            a = e.value.alpha.value;
+          }
+
+          return { progress: t, value: a / 255 };
+        });
+
+        const l = (t.target.value.colorKeys.value || []).map((t) => {
+          let a = 0;
+
+          if (t.value.time) {
+            a = t.value.time.value;
+          }
+
+          let l = [255, 255, 255];
+
+          if (t.value.color) {
+            l[0] = t.value.color.value.r;
+            l[1] = t.value.color.value.g;
+            l[2] = t.value.color.value.b;
+          }
+
+          let r = "";
+          try {
+            r = e(l).hex();
+          } catch (e) {
+            r = "#ffffff";
+          }
+          return { progress: a, value: r };
+        });
+
         t.value = { color: l, alpha: a };
       }
     },

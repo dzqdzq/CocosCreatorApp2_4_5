@@ -36,8 +36,6 @@
         }
       );
 
-      // purge
-      //noinspection JSUndeclaredVariable
       _CCSettings = undefined;
     };
 
@@ -53,15 +51,22 @@
     var INTERNAL = cc.AssetManager.BuiltinBundleName.INTERNAL;
     var MAIN = cc.AssetManager.BuiltinBundleName.MAIN;
     var bundleRoot = [INTERNAL];
-    _CCSettings.hasResourcesBundle && bundleRoot.push(RESOURCES);
+
+    if (_CCSettings.hasResourcesBundle) {
+      bundleRoot.push(RESOURCES);
+    }
 
     var count = 0;
     function cb(err) {
-      if (err) return console.error(err);
+      if (err) {
+        return console.error(err);
+      }
       count++;
       if (count === bundleRoot.length + 1) {
         cc.assetManager.loadBundle(MAIN, function (err) {
-          if (!err) cc.game.run(option, onStart);
+          if (!err) {
+            cc.game.run(option, onStart);
+          }
         });
       }
     }

@@ -1,10 +1,11 @@
 "use strict";
-let e = Editor.Profile.load("project://bytedance.json"),
-  t = e.getSelfData();
-const n = Editor.remote.Profile.load("global://features.json"),
-  a = require("electron").remote.dialog,
-  o = /^v?[0-9.]*(?:-p.[0-9]+)?$/;
-(exports.template = `\n    <ui-prop name="${Editor.T(
+let e = Editor.Profile.load("project://bytedance.json");
+let t = e.getSelfData();
+const n = Editor.remote.Profile.load("global://features.json");
+const a = require("electron").remote.dialog;
+const o = /^v?[0-9.]*(?:-p.[0-9]+)?$/;
+
+exports.template = `\n    <ui-prop name="${Editor.T(
   "BUILDER.start_scene_asset_bundle"
 )}"\n            tooltip="${Editor.T(
   "BUILDER.start_scene_asset_bundle_tooltip"
@@ -26,46 +27,57 @@ const n = Editor.remote.Profile.load("global://features.json"),
   "bytedance.separate_engine"
 )}"\n             tooltip="${Editor.T(
   "bytedance.separate_engine_tips"
-)}"\n             v-if="!local.debug && showSeparateEngine()">\n        <ui-checkbox v-value="bytedanceData.separate_engine">\n        </ui-checkbox>\n    </ui-prop>\n`),
-  (exports.name = "bytedance"),
-  (exports.props = { local: null, project: null, anysdk: null }),
-  (exports.created = function () {
+)}"\n             v-if="!local.debug && showSeparateEngine()">\n        <ui-checkbox v-value="bytedanceData.separate_engine">\n        </ui-checkbox>\n    </ui-prop>\n`;
+
+exports.name = "bytedance";
+exports.props = { local: null, project: null, anysdk: null };
+
+exports.created = function () {
     Object.keys(this.bytedanceData).forEach((t) => {
       this.bytedanceData[t] = e.get(t);
     });
-  }),
-  (exports.watch = {
+  };
+
+exports.watch = {
     bytedanceData: {
       handler(t) {
-        e.set("", t), e.save();
+        e.set("", t);
+        e.save();
       },
-      deep: !0,
+      deep: true,
     },
-  }),
-  (exports.data = function () {
+  };
+
+exports.data = function () {
     return { bytedanceData: t };
-  }),
-  (exports.directives = {}),
-  (exports.methods = {
+  };
+
+exports.directives = {};
+
+exports.methods = {
     checkParams() {
       if (!this.local.debug && this.bytedanceData.separate_engine) {
-        let e = Editor.remote.Profile.load("local://settings.json"),
-          t = Editor.remote.Profile.load("global://settings.json").get(
-            "use-default-js-engine"
-          );
-        !1 === e.get("use-global-engine-setting") &&
-          (t = !0 === e.get("use-default-js-engine"));
+        let e = Editor.remote.Profile.load("local://settings.json");
+
+        let t = Editor.remote.Profile.load("global://settings.json").get(
+          "use-default-js-engine"
+        );
+
+        if (false === e.get("use-global-engine-setting")) {
+          t = true === e.get("use-default-js-engine");
+        }
+
         let n = Editor.remote.versions.CocosCreator;
-        if (!t || !o.test(n))
-          return (
-            a.showErrorBox(
-              Editor.T("BUILDER.error.build_error"),
-              Editor.T("BUILDER.error.separate_engine")
-            ),
-            !1
+        if (!t || !o.test(n)) {
+          a.showErrorBox(
+            Editor.T("BUILDER.error.build_error"),
+            Editor.T("BUILDER.error.separate_engine")
           );
+
+          return false;
+        }
       }
-      return !0;
+      return true;
     },
-    showSeparateEngine: () => (n && n.get("bytedance-separation-engine")) || !1,
-  });
+    showSeparateEngine: () => (n && n.get("bytedance-separation-engine")) || false,
+  };

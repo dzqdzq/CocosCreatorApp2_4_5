@@ -1,33 +1,34 @@
 "use strict";
-const e = require("electron").BrowserWindow,
-  o = require("./core/menu"),
-  n = require("path"),
-  t = require("fs-extra"),
-  r = (require("util"), require("./panel/utils/prefab"));
+const e = require("electron").BrowserWindow;
+const o = require("./core/menu");
+const n = require("path");
+const t = require("fs-extra");
+const r = (require("util"), require("./panel/utils/prefab"));
+
 module.exports = {
   load() {
-    Editor.Ipc.sendToAll("node-library:update-menu", !0);
+    Editor.Ipc.sendToAll("node-library:update-menu", true);
   },
   unload() {
-    Editor.Ipc.sendToAll("node-library:update-menu", !1);
+    Editor.Ipc.sendToAll("node-library:update-menu", false);
   },
-  lock: !1,
+  lock: false,
   messages: {
     open() {
       Editor.Panel.open("node-library");
     },
     "store:cloud-component-installation-completed"() {
-      Editor.Ipc.sendToAll("node-library:update-menu", !0);
+      Editor.Ipc.sendToAll("node-library:update-menu", true);
     },
     "node-library:popup-prefab-menu"(n, t, s, i) {
       let a = r.creator.some((e) => e.prefab.some((e) => e.uuid === i.id));
       i.modify = !a;
-      var c = o.getPrefabMenuTemplate(i),
-        u = new Editor.Menu(c, n.sender);
-      (t = Math.floor(t)),
-        (s = Math.floor(s)),
-        u.nativeMenu.popup(e.fromWebContents(n.sender), t, s),
-        u.dispose();
+      var c = o.getPrefabMenuTemplate(i);
+      var u = new Editor.Menu(c, n.sender);
+      t = Math.floor(t);
+      s = Math.floor(s);
+      u.nativeMenu.popup(e.fromWebContents(n.sender), t, s);
+      u.dispose();
     },
     async "import-cloud-component"(e, o) {
       e.reply = e.reply || function () {};
@@ -37,8 +38,9 @@ module.exports = {
         assets: n.join(o, "assets"),
         cloudFunction: n.join(o, "./cloud-function"),
       };
-      if (!t.existsSync(r.json))
+      if (!t.existsSync(r.json)) {
         return e.reply(new Error("package.json is not found."));
+      }
       try {
         const a = t.readJSONSync(r.json);
         let c = "undefinedenv";
@@ -55,45 +57,65 @@ module.exports = {
             c
           ),
         };
-        t.existsSync(u.cloud) ||
-          (t.mkdirSync(u.cloud),
+
+        if (!t.existsSync(u.cloud)) {
+          t.mkdirSync(u.cloud);
+
           await new Promise((e, o) => {
             Editor.assetdb.refresh("db://assets", (n) => {
-              if (n) return o(n);
+              if (n) {
+                return o(n);
+              }
               e();
             });
-          })),
-          await t.copy(r.assets, u.assets),
-          t.existsSync(r.cloudFunction) &&
-            (await t.copy(r.cloudFunction, u.cloudFunction));
+          });
+        }
+
+        await t.copy(r.assets, u.assets);
+
+        if (t.existsSync(r.cloudFunction)) {
+          (await t.copy(r.cloudFunction, u.cloudFunction));
+        }
+
         var s = n.join(o, "install.js");
         if (t.existsSync(s)) {
-          if (this.lock) return;
-          this.lock = !0;
+          if (this.lock) {
+            return;
+          }
+          this.lock = true;
           try {
             delete require.cache[require.resolve(s)];
-            var i = !1;
+            var i = false;
             await new Promise((e, o) => {
               var n = {
                 assetsPath: u.assets,
                 cloudPath: u.cloudFunction,
                 envID: c,
               };
+
               require(s).main(n, (n) => {
-                if (n) return o(n);
-                (i = !0), e();
-              }),
-                !i && setTimeout(() => o("Operation Timeout."), 5e3);
+                if (n) {
+                  return o(n);
+                }
+                i = true;
+                e();
+              });
+
+              if (!i) {
+                setTimeout(() => o("Operation Timeout."), 5e3);
+              }
             });
           } catch (e) {
             throw (t.removeSync(u.assets), e);
           } finally {
-            this.lock = !1;
+            this.lock = false;
           }
         }
         await new Promise((e, o) => {
           Editor.assetdb.refresh("db://assets/cloud-component", (n) => {
-            if (n) return o(n);
+            if (n) {
+              return o(n);
+            }
             e();
           });
         });
@@ -102,7 +124,9 @@ module.exports = {
             "asset-db:query-uuid-by-url",
             `db://assets/cloud-component/${a.name}/${a.name + ".prefab"}`,
             (n, t) => {
-              if (n) return o(n);
+              if (n) {
+                return o(n);
+              }
               e(t);
             },
             -1
@@ -110,7 +134,8 @@ module.exports = {
         });
         e.reply(null, d);
       } catch (o) {
-        return Editor.error(o), e.reply(o);
+        Editor.error(o);
+        return e.reply(o);
       }
     },
   },

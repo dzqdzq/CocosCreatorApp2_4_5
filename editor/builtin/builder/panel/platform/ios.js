@@ -1,8 +1,10 @@
 "use strict";
-const e = Editor.remote.Profile.load("global://features.json"),
-  t = require(Editor.url("packages://builder/panel/platform/common")),
-  i = require("electron").remote.dialog;
-require("fire-path"), require(Editor.url("app://editor/share/build-utils"));
+const e = Editor.remote.Profile.load("global://features.json");
+const t = require(Editor.url("packages://builder/panel/platform/common"));
+const i = require("electron").remote.dialog;
+require("fire-path");
+require(Editor.url("app://editor/share/build-utils"));
+
 exports.template = `\n    <ui-prop name="${Editor.T(
   "BUILDER.template"
 )}">\n        <ui-select class="flex-1" v-value="local.template">\n            <template v-for="item in templates">\n                <option v-bind:value="item">{{item}}</option>\n            </template>\n        </ui-select>\n    </ui-prop>\n    \n    <ui-prop name="${Editor.T(
@@ -22,57 +24,78 @@ exports.template = `\n    <ui-prop name="${Editor.T(
 )}">\n        <ui-checkbox class="item" \n            v-value="platform['ios'].ios_enable_jit">\n        </ui-checkbox>\n    </ui-prop>\n\n    ${
   t.native.xxtea
 }\n`;
+
 const o = (exports.name = "ios");
-(exports.props = { local: null, project: null, anysdk: null }),
-  (exports.data = function () {
+exports.props = { local: null, project: null, anysdk: null };
+
+exports.data = function () {
     return { templates: [], packageName: this.project[o].packageName };
-  }),
-  (exports.watch = {
+  };
+
+exports.watch = {
     packageName: {
       handler(e) {
         let t = this.project[o];
-        t && (t.packageName = e);
+
+        if (t) {
+          t.packageName = e;
+        }
       },
     },
-  }),
-  (exports.created = function () {
+  };
+
+exports.created = function () {
     Editor.Ipc.sendToMain("app:query-cocos-templates", (e, t) => {
-      if (e) return Editor.warn(e);
+      if (e) {
+        return Editor.warn(e);
+      }
+
+      t.forEach((e) => {
+        if ("android-instant" !== e) {
+          this.templates.push(e);
+        }
+      });
+
       if (
-        (t.forEach((e) => {
-          "android-instant" !== e && this.templates.push(e);
-        }),
-        this.local)
+        (this.local)
       ) {
         var i = this.local.template;
-        if (t.length <= 0) return this.set("profiles.local.template", "");
-        -1 === t.indexOf(i) && this.set("profiles.local.template", t[0]);
+        if (t.length <= 0) {
+          return this.set("profiles.local.template", "");
+        }
+
+        if (-1 === t.indexOf(i)) {
+          this.set("profiles.local.template", t[0]);
+        }
       }
     });
-  }),
-  (exports.directives = {}),
-  (exports.methods = {
+  };
+
+exports.directives = {};
+
+exports.methods = {
     checkParams() {
       let e = this.packageName;
-      if (!/^[a-zA-Z0-9_.-]*$/.test(e))
-        return (
+      if (!/^[a-zA-Z0-9_.-]*$/.test(e)) {
+        i.showErrorBox(
+          Editor.T("BUILDER.error.build_error"),
+          Editor.T("BUILDER.error.package_name_not_legal")
+        );
+
+        return false;
+      }
+      let t = e.split(".");
+      for (let e = 0; e < t.length; e++) {
+        if (!isNaN(t[e][0])) {
           i.showErrorBox(
             Editor.T("BUILDER.error.build_error"),
-            Editor.T("BUILDER.error.package_name_not_legal")
-          ),
-          !1
-        );
-      let t = e.split(".");
-      for (let e = 0; e < t.length; e++)
-        if (!isNaN(t[e][0]))
-          return (
-            i.showErrorBox(
-              Editor.T("BUILDER.error.build_error"),
-              Editor.T("BUILDER.error.package_name_start_with_number")
-            ),
-            !1
+            Editor.T("BUILDER.error.package_name_start_with_number")
           );
-      return !0;
+
+          return false;
+        }
+      }
+      return true;
     },
-    showJIT: () => (e && !e.get("iOSForceDisableJit")) || !1,
-  });
+    showJIT: () => (e && !e.get("iOSForceDisableJit")) || false,
+  };

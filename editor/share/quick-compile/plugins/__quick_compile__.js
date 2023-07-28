@@ -28,10 +28,13 @@ function downloadText(url, callback) {
     return;
   }
 
-  var xhr = getXMLHttpRequest(),
-    errInfo = "Load text file failed: " + url;
+  var xhr = getXMLHttpRequest();
+  var errInfo = "Load text file failed: " + url;
   xhr.open("GET", url, true);
-  if (xhr.overrideMimeType) xhr.overrideMimeType("text/plain; charset=utf-8");
+  if (xhr.overrideMimeType) {
+    xhr.overrideMimeType("text/plain; charset=utf-8");
+  }
+
   xhr.onload = function () {
     if (xhr.readyState === 4) {
       if (xhr.status === 200 || xhr.status === 0) {
@@ -49,12 +52,15 @@ function downloadText(url, callback) {
       });
     }
   };
+
   xhr.onerror = function () {
     callback({ status: xhr.status, errorMessage: errInfo + "(error)" });
   };
+
   xhr.ontimeout = function () {
     callback({ status: xhr.status, errorMessage: errInfo + "(time out)" });
   };
+
   xhr.send(null);
 }
 
@@ -136,8 +142,8 @@ window.__quick_compile__ = {
   },
 
   require: function (request, path) {
-    var m, requestScript;
-
+    var m;
+    var requestScript;
     path = formatPath(path);
     if (path) {
       m = modules[path];
@@ -219,18 +225,28 @@ window.__quick_compile__ = {
       return path;
     });
 
-    console.time && console.time("load __quick_compile__");
+    if (console.time) {
+      console.time("load __quick_compile__");
+    }
+
     // jsb can not analysis sourcemap, so keep separate files.
     if (bundleScript && !isJSB) {
       downloadText(formatPath(bundleScript), function (err, bundleSource) {
-        console.timeEnd && console.timeEnd("load __quick_compile__");
+        if (console.timeEnd) {
+          console.timeEnd("load __quick_compile__");
+        }
+
         if (err) {
           console.error(err);
           return;
         }
 
         let evalTime = "eval __quick_compile__ : " + srcs.length + " files";
-        console.time && console.time(evalTime);
+
+        if (console.time) {
+          console.time(evalTime);
+        }
+
         var sources = bundleSource.split("\n//------QC-SOURCE-SPLIT------\n");
         for (var i = 0; i < sources.length; i++) {
           if (sources[i]) {
@@ -240,13 +256,21 @@ window.__quick_compile__ = {
           }
         }
         self.run();
-        console.timeEnd && console.timeEnd(evalTime);
+
+        if (console.timeEnd) {
+          console.timeEnd(evalTime);
+        }
+
         cb();
       });
     } else {
       loadScripts(srcs, function () {
         self.run();
-        console.timeEnd && console.timeEnd("load __quick_compile__");
+
+        if (console.timeEnd) {
+          console.timeEnd("load __quick_compile__");
+        }
+
         cb();
       });
     }

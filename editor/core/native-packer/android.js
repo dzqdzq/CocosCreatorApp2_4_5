@@ -1,24 +1,34 @@
 "use strict";
-const r = require("fire-path"),
-  e = require("fire-fs"),
-  i = require("xml2js"),
-  t = require("./base");
+const r = require("fire-path");
+const e = require("fire-fs");
+const i = require("xml2js");
+const t = require("./base");
+
 module.exports = class extends t {
   addDependence(i, t) {
-    let n = !0,
-      s = r.join(
-        this.options.dest,
-        "frameworks/runtime-src/proj.android-studio/app/build.gradle"
-      );
+    let n = true;
+
+    let s = r.join(
+      this.options.dest,
+      "frameworks/runtime-src/proj.android-studio/app/build.gradle"
+    );
+
     if (e.existsSync(s)) {
       let r = e.readFileSync(s, "utf-8");
-      (r = r.replace(/dependencies\s*\{[^\}]+}/, (r) => {
-        if (-1 != r.indexOf(i)) return r;
+
+      r = r.replace(/dependencies\s*\{[^\}]+}/, (r) => {
+        if (-1 != r.indexOf(i)) {
+          return r;
+        }
         let e = r.substr(0, r.length - 1);
         return (e += `    implementation '${i}:${t}'\n}`);
-      })),
-        e.writeFileSync(s, r);
-    } else (n = !1), Editor.error("cant find build.gradle at ", s);
+      });
+
+      e.writeFileSync(s, r);
+    } else {
+      n = false;
+      Editor.error("cant find build.gradle at ", s);
+    }
     return n;
   }
   removeDependence(i, t) {
@@ -26,15 +36,19 @@ module.exports = class extends t {
       this.options.dest,
       "frameworks/runtime-src/proj.android-studio/app/build.gradle"
     );
-    if (!e.existsSync(n))
-      return Editor.error("Can not find build.gradle file at ", n), void 0;
+    if (!e.existsSync(n)) {
+      Editor.error("Can not find build.gradle file at ", n);
+      return;
+    }
     try {
       let r = e.readFileSync(n, "utf8");
-      (r = r.replace(
+
+      r = r.replace(
         new RegExp("\\s+implementation\\s+" + `'${i}:${t}'`, "g"),
         ""
-      )),
-        e.writeFileSync(n, r, "utf8");
+      );
+
+      e.writeFileSync(n, r, "utf8");
     } catch (r) {
       Editor.error(r);
     }
@@ -53,14 +67,23 @@ module.exports = class extends t {
     let s = r.join(
         this.options.dest,
         "frameworks/runtime-src/proj.android-studio/app/AndroidManifest.xml"
-      ),
-      d = await this.readXML(s),
-      o = d.manifest.application[t];
+      );
+
+    let d = await this.readXML(s);
+    let o = d.manifest.application[t];
     if (o) {
-      if (-1 != JSON.stringify(o).indexOf(n.$["android:name"]))
+      if (-1 != JSON.stringify(o).indexOf(n.$["android:name"])) {
         return Promise.resolve();
-      Array.isArray(o) ? o.push(n) : (d.manifest.application[t] = [o, n]);
-    } else d.manifest.application[t] = n;
+      }
+
+      if (Array.isArray(o)) {
+        o.push(n);
+      } else {
+        d.manifest.application[t] = [o, n];
+      }
+    } else {
+      d.manifest.application[t] = n;
+    }
     let a = new i.Builder();
     e.writeFileSync(
       r.join(
@@ -83,12 +106,28 @@ module.exports = class extends t {
     let n = await this.readXML(t);
     do {
       let e = n.resources;
-      if (!e) break;
+      if (!e) {
+        break;
+      }
       let i = e.string;
-      if (!i) break;
-      Array.isArray(i) || ((i = [i]), (n.resources.string = i));
+      if (!i) {
+        break;
+      }
+
+      if (!Array.isArray(i)) {
+        i = [i];
+        n.resources.string = i;
+      }
+
       let t = i.find((e) => e.$.name === r.$.name);
-      t || i.push(r), t && t._ !== r._ && (t._ = r._);
+
+      if (!t) {
+        i.push(r);
+      }
+
+      if (t && t._ !== r._) {
+        t._ = r._;
+      }
     } while (0);
     e.writeFileSync(t, new i.Builder().buildObject(n));
   }
@@ -97,27 +136,38 @@ module.exports = class extends t {
       this.options.dest,
       "frameworks/runtime-src/proj.android-studio/app/AndroidManifest.xml"
     );
-    if (!e.existsSync(n))
-      return Editor.error("AndroidManifest.xml not found"), void 0;
-    let s = await this.readXML(n),
-      d = s.manifest["uses-permission"];
-    d.find((r) => r.$["android:name"] === t) ||
-      (d.push({ $: { "android:name": t } }),
-      e.writeFileSync(n, new i.Builder().buildObject(s)));
+    if (!e.existsSync(n)) {
+      Editor.error("AndroidManifest.xml not found");
+      return;
+    }
+    let s = await this.readXML(n);
+    let d = s.manifest["uses-permission"];
+
+    if (!d.find((r) => r.$["android:name"] === t)) {
+      d.push({ $: { "android:name": t } });
+      e.writeFileSync(n, new i.Builder().buildObject(s));
+    }
   }
   async removeUserPermission(t) {
     let n = r.join(
       this.options.dest,
       "frameworks/runtime-src/proj.android-studio/app/AndroidManifest.xml"
     );
-    if (!e.existsSync(n))
-      return Editor.error("AndroidManifest.xml not found at path", n), void 0;
-    let s = await this.readXML(n),
-      d = s.manifest["uses-permission"];
-    if (!d.find((r) => r.$["android:name"] === t)) return;
+    if (!e.existsSync(n)) {
+      Editor.error("AndroidManifest.xml not found at path", n);
+      return;
+    }
+    let s = await this.readXML(n);
+    let d = s.manifest["uses-permission"];
+    if (!d.find((r) => r.$["android:name"] === t)) {
+      return;
+    }
     let o = d.findIndex((r) => r.$["android:name"] === t);
-    -1 !== o &&
-      (d.splice(o, 1), e.writeFileSync(n, new i.Builder().buildObject(s)));
+
+    if (-1 !== o) {
+      d.splice(o, 1);
+      e.writeFileSync(n, new i.Builder().buildObject(s));
+    }
   }
   addProguard(i, t) {
     t = t ? (t.startsWith("#") ? t : "#" + t) : "#";
@@ -125,17 +175,25 @@ module.exports = class extends t {
       this.options.dest,
       "frameworks/runtime-src/proj.android-studio/app/proguard-rules.pro"
     );
-    if (((i = Array.isArray(i) ? i : [i]), !e.existsSync(n)))
-      return (
-        Editor.error("Can not find build.gradle proguard-rules.pro ", n), void 0
-      );
-    let s = e.readFileSync(n, "utf8"),
-      d = !1;
-    (s += `\n${t}\n`),
-      i.forEach((r) => {
-        s.includes(r) || ((d = !0), (s += r + "\n"));
-      }),
-      d && e.writeFileSync(n, s, "utf8");
+    i = Array.isArray(i) ? i : [i];
+    if (!e.existsSync(n)) {
+      Editor.error("Can not find build.gradle proguard-rules.pro ", n);
+      return;
+    }
+    let s = e.readFileSync(n, "utf8");
+    let d = false;
+    s += `\n${t}\n`;
+
+    i.forEach((r) => {
+      if (!s.includes(r)) {
+        d = true;
+        s += r + "\n";
+      }
+    });
+
+    if (d) {
+      e.writeFileSync(n, s, "utf8");
+    }
   }
   removeProguard(i, t) {
     t = t ? (t.startsWith("#") ? t : "#" + t) : "#";
@@ -143,27 +201,42 @@ module.exports = class extends t {
       this.options.dest,
       "frameworks/runtime-src/proj.android-studio/app/proguard-rules.pro"
     );
-    if (((i = Array.isArray(i) ? i : [i]), !e.existsSync(n)))
-      return (
-        Editor.error("cannot fin build.gradle proguard-rules.pro ", n), void 0
-      );
-    let s = e.readFileSync(n, "utf8"),
-      d = 0;
-    s.includes(t) && (s = s.replace(`\n${t}\n`, "")),
-      i.forEach((r) => {
-        s.includes(r) && (d++, (s = s.replace(`${r}\n`, "")));
-      }),
-      d > 0 && e.writeFileSync(n, s, "utf8");
+    i = Array.isArray(i) ? i : [i];
+    if (!e.existsSync(n)) {
+      Editor.error("cannot fin build.gradle proguard-rules.pro ", n);
+      return;
+    }
+    let s = e.readFileSync(n, "utf8");
+    let d = 0;
+
+    if (s.includes(t)) {
+      s = s.replace(`\n${t}\n`, "");
+    }
+
+    i.forEach((r) => {
+      if (s.includes(r)) {
+        d++;
+        s = s.replace(`${r}\n`, "");
+      }
+    });
+
+    if (d > 0) {
+      e.writeFileSync(n, s, "utf8");
+    }
   }
   readXML(r) {
     return new Promise((t, n) => {
       let s = e.readFileSync(r, "utf-8");
-      if (!s) return n("File not found at path ", r), void 0;
+      if (!s) {
+        n("File not found at path ", r);
+        return;
+      }
       let d = new i.Parser();
-      (d.options.explicitArray = !1),
-        d.parseString(s, (r, e) => {
-          t(e);
-        });
+      d.options.explicitArray = false;
+
+      d.parseString(s, (r, e) => {
+        t(e);
+      });
     });
   }
 };

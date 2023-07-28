@@ -1,9 +1,9 @@
 "use strict";
-const t = require("path"),
-  e = require("../../../asset-db");
-(Editor.metaBackupPath = "temp/RemovedMetas"),
-  (Editor.assetBackupPath = "temp/BackupAssets"),
-  Editor.log("Initializing Asset Database");
+const t = require("path");
+const e = require("../../../asset-db");
+Editor.metaBackupPath = "temp/RemovedMetas";
+Editor.assetBackupPath = "temp/BackupAssets";
+Editor.log("Initializing Asset Database");
 const a = new e({
   cwd: t.join(Editor.Project.path),
   library: "library",
@@ -12,37 +12,49 @@ const a = new e({
   metaBackupPath: t.join(Editor.Project.path, Editor.metaBackupPath),
   assetBackupPath: t.join(Editor.Project.path, Editor.assetBackupPath),
 });
-(Editor.libraryPath = a.library),
-  (Editor.importPath = a._importPath),
-  (Editor.externalMounts = (function (e) {
-    if (!e || !Array.isArray(e)) return null;
+Editor.libraryPath = a.library;
+Editor.importPath = a._importPath;
+
+Editor.externalMounts = (function (e) {
+    if (!e || !Array.isArray(e)) {
+      return null;
+    }
     for (
       var a = [], r = ["assets", "internal"], i = 0, n = e.length;
       i < n;
       i++
     ) {
       let n = e[i];
-      if (
-        ((n = t.isAbsolute(n)
+
+      n = t.isAbsolute(n)
           ? t.normalize(n)
-          : t.normalize(t.join(Editor.Project.path, n))),
-        !_checkMountValid(n))
+          : t.normalize(t.join(Editor.Project.path, n));
+
+      if (
+        (!_checkMountValid(n))
       ) {
         Editor.warn(`${n} is not a valid mount path.`);
         continue;
       }
       let o = _getUniqueName(t.basename(n), r);
-      r.push(o), a.push({ path: n, name: o });
+      r.push(o);
+      a.push({ path: n, name: o });
     }
     return a;
-  })(Editor.argv.mount)),
-  (Editor.mountsWritable = Editor.argv.writable);
+  })(Editor.argv.mount);
+
+Editor.mountsWritable = Editor.argv.writable;
 const r = ["asset-db:watch-state-changed", "asset-db:state-changed"];
 a.setEventCallback((t, e) => {
-  r.indexOf(t) >= 0
-    ? Editor.Window.main && Editor.Ipc.sendToMainWin(t, e)
-    : Editor.Ipc.sendToAll(t, e);
+  if (r.indexOf(t) >= 0) {
+    if (Editor.Window.main) {
+      Editor.Ipc.sendToMainWin(t, e);
+    }
+  } else {
+    Editor.Ipc.sendToAll(t, e);
+  }
 });
+
 module.exports = new (class {
   get loading() {
     return !!this.loadingWin;
@@ -50,12 +62,14 @@ module.exports = new (class {
   set loading(t) {
     t = !!t;
     let e = Editor.Window.main;
-    t &&
-      e &&
+
+    if (t &&
+      e) {
       e.nativeWin.webContents.send(
         "update-loading-tips",
         Editor.T("MESSAGE.assets.import_waiting")
       );
+    }
   }
   constructor(t) {
     this.assetdb = t;
@@ -67,13 +81,17 @@ module.exports = new (class {
         "internal",
         { hidden: !Editor.showInternalMount, readonly: !Editor.dev },
         (a) => {
-          a ? e(a) : t();
+          if (a) {
+            e(a);
+          } else {
+            t();
+          }
         }
       );
     });
   }
   async mountExternal() {
-    if (Editor.externalMounts && 0 !== Editor.externalMounts.length)
+    if (Editor.externalMounts && 0 !== Editor.externalMounts.length) {
       return Promise.all(
         Editor.externalMounts.map(
           (t) =>
@@ -83,12 +101,17 @@ module.exports = new (class {
                 t.name,
                 { readonly: !Editor.mountsWritable },
                 (t) => {
-                  t ? a(t) : e();
+                  if (t) {
+                    a(t);
+                  } else {
+                    e();
+                  }
                 }
               );
             })
         )
       );
+    }
   }
   async mountMain() {
     return new Promise((e, a) => {
@@ -96,7 +119,11 @@ module.exports = new (class {
         t.join(Editor.Project.path, "assets"),
         "assets",
         (t) => {
-          t ? a(t) : e();
+          if (t) {
+            a(t);
+          } else {
+            e();
+          }
         }
       );
     });
@@ -104,7 +131,8 @@ module.exports = new (class {
   async init() {
     return new Promise((t, e) => {
       Editor.assetdb.init((e, a) => {
-        (Editor.assetdbInited = !0), t();
+        Editor.assetdbInited = true;
+        t();
       });
     });
   }

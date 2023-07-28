@@ -1,7 +1,7 @@
 "use strict";
-const i = require("fire-fs"),
-  r = require("fire-path"),
-  t = Editor.require("app://editor/share/build-utils");
+const i = require("fire-fs");
+const r = require("fire-path");
+const t = Editor.require("app://editor/share/build-utils");
 var o = `\n    <h2></h2>\n    <section>\n         <ui-loader :hidden="!saving" style="background-color: rgba(0, 0, 0, 0.3);"></ui-loader>\n         <ui-prop name="${Editor.T(
   "KEYSTORE.country"
 )}" v-bind:error="countryError">\n            <ui-input class="flex-1"v-value="country"></ui-input>\n        </ui-prop>\n\n         <ui-prop name="${Editor.T(
@@ -32,7 +32,7 @@ Editor.Panel.extend({
       el: this.shadowRoot,
       data: {
         commonName: "",
-        saving: !1,
+        saving: false,
         organizationalUnit: "",
         organization: "",
         locality: "",
@@ -40,61 +40,62 @@ Editor.Panel.extend({
         country: "",
         email: "",
         certificatePath: Editor.Project.path,
-        commonNameError: !1,
-        organizationalUnitError: !1,
-        organizationError: !1,
-        localityError: !1,
-        stateError: !1,
-        countryError: !1,
-        emailError: !1,
-        certificatePathError: !1,
+        commonNameError: false,
+        organizationalUnitError: false,
+        organizationError: false,
+        localityError: false,
+        stateError: false,
+        countryError: false,
+        emailError: false,
+        certificatePathError: false,
       },
       watch: {
         commonName: {
           handler() {
-            this.commonNameError = !1;
+            this.commonNameError = false;
           },
         },
         organizationalUnit: {
           handler() {
-            this.organizationalUnitError = !1;
+            this.organizationalUnitError = false;
           },
         },
         organization: {
           handler() {
-            this.organizationError = !1;
+            this.organizationError = false;
           },
         },
         locality: {
           handler() {
-            this.localityError = !1;
+            this.localityError = false;
           },
         },
         state: {
           handler() {
-            this.stateError = !1;
+            this.stateError = false;
           },
         },
         country: {
           handler() {
-            this.countryError = !1;
+            this.countryError = false;
           },
         },
         email: {
           handler() {
-            this.emailError = !1;
+            this.emailError = false;
           },
         },
         certificatePath: {
           handler() {
-            this.certificatePathError = !1;
+            this.certificatePathError = false;
           },
         },
       },
       methods: {
         _getProjectPath() {
           let r = Editor.Project.path;
-          return i.ensureDirSync(r), r;
+          i.ensureDirSync(r);
+          return r;
         },
         onChooseCertificatePath(i) {
           i.stopPropagation();
@@ -105,145 +106,185 @@ Editor.Panel.extend({
               { name: Editor.T("xiaomi-runtime.select_save_certificate_path") },
             ],
           });
-          r && r[0] && (this.certificatePath = r[0]);
+
+          if (r && r[0]) {
+            this.certificatePath = r[0];
+          }
         },
         _judgeEmpty(i, r) {
-          var t = !1;
-          return (
-            (i && 0 != i.trim().length) ||
-              ((t = !0),
-              Editor.error(Editor.T(`certificate.error.${r} Can't be empty`))),
-            t
-          );
+          var t = false;
+
+          if (!(i && 0 != i.trim().length)) {
+            t = true;
+            Editor.error(Editor.T(`certificate.error.${r} Can't be empty`));
+          }
+
+          return t;
         },
         _onSaveClick(o) {
-          if (
-            (o.stopPropagation(),
-            (this.country && 2 == this.country.trim().length) ||
-              ((this.countryError = !0),
-              Editor.error(
-                Editor.T(
-                  `certificate.error.${Editor.T(
-                    "KEYSTORE.country"
-                  )} only needs 2 letter code`
-                )
-              )),
-            (this.commonNameError = this._judgeEmpty(
+          o.stopPropagation();
+
+          if (!(this.country && 2 == this.country.trim().length)) {
+            this.countryError = true;
+
+            Editor.error(
+              Editor.T(
+                `certificate.error.${Editor.T(
+                  "KEYSTORE.country"
+                )} only needs 2 letter code`
+              )
+            );
+          }
+
+          this.commonNameError = this._judgeEmpty(
               this.commonName,
               Editor.T("KEYSTORE.name")
-            )),
-            (this.organizationalUnitError = this._judgeEmpty(
+            );
+
+          this.organizationalUnitError = this._judgeEmpty(
               this.organizationalUnit,
               Editor.T("KEYSTORE.organizational_unit")
-            )),
-            (this.organizationError = this._judgeEmpty(
+            );
+
+          this.organizationError = this._judgeEmpty(
               this.organization,
               Editor.T("KEYSTORE.organization")
-            )),
-            (this.localityError = this._judgeEmpty(
+            );
+
+          this.localityError = this._judgeEmpty(
               this.locality,
               Editor.T("KEYSTORE.locality")
-            )),
-            (this.stateError = this._judgeEmpty(
+            );
+
+          this.stateError = this._judgeEmpty(
               this.state,
               Editor.T("KEYSTORE.state")
-            )),
-            (this.emailError = this._judgeEmpty(this.email, "email")),
-            !this.commonName && (this.commonNameError = !0),
-            !this.organizationalUnit && (this.organizationalUnitError = !0),
-            !this.organization && (this.organizationError = !0),
-            !this.locality && (this.localityError = !0),
-            !this.state && (this.stateError = !0),
-            !this.email && (this.emailError = !0),
-            !this.certificatePath && (this.certificatePathError = !0),
-            require("fs").existsSync(this.certificatePath)
-              ? (this.certificatePathError = !1)
-              : (this.certificatePathError = !0),
-            this.certificatePath)
+            );
+
+          this.emailError = this._judgeEmpty(this.email, "email");
+
+          if (!this.commonName) {
+            this.commonNameError = true;
+          }
+
+          if (!this.organizationalUnit) {
+            this.organizationalUnitError = true;
+          }
+
+          if (!this.organization) {
+            this.organizationError = true;
+          }
+
+          if (!this.locality) {
+            this.localityError = true;
+          }
+
+          if (!this.state) {
+            this.stateError = true;
+          }
+
+          if (!this.email) {
+            this.emailError = true;
+          }
+
+          if (!this.certificatePath) {
+            this.certificatePathError = true;
+          }
+
+          if (require("fs").existsSync(this.certificatePath)) {
+            this.certificatePathError = false;
+          } else {
+            this.certificatePathError = true;
+          }
+
+          if (
+            (this.certificatePath)
           ) {
             let i = Editor.Profile.load("local://builder.json").get(
               "buildPath"
             );
-            if (
-              ((i = t.getAbsoluteBuildPath(i)),
-              this.certificatePath.startsWith(i))
-            )
-              return (
-                Editor.error("certificate can't be saved in the build path"),
-                void 0
-              );
+            i = t.getAbsoluteBuildPath(i);
+            if (this.certificatePath.startsWith(i)) {
+              Editor.error("certificate can't be saved in the build path");
+              return;
+            }
           }
-          if (
-            !(
-              this.commonName ||
-              this.organizationalUnit ||
-              this.organization ||
-              this.locality ||
-              this.state ||
-              this.country ||
-              this.certificatePath
-            )
-          )
-            return (
-              Editor.error(Editor.T("certificate.error.publish_empty")), void 0
-            );
-          if (
-            this.passwordError ||
-            this.confirmPasswordError ||
-            this.aliasError ||
-            this.aliasPasswordError ||
-            this.confirmAliasPasswordError ||
-            this.validityError ||
-            this.commonNameError ||
-            this.organizationalUnitError ||
-            this.organizationError ||
-            this.localityError ||
-            this.stateError ||
-            this.countryError ||
-            this.certificatePathError
-          )
+          if (!(
+            this.commonName ||
+            this.organizationalUnit ||
+            this.organization ||
+            this.locality ||
+            this.state ||
+            this.country ||
+            this.certificatePath
+          )) {
+            Editor.error(Editor.T("certificate.error.publish_empty"));
             return;
-          let n,
-            e,
-            a = this.certificatePath;
-          if (
-            (i.existsSync(a) || i.ensureDirSync(a),
-            "win32" === process.platform)
-          ) {
+          }
+          if (this.passwordError ||
+          this.confirmPasswordError ||
+          this.aliasError ||
+          this.aliasPasswordError ||
+          this.confirmAliasPasswordError ||
+          this.validityError ||
+          this.commonNameError ||
+          this.organizationalUnitError ||
+          this.organizationError ||
+          this.localityError ||
+          this.stateError ||
+          this.countryError ||
+          this.certificatePathError) {
+            return;
+          }
+          let n;
+          let e;
+          let a = this.certificatePath;
+
+          if (!i.existsSync(a)) {
+            i.ensureDirSync(a);
+          }
+
+          if ("win32" === process.platform) {
             let i = Editor.url(
               "packages://adapters/platforms/xiaomi/res/openSSLWin64/bin"
             );
-            (n = r.join(i, "openssl")),
-              (e = { OPENSSL_CONF: r.join(i, "openssl.cfg") });
-          } else
-            -1 === process.env.PATH.indexOf("/usr/bin/openssl") &&
-              (process.env.PATH += ":/usr/bin/openssl"),
-              (n = "openssl"),
-              (e = process.env);
-          var s = this,
-            l = `${n} req -newkey rsa:2048 -nodes -keyout private.pem -x509 -days 3650 -out certificate.pem -subj ${`/C=${this.country}/ST=${this.state}/L=${this.locality}/O=${this.organization}/OU=${this.organizationalUnit}/CN=${this.commonName}/emailAddress=${this.email}`}`;
-          (s.saving = !0),
-            (0, require("child_process").exec)(
-              `${l}`,
-              { env: e, cwd: a },
-              (i) => {
-                if (((s.saving = !1), !i))
-                  return (
-                    Editor.log(
-                      Editor.T("xiaomi-runtime.build_certificate_complet")
-                    ),
-                    Editor.Ipc.sendToWins(
-                      "builder:events",
-                      "certificate-created",
-                      a
-                    ),
-                    void 0
-                  );
-                Editor.error(
-                  Editor.T("xiaomi-runtime.build_certificate_fail") + i
+            n = r.join(i, "openssl");
+            e = { OPENSSL_CONF: r.join(i, "openssl.cfg") };
+          } else {
+            if (-1 === process.env.PATH.indexOf("/usr/bin/openssl")) {
+              process.env.PATH += ":/usr/bin/openssl";
+            }
+
+            n = "openssl";
+            e = process.env;
+          }
+          var s = this;
+          var l = `${n} req -newkey rsa:2048 -nodes -keyout private.pem -x509 -days 3650 -out certificate.pem -subj ${`/C=${this.country}/ST=${this.state}/L=${this.locality}/O=${this.organization}/OU=${this.organizationalUnit}/CN=${this.commonName}/emailAddress=${this.email}`}`;
+          s.saving = true;
+
+          (0, require("child_process").exec)(
+            `${l}`,
+            { env: e, cwd: a },
+            (i) => {
+              s.saving = false;
+              if (!i) {
+                Editor.log(
+                  Editor.T("xiaomi-runtime.build_certificate_complet")
                 );
+
+                Editor.Ipc.sendToWins(
+                  "builder:events",
+                  "certificate-created",
+                  a
+                );
+
+                return;
               }
-            );
+              Editor.error(
+                Editor.T("xiaomi-runtime.build_certificate_fail") + i
+              );
+            }
+          );
         },
       },
     });

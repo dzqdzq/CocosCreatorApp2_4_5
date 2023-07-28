@@ -1,5 +1,6 @@
-const t = require("fire-fs"),
-  e = (require("fire-path"), require("./const"));
+const t = require("fire-fs");
+const e = (require("fire-path"), require("./const"));
+
 module.exports = {
   name: Editor.T("huawei-agc.platform_name"),
   platform: "huawei-agc",
@@ -13,11 +14,15 @@ module.exports = {
     let a = Editor.Profile.load(e.PROFILE_PATH);
     i[i.actualPlatform] = a.getSelfData();
     let o = a.get("configSelected");
-    if (((i.sdkhub = null), t.existsSync(e.CONFIG_PATH))) {
+    i.sdkhub = null;
+    if ((t.existsSync(e.CONFIG_PATH))) {
       let a = t.readJsonSync(e.CONFIG_PATH);
       if (a.configSet) {
         let t = a.configSet.find((t) => t.id === o);
-        t && (i.sdkhub = t);
+
+        if (t) {
+          i.sdkhub = t;
+        }
       }
     }
   },
@@ -27,16 +32,22 @@ module.exports = {
     },
     "build-finished": function (t, e) {
       let i;
-      e.orientation.landscapeLeft || e.orientation.landscapeRight
-        ? (i = "landscape")
-        : (e.orientation.portrait || e.orientation.upsideDown) &&
-          (i = "portrait"),
-        Editor.Ipc.sendToMain("builder:notify-build-result", e, {
-          packageName: e.packageName,
-          resUrl: (e.android && e.android.REMOTE_SERVER_ROOT) || "",
-          orientation: i,
-        }),
-        t.reply();
+
+      if (e.orientation.landscapeLeft || e.orientation.landscapeRight) {
+        i = "landscape";
+      } else {
+        if ((e.orientation.portrait || e.orientation.upsideDown)) {
+          i = "portrait";
+        }
+      }
+
+      Editor.Ipc.sendToMain("builder:notify-build-result", e, {
+        packageName: e.packageName,
+        resUrl: (e.android && e.android.REMOTE_SERVER_ROOT) || "",
+        orientation: i,
+      });
+
+      t.reply();
     },
   },
   settings: Editor.url("packages://huawei-agc/ui/index.js"),

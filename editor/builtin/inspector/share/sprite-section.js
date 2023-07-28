@@ -6,7 +6,7 @@ Vue.component("cc-sprite-section", {
     cssBtn: { display: "block", width: "240px", margin: "10px auto" },
   }),
   props: {
-    target: { twoWay: !0, type: Object },
+    target: { twoWay: true, type: Object },
     multi: Boolean,
     child: Boolean,
   },

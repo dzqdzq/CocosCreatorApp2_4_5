@@ -1,1 +1,1 @@
-module.exports={"received-ids":[],"installed-hotupdates":[]};
+module.exports = {"received-ids":[],"installed-hotupdates":[]};

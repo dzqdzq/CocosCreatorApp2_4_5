@@ -1,21 +1,23 @@
-const e = {},
-  r = require("browserify"),
-  t = require("babelify"),
-  a = require("@babel/core"),
-  i = require("vinyl-source-stream"),
-  o = require("vinyl-buffer"),
-  n = require("gulp-uglify"),
-  s = require("event-stream"),
-  u = (require("fs"), require("path")),
-  c = require("gulp"),
-  l = Editor.require("packages://adapters/modules.json"),
-  p = [require("@babel/preset-env")],
-  d = [
-    [require("@babel/plugin-proposal-decorators"), { legacy: !0 }],
-    [require("@babel/plugin-proposal-class-properties"), { loose: !0 }],
-    [require("babel-plugin-add-module-exports")],
-    [require("@babel/plugin-proposal-export-default-from")],
-  ];
+const e = {};
+const r = require("browserify");
+const t = require("babelify");
+const a = require("@babel/core");
+const i = require("vinyl-source-stream");
+const o = require("vinyl-buffer");
+const n = require("gulp-uglify");
+const s = require("event-stream");
+const u = (require("fs"), require("path"));
+const c = require("gulp");
+const l = Editor.require("packages://adapters/modules.json");
+const p = [require("@babel/preset-env")];
+
+const d = [
+  [require("@babel/plugin-proposal-decorators"), { legacy: true }],
+  [require("@babel/plugin-proposal-class-properties"), { loose: true }],
+  [require("babel-plugin-add-module-exports")],
+  [require("@babel/plugin-proposal-export-default-from")],
+];
+
 let f = {
   wechatgame: "wechat",
   "wechatgame-subcontext": "wechat",
@@ -24,75 +26,103 @@ let f = {
   "bytedance-subcontext": "bytedance",
 };
 function b(e) {
-  return (e = f[e] || e), Editor.url(`packages://adapters/platforms/${e}`);
+  e = f[e] || e;
+  return Editor.url(`packages://adapters/platforms/${e}`);
 }
-(e.buildAdapter = function (
+
+e.buildAdapter = function (
   { actualPlatform: e, debug: a, excludedModules: s, dest: f },
   g
 ) {
   return new Promise((h, m) => {
-    let q = u.join(b(e), "index.js"),
-      y = r(q);
-    if (
-      ((function (e) {
+    let q = u.join(b(e), "index.js");
+    let y = r(q);
+
+    (function (e) {
         let r = [];
         if (e && e.length > 0) {
           let t = Editor.url("packages://adapters");
           e.forEach((e) => {
             let a = l[e];
-            a &&
+
+            if (a) {
               a.forEach((e) => {
                 r.push(u.join(t, e));
               });
+            }
           });
         }
         return r;
       })(s).forEach((e) => {
         y.ignore(e);
-      }),
-      g)
+      });
+
+    if (
+      (g)
     ) {
       let e = Editor.url("packages://adapters");
-      g instanceof Array || (g = [g]),
-        g.forEach((r) => {
-          y.ignore(u.join(e, r));
-        });
+
+      if (!(g instanceof Array)) {
+        g = [g];
+      }
+
+      g.forEach((r) => {
+        y.ignore(u.join(e, r));
+      });
     }
     let j = y
       .transform(t, { presets: p, plugins: d })
       .bundle()
       .pipe(i(a ? "adapter.js" : "adapter-min.js"))
       .pipe(o());
-    a || (j = j.pipe(n())),
-      j.pipe(c.dest(f)),
-      j.on("end", () => {
-        h();
-      }),
-      j.once("error", (e) => {
-        m(e);
-      });
+
+    if (!a) {
+      j = j.pipe(n());
+    }
+
+    j.pipe(c.dest(f));
+
+    j.on("end", () => {
+      h();
+    });
+
+    j.once("error", (e) => {
+      m(e);
+    });
   });
-}),
-  (e.copyRes = async function (e, r, t, i) {
+};
+
+e.copyRes = async function (e, r, t, i) {
     return new Promise(async function (i, o) {
-      let { platform: n, actualPlatform: l, dest: f } = e,
-        g = b(l),
-        h = [u.join(g, "res/**/*")];
-      r &&
-        (r instanceof Array || (r = [r]),
+      let { platform: n, actualPlatform: l, dest: f } = e;
+      let g = b(l);
+      let h = [u.join(g, "res/**/*")];
+
+      if (r) {
+        if (!(r instanceof Array)) {
+          r = [r];
+        }
+
         r.forEach((e) => {
           h.push(`!${u.join(g, "res", e)}`);
-        }));
+        });
+      }
+
       let m = await new Promise((e, r) => {
         Editor.Ipc.sendToMain("app:query-plugin-scripts", n, (t, a) => {
-          if (t) return r(t);
+          if (t) {
+            return r(t);
+          }
           let i = [];
           const o = Editor.assetdb;
+
           a.forEach((e) => {
             let r = o.fspathToUrl(e).slice("db://".length);
-            (r = r.replace(/\\/g, "/")), i.push(r);
-          }),
-            e(i);
+            r = r.replace(/\\/g, "/");
+            i.push(r);
+          });
+
+          e(i);
         });
       });
       c.src(h)
@@ -102,37 +132,43 @@ function b(e) {
               let i = u.basename(r.path);
               if ("object" == typeof t) {
                 let a = t[i];
-                "function" == typeof a && a(r, e);
+
+                if ("function" == typeof a) {
+                  a(r, e);
+                }
               }
               if ("ccRequire.js" === i) {
-                let t = "// tail",
-                  a = r.contents.toString(),
-                  i = "";
-                m &&
+                let t = "// tail";
+                let a = r.contents.toString();
+                let i = "";
+
+                if (m) {
                   m.forEach((e) => {
                     i += `'src/${e}' () { return require('src/${e}') },\n`;
-                  }),
-                  e.bundles.forEach((r) => {
-                    if (
-                      "subpackage" === r.compressionType &&
-                      "alipay" !== e.actualPlatform
-                    )
-                      return;
-                    let t = u.relative(f, r.scriptDest),
-                      a = u.join(t, "index.js");
-                    (a = a.replace(/\\/g, "/")),
-                      (i += `'${a}' () { return require('${a}') },\n`);
-                  }),
-                  (i += t),
-                  (a = a.replace(t, i)),
-                  (r.contents = new Buffer(a));
+                  });
+                }
+
+                e.bundles.forEach((r) => {
+                  if ("subpackage" === r.compressionType &&
+                  "alipay" !== e.actualPlatform) {
+                    return;
+                  }
+                  let t = u.relative(f, r.scriptDest);
+                  let a = u.join(t, "index.js");
+                  a = a.replace(/\\/g, "/");
+                  i += `'${a}' () { return require('${a}') },\n`;
+                });
+
+                i += t;
+                a = a.replace(t, i);
+                r.contents = new Buffer(a);
               }
               if (".js" === u.extname(i) && "ccRequire.js" !== i) {
                 let e = a.transform(r.contents.toString(), {
-                  ast: !1,
-                  highlightCode: !1,
-                  sourceMaps: !1,
-                  compact: !1,
+                  ast: false,
+                  highlightCode: false,
+                  sourceMaps: false,
+                  compact: false,
                   filename: r.path,
                   presets: p,
                   plugins: d,
@@ -153,5 +189,6 @@ function b(e) {
           i();
         });
     });
-  }),
-  (module.exports = e);
+  };
+
+module.exports = e;

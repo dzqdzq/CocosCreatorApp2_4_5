@@ -19,12 +19,12 @@ Vue.component("cc-type-error-prop", {
   }),
   props: {
     indent: { type: Number, default: 0 },
-    target: { twoWay: !0, type: Object },
+    target: { twoWay: true, type: Object },
   },
   methods: {
     _onReset() {
       Editor.UI.fire(this.$el, "reset-prop", {
-        bubbles: !0,
+        bubbles: true,
         detail: { path: this.target.path, type: this.target.attrs.type },
       });
     },

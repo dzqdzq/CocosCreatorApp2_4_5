@@ -39,7 +39,7 @@ Vue.component("cc-node-header", {
       "transition-duration": "0.20s",
     },
   }),
-  props: { target: { twoWay: !0, type: Object }, multi: { type: Boolean } },
+  props: { target: { twoWay: true, type: Object }, multi: { type: Boolean } },
   methods: {
     T: Editor.T,
     enabledPrefabSetSync() {
@@ -49,28 +49,32 @@ Vue.component("cc-node-header", {
         : !t.sync;
     },
     toggle3D(e) {
-      e.stopPropagation(),
-        this.target.uuid.split("^").forEach((e) => {
-          Editor.Ipc.sendToPanel("scene", "scene:set-property", {
-            id: e,
-            path: "is3DNode",
-            value: !this.target.is3DNode.value,
-            isSubProp: !1,
-          });
+      e.stopPropagation();
+
+      this.target.uuid.split("^").forEach((e) => {
+        Editor.Ipc.sendToPanel("scene", "scene:set-property", {
+          id: e,
+          path: "is3DNode",
+          value: !this.target.is3DNode.value,
+          isSubProp: false,
         });
+      });
     },
     prefabSelectAsset() {
-      Editor.UI.fire(this.$el, "prefab-select-asset", { bubbles: !0 });
+      Editor.UI.fire(this.$el, "prefab-select-asset", { bubbles: true });
     },
     prefabSelectRoot() {
-      Editor.UI.fire(this.$el, "prefab-select-root", { bubbles: !0 });
+      Editor.UI.fire(this.$el, "prefab-select-root", { bubbles: true });
     },
     prefabApply() {
       if (this.target.__prefab__.hasSubPrefab) {
-        this._applyRequestID &&
-          (Editor.Ipc.cancelRequest(this._applyRequestID),
-          (this._applyRequestID = null));
+        if (this._applyRequestID) {
+          Editor.Ipc.cancelRequest(this._applyRequestID);
+          this._applyRequestID = null;
+        }
+
         let e = this.$els.save.getBoundingClientRect();
+
         this._applyRequestID = Editor.Ipc.sendToPackage(
           "inspector",
           "popup-multiple-prefab-menu",
@@ -82,14 +86,19 @@ Vue.component("cc-node-header", {
             nestedInfo: this.target.__prefab__.nestedInfo,
           }
         );
-      } else Editor.UI.fire(this.$el, "prefab-apply", { bubbles: !0 });
+      } else {
+        Editor.UI.fire(this.$el, "prefab-apply", { bubbles: true });
+      }
     },
     prefabRevert() {
       if (this.target.__prefab__.hasSubPrefab) {
-        this._revertRequestID &&
-          (Editor.Ipc.cancelRequest(this._revertRequestID),
-          (this._revertRequestID = null));
+        if (this._revertRequestID) {
+          Editor.Ipc.cancelRequest(this._revertRequestID);
+          this._revertRequestID = null;
+        }
+
         let e = this.$els.save.getBoundingClientRect();
+
         this._revertRequestID = Editor.Ipc.sendToPackage(
           "inspector",
           "popup-multiple-prefab-menu",
@@ -101,10 +110,12 @@ Vue.component("cc-node-header", {
             nestedInfo: this.target.__prefab__.nestedInfo,
           }
         );
-      } else Editor.UI.fire(this.$el, "prefab-revert", { bubbles: !0 });
+      } else {
+        Editor.UI.fire(this.$el, "prefab-revert", { bubbles: true });
+      }
     },
     prefabSetSync() {
-      Editor.UI.fire(this.$el, "prefab-set-sync", { bubbles: !0 });
+      Editor.UI.fire(this.$el, "prefab-set-sync", { bubbles: true });
     },
     _updateActiveMulti: (e) => e.values.length > 1,
     _updateNameMulti: (e) => e.values.length > 1,

@@ -1,26 +1,28 @@
 "use strict";
-const e = require("fs"),
-  t = require("path"),
-  r =
-    (require("../utils/cache"),
-    require("../utils/operation"),
-    require("../utils/event")),
-  i = require("../utils/utils"),
-  s = require("../utils/communication");
-(exports.template = e.readFileSync(
+const e = require("fs");
+const t = require("path");
+const r = (require("../utils/cache"), require("../utils/operation"), require("../utils/event"));
+const i = require("../utils/utils");
+const s = require("../utils/communication");
+
+exports.template = e.readFileSync(
   t.join(__dirname, "../template/tools.html"),
   "utf-8"
-)),
-  (exports.props = ["filter"]),
-  (exports.data = function () {
-    return { input: !1 };
-  }),
-  (exports.created = function () {
+);
+
+exports.props = ["filter"];
+
+exports.data = function () {
+    return { input: false };
+  };
+
+exports.created = function () {
     r.on("nodes_focus", (e) => {
       this.input = !e;
     });
-  }),
-  (exports.methods = {
+  };
+
+exports.methods = {
     t: (e) => Editor.T(e),
     refresh() {
       r.emit("refresh-asset-tree");
@@ -41,9 +43,9 @@ const e = require("fs"),
       i.emptyFilter();
     },
     oInputnFocus() {
-      this.input = !0;
+      this.input = true;
     },
     onInputBlur() {
-      this.input = !1;
+      this.input = false;
     },
-  });
+  };

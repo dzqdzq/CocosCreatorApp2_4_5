@@ -1,7 +1,8 @@
-let e = Editor.Profile.load("project://alipay-minigame.json"),
-  t = e.getSelfData();
-"use strict",
-  (exports.template = `\n        <ui-prop name="${Editor.T(
+let e = Editor.Profile.load("project://alipay-minigame.json");
+let t = e.getSelfData();
+"use strict";
+
+exports.template = `\n        <ui-prop name="${Editor.T(
     "BUILDER.start_scene_asset_bundle"
   )}"\n                tooltip="${Editor.T(
     "BUILDER.start_scene_asset_bundle_tooltip"
@@ -15,27 +16,34 @@ let e = Editor.Profile.load("project://alipay-minigame.json"),
     "alipay-minigame.remote_url"
   )}" auto-height>\n            <ui-input class="flex-1" v-value="runtimeSetting.remoteUrl" placeholder="${Editor.T(
     "alipay-minigame.remote_url_hint"
-  )}"></ui-input>\n        </ui-prop>\n`),
-  (exports.name = "alipay"),
-  (exports.data = function () {
-    return { runtimeSetting: t, originEncryptJs: !1, profile: null };
-  }),
-  (exports.watch = {
+  )}"></ui-input>\n        </ui-prop>\n`;
+
+exports.name = "alipay";
+
+exports.data = function () {
+    return { runtimeSetting: t, originEncryptJs: false, profile: null };
+  };
+
+exports.watch = {
     runtimeSetting: {
       handler(t) {
         Object.keys(this.runtimeSetting).forEach((t) => {
           e.set(t, this.runtimeSetting[t]);
-        }),
-          e.save();
+        });
+
+        e.save();
       },
-      deep: !0,
+      deep: true,
     },
-  }),
-  (exports.created = function () {
-    (this.originEncryptJs = this.project.encryptJs),
-      (this.project.encryptJs = !1);
-  }),
-  (exports.directives = {}),
-  (exports.beforeDestroy = function () {
+  };
+
+exports.created = function () {
+  this.originEncryptJs = this.project.encryptJs;
+  this.project.encryptJs = false;
+};
+
+exports.directives = {};
+
+exports.beforeDestroy = function () {
     this.project.encryptJs = this.originEncryptJs;
-  });
+  };

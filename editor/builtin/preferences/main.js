@@ -5,7 +5,11 @@ module.exports = {
   unload() {},
   messages: {
     open(l, t) {
-      t && t.tab && (e = t.tab), Editor.Panel.open("preferences");
+      if (t && t.tab) {
+        e = t.tab;
+      }
+
+      Editor.Panel.open("preferences");
     },
     close() {
       Editor.Panel.close("preferences");

@@ -1,7 +1,5 @@
-let e = require("fire-fs"),
-  t =
-    (require("fire-path"),
-    Editor.require("packages://channel-upload-tools/package.json"));
+let e = require("fire-fs");
+let t = (require("fire-path"), Editor.require("packages://channel-upload-tools/package.json"));
 Editor.Panel.extend({
   _vm: null,
   template: e.readFileSync(
@@ -22,7 +20,7 @@ Editor.Panel.extend({
     this._vm = new Vue({
       el: this.shadowRoot,
       data: () => ({
-        loading: !0,
+        loading: true,
         url: e.url,
         platform: e.platform,
         redirect: e.redirect,
@@ -30,7 +28,8 @@ Editor.Panel.extend({
       methods: {
         clearCache() {
           var e = this.$webview.getWebContents();
-          void 0 !== e &&
+
+          if (void 0 !== e) {
             e.session.clearStorageData([
               "appcache",
               "cookies",
@@ -42,14 +41,18 @@ Editor.Panel.extend({
               "serviceworkers",
               "cachestorage",
             ]);
+          }
         },
         startLoading(e) {
-          this.loading = !0;
+          this.loading = true;
         },
         finishLoading(e) {
-          a.src.startsWith(this.redirect) &&
-            (this.notifyLoginResult(), Editor.Panel.close(`${t.name}.oauth`)),
-            (this.loading = !1);
+          if (a.src.startsWith(this.redirect)) {
+            this.notifyLoginResult();
+            Editor.Panel.close(`${t.name}.oauth`);
+          }
+
+          this.loading = false;
         },
         notifyLoginResult() {
           Editor.Ipc.sendToPanel(

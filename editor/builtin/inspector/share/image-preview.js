@@ -6,7 +6,7 @@ Vue.component("cc-image-preview", {
     this._loadImage();
   },
   destroyed() {
-    this._destroyed = !0;
+    this._destroyed = true;
   },
   data: () => ({
     cssHost: {
@@ -47,96 +47,119 @@ Vue.component("cc-image-preview", {
   watch: {
     uuid: "_loadImage",
     "target.__mtime__": "_loadImage",
-    target: { handler: "_updateImage", deep: !0 },
+    target: { handler: "_updateImage", deep: true },
   },
   methods: {
     _loadImage() {
-      this.uuid &&
-        ((this._image = new Image()),
-        (this._image.onload = () => {
-          this._destroyed || this._updateImage();
-        }),
-        (this._image.src =
-          "uuid://" + this.uuid + "?" + this.target.__mtime__));
+      if (this.uuid) {
+        this._image = new Image();
+
+        this._image.onload = () => {
+          if (!this._destroyed) {
+            this._updateImage();
+          }
+        };
+
+        this._image.src = "uuid://" + this.uuid + "?" + this.target.__mtime__;
+      }
     },
     _updateImage() {
       let t = this._getSize();
-      (this.info = t.width + " x " + t.height), this.resize();
+      this.info = t.width + " x " + t.height;
+      this.resize();
     },
     _getSize() {
-      let t = 0,
-        e = 0;
-      return (
-        "texture" === this.target.__assetType__
-          ? ((t = this._image.width), (e = this._image.height))
-          : "sprite-frame" === this.target.__assetType__ &&
-            ((t = this.target.width), (e = this.target.height)),
-        { width: t, height: e }
-      );
+      let t = 0;
+      let e = 0;
+
+      if ("texture" === this.target.__assetType__) {
+        t = this._image.width;
+        e = this._image.height;
+      } else {
+        if ("sprite-frame" === this.target.__assetType__) {
+          t = this.target.width;
+          e = this.target.height;
+        }
+      }
+
+      return { width: t, height: e };
     },
     resize() {
-      let t = this.$els.content.getBoundingClientRect(),
-        e = this._getSize(),
-        i = Editor.Utils.fitSize(e.width, e.height, t.width, t.height);
-      this.target.rotated &&
-        (this._scalingSize = {
-          width: Math.ceil(i[1]),
-          height: Math.ceil(i[0]),
-        }),
-        (this.$els.canvas.width = Math.ceil(i[0])),
-        (this.$els.canvas.height = Math.ceil(i[1])),
-        this.repaint();
+      let t = this.$els.content.getBoundingClientRect();
+      let e = this._getSize();
+      let i = Editor.Utils.fitSize(e.width, e.height, t.width, t.height);
+
+      if (this.target.rotated) {
+        this._scalingSize = {
+            width: Math.ceil(i[1]),
+            height: Math.ceil(i[0]),
+          };
+      }
+
+      this.$els.canvas.width = Math.ceil(i[0]);
+      this.$els.canvas.height = Math.ceil(i[1]);
+      this.repaint();
     },
     repaint() {
-      if (!this.target || !this._image) return;
+      if (!this.target || !this._image) {
+        return;
+      }
       let t = this.$els.canvas.getContext("2d");
-      t.imageSmoothingEnabled = !1;
-      let e = this.$els.canvas.width,
-        i = this.$els.canvas.height;
-      if ("texture" === this.target.__assetType__)
-        t.drawImage(this._image, 0, 0, e, i),
-          this.target.subMetas &&
-            this.target.subMetas.forEach((s) => {
-              let a = e / this._image.width,
-                h = i / this._image.height;
-              t.beginPath(),
-                t.rect(s.trimX * a, s.trimY * h, s.width * a, s.height * h),
-                (t.lineWidth = 1),
-                (t.strokeStyle = "#ff00ff"),
-                t.stroke();
-            });
-      else if ("sprite-frame" === this.target.__assetType__) {
-        let s, a, h, g;
-        if (this.target.rotated) {
-          let r = e / 2,
-            n = i / 2;
-          t.translate(r, n),
-            t.rotate((-90 * Math.PI) / 180),
-            t.translate(-r, -n),
-            (s = e / 2 - this._scalingSize.width / 2),
-            (a = i / 2 - this._scalingSize.height / 2),
-            (h = this.target.height),
-            (g = this.target.width),
-            (e = this.$els.canvas.height),
-            (i = this.$els.canvas.width);
-        } else
-          (s = 0),
-            (a = 0),
-            (h = this.target.width),
-            (g = this.target.height),
-            (e = this.$els.canvas.width),
-            (i = this.$els.canvas.height);
-        t.drawImage(
-          this._image,
-          this.target.trimX,
-          this.target.trimY,
-          h,
-          g,
-          s,
-          a,
-          e,
-          i
-        );
+      t.imageSmoothingEnabled = false;
+      let e = this.$els.canvas.width;
+      let i = this.$els.canvas.height;
+      if ("texture" === this.target.__assetType__) {
+        t.drawImage(this._image, 0, 0, e, i);
+
+        if (this.target.subMetas) {
+          this.target.subMetas.forEach((s) => {
+            let a = e / this._image.width;
+            let h = i / this._image.height;
+            t.beginPath();
+            t.rect(s.trimX * a, s.trimY * h, s.width * a, s.height * h);
+            t.lineWidth = 1;
+            t.strokeStyle = "#ff00ff";
+            t.stroke();
+          });
+        }
+      } else {
+        if ("sprite-frame" === this.target.__assetType__) {
+          let s;
+          let a;
+          let h;
+          let g;
+          if (this.target.rotated) {
+            let r = e / 2;
+            let n = i / 2;
+            t.translate(r, n);
+            t.rotate((-90 * Math.PI) / 180);
+            t.translate(-r, -n);
+            s = e / 2 - this._scalingSize.width / 2;
+            a = i / 2 - this._scalingSize.height / 2;
+            h = this.target.height;
+            g = this.target.width;
+            e = this.$els.canvas.height;
+            i = this.$els.canvas.width;
+          } else {
+            s = 0;
+            a = 0;
+            h = this.target.width;
+            g = this.target.height;
+            e = this.$els.canvas.width;
+            i = this.$els.canvas.height;
+          }
+          t.drawImage(
+            this._image,
+            this.target.trimX,
+            this.target.trimY,
+            h,
+            g,
+            s,
+            a,
+            e,
+            i
+          );
+        }
       }
     },
   },

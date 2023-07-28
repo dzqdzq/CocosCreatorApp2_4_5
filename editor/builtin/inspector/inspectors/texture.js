@@ -15,14 +15,15 @@
     ready() {},
     watch: {
       "target.wrapMode": function () {
-        "repeat" !== this.target.wrapMode ||
-          this.isPow2() ||
+        if (!("repeat" !== this.target.wrapMode || this.isPow2())) {
           Editor.warn(Editor.T("INSPECTOR.texture.repeat_mode_warning"));
+        }
       },
       "target.genMipmaps": function () {
-        this.target.genMipmaps &&
-          !this.isPow2() &&
+        if (this.target.genMipmaps &&
+          !this.isPow2()) {
           Editor.warn(Editor.T("INSPECTOR.texture.gen_mipmaps_warning"));
+        }
       },
     },
     methods: {

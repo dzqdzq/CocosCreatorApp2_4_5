@@ -49,8 +49,12 @@ let e = {
   },
 };
 const s = Editor.require("app://asset-db/lib/meta");
-Editor.metas || (Editor.metas = {}),
-  (Editor.metas["raw-asset"] = s.RawAssetMeta),
-  (Editor.metas.asset = s.AssetMeta),
-  (Editor.metas.folder = s.FolderMeta),
-  (Editor.assetdb = e);
+
+if (!Editor.metas) {
+  Editor.metas = {};
+}
+
+Editor.metas["raw-asset"] = s.RawAssetMeta;
+Editor.metas.asset = s.AssetMeta;
+Editor.metas.folder = s.FolderMeta;
+Editor.assetdb = e;

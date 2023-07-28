@@ -6,12 +6,14 @@ module.exports = function () {
         var n = r("gulp", ["build-debug-infos"], {
           cwd: Editor.url("unpack://engine"),
         });
+
         n.stdout.on("data", (r) => {
           Editor.log(r.toString());
-        }),
-          n.stderr.on("data", (r) => {
-            Editor.log(r.toString());
-          });
+        });
+
+        n.stderr.on("data", (r) => {
+          Editor.log(r.toString());
+        });
       }
     },
   };

@@ -1,55 +1,87 @@
 "use strict";
-const e = require("fire-fs"),
-  t =
-    (require("fire-path"),
-    Editor.require("packages://hierarchy/panel/utils/event")),
-  r = Editor.require("packages://hierarchy/panel/utils/cache"),
-  o = Editor.require("packages://hierarchy/panel/utils/operation"),
-  n = Editor.require("packages://hierarchy/panel/manager");
+const e = require("fire-fs");
+const t = (require("fire-path"), Editor.require("packages://hierarchy/panel/utils/event"));
+const r = Editor.require("packages://hierarchy/panel/utils/cache");
+const o = Editor.require("packages://hierarchy/panel/utils/operation");
+const n = Editor.require("packages://hierarchy/panel/manager");
 Editor.require("packages://hierarchy/panel/utils/communication");
 function i(e) {
   let t = Editor.Selection.curSelection("node");
-  Editor.Ipc.sendToWins("scene:center-nodes", t), l(t, e);
+  Editor.Ipc.sendToWins("scene:center-nodes", t);
+  l(t, e);
 }
 function l(e, t) {
   let n = e[e.length - 1];
-  if (!n) return;
+  if (!n) {
+    return;
+  }
   let i = r.queryNode(n);
-  i &&
-    (i.isSearch || o.foldAllParentNodeState(i, !1),
+
+  if (i) {
+    if (!i.isSearch) {
+      o.foldAllParentNodeState(i, false);
+    }
+
     requestAnimationFrame(() => {
-      let e = 20 * i.showIndex,
-        r = t.clientHeight,
-        o = t.scrollTop;
-      e > o + r - 20 ? (t.scrollTop = e - r + 20) : e < o && (t.scrollTop = e);
-    }));
+      let e = 20 * i.showIndex;
+      let r = t.clientHeight;
+      let o = t.scrollTop;
+
+      if (e > o + r - 20) {
+        t.scrollTop = e - r + 20;
+      } else {
+        if (e < o) {
+          t.scrollTop = e;
+        }
+      }
+    });
+  }
 }
+
 let s = function (e) {
-    let t = r.querySearchNodes();
-    0 === t.length && (t = r.queryNodes()), (t = t.filter((e) => e && e.show));
-    let o = Editor.Selection.curSelection("node"),
-      n = o[o.length - 1],
-      i = o.indexOf(n),
-      l = t.findIndex((e) => e.id === n),
-      s = t[l + ("down" === e ? 1 : -1)];
-    if (!s) return;
-    let d = t[l];
-    s.selected
-      ? ((d.selected = !d.selected), o.splice(i, 1))
-      : ((s.selected = !s.selected),
-        s.selected
-          ? o.push(s.id)
-          : o.forEach((e, t) => {
-              e === s.id && o.splice(t, 1);
-            })),
-      Editor.Selection.select("node", o, !0, !0);
-  },
-  d = -1;
+  let t = r.querySearchNodes();
+
+  if (0 === t.length) {
+    t = r.queryNodes();
+  }
+
+  t = t.filter((e) => e && e.show);
+  let o = Editor.Selection.curSelection("node");
+  let n = o[o.length - 1];
+  let i = o.indexOf(n);
+  let l = t.findIndex((e) => e.id === n);
+  let s = t[l + ("down" === e ? 1 : -1)];
+  if (!s) {
+    return;
+  }
+  let d = t[l];
+
+  if (s.selected) {
+    d.selected = !d.selected;
+    o.splice(i, 1);
+  } else {
+    s.selected = !s.selected;
+
+    if (s.selected) {
+      o.push(s.id);
+    } else {
+      o.forEach((e, t) => {
+        if (e === s.id) {
+          o.splice(t, 1);
+        }
+      });
+    }
+  }
+
+  Editor.Selection.select("node", o, true, true);
+};
+
+let d = -1;
 Editor.Panel.extend({
   listeners: {
     "panel-resize"() {
-      (this._vm.length = (this.clientHeight - 56) / 20 + 3),
-        t.emit("refresh-node-tree");
+      this._vm.length = (this.clientHeight - 56) / 20 + 3;
+      t.emit("refresh-node-tree");
     },
   },
   style: e.readFileSync(
@@ -66,20 +98,24 @@ Editor.Panel.extend({
       n.stop();
     },
     "selection:selected"(e, t, r) {
-      "node" === t &&
-        (r.forEach((e) => {
-          o.select(e, !0);
-        }),
-        l(r, this._vm.$els.nodes));
+      if ("node" === t) {
+        r.forEach((e) => {
+            o.select(e, true);
+          });
+
+        l(r, this._vm.$els.nodes);
+      }
     },
     "selection:unselected"(e, t, r) {
-      "node" === t &&
+      if ("node" === t) {
         r.forEach((e) => {
-          o.select(e, !1);
+          o.select(e, false);
         });
+      }
     },
     "scene:animation-record-changed"(e, t, n) {
-      (r.recording = !!t), o.ignore(n, t);
+      r.recording = !!t;
+      o.ignore(n, t);
     },
     "scene:prefab-mode-changed"(e, t) {
       r.editPrefab = !!t;
@@ -88,19 +124,23 @@ Editor.Panel.extend({
       this._vm.filter = t;
     },
     delete(e, t) {
-      clearTimeout(d),
-        Editor.Selection.select("node", t, !0),
-        (d = setTimeout(() => {
+      clearTimeout(d);
+      Editor.Selection.select("node", t, true);
+
+      d = setTimeout(() => {
           n.deleteNode(t);
-        }, 0));
+        }, 0);
     },
     rename(e, t) {
       o.rename(t);
     },
     copy(e) {
-      if (r.recording) return;
+      if (r.recording) {
+        return;
+      }
       let t = Editor.Selection.curSelection("node");
-      (r.copyNodes = t), Editor.Ipc.sendToPanel("scene", "scene:copy-nodes", t);
+      r.copyNodes = t;
+      Editor.Ipc.sendToPanel("scene", "scene:copy-nodes", t);
     },
     "show-path"(e, t) {
       o.print(t);
@@ -119,7 +159,7 @@ Editor.Panel.extend({
     },
   },
   ready() {
-    (this._vm = (function (e, r) {
+    this._vm = (function (e, r) {
       return new Vue({
         el: e,
         data: { length: 0, filter: "" },
@@ -135,49 +175,85 @@ Editor.Panel.extend({
             "scene",
             "scene:is-ready",
             (e, t) => {
-              t && n.startup();
+              if (t) {
+                n.startup();
+              }
             },
             -1
-          ),
-            t.on("filter-changed", (e) => {
-              (this.filter = e), "" === e && i(this.$els.nodes);
-            }),
-            t.on("empty-filter", () => {
+          );
+
+          t.on("filter-changed", (e) => {
+            this.filter = e;
+
+            if ("" === e) {
               i(this.$els.nodes);
-            });
+            }
+          });
+
+          t.on("empty-filter", () => {
+            i(this.$els.nodes);
+          });
         },
       });
-    })(this.shadowRoot)),
-      (this._vm.length = (this.clientHeight - 56) / 20 + 3),
-      r.initNodeState(),
-      r.initNodeStateProfile();
+    })(this.shadowRoot);
+
+    this._vm.length = (this.clientHeight - 56) / 20 + 3;
+    r.initNodeState();
+    r.initNodeStateProfile();
   },
   close() {
     r.saveNodeTreeStateProfile();
   },
   selectAll(e) {
-    e && (e.stopPropagation(), e.preventDefault());
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
     let t = [];
+
     r.queryNodes().forEach((e) => {
-      t.push(e.id), e.children.length > 0 && o.fold(e.id, !1);
-    }),
-      Editor.Selection.select("node", t, !0, !1);
+      t.push(e.id);
+
+      if (e.children.length > 0) {
+        o.fold(e.id, false);
+      }
+    });
+
+    Editor.Selection.select("node", t, true, false);
   },
   delete(e) {
-    if ((e && (e.stopPropagation(), e.preventDefault()), r.recording)) return;
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    if (r.recording) {
+      return;
+    }
     const t = r.queryRoots();
     let o = [];
+
     r.queryNodes().forEach((e) => {
-      (r.editPrefab && e.id === t[0]) || (e.selected && o.push(e.id));
-    }),
-      n.deleteNode(o);
+      if (!(r.editPrefab && e.id === t[0])) {
+        if (e.selected) {
+          o.push(e.id);
+        }
+      }
+    });
+
+    n.deleteNode(o);
   },
   up(e) {
-    e && (e.stopPropagation(), e.preventDefault());
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
     let t = r.queryNodes();
     for (let e = 0; e < t.length; e++) {
-      let r = t[e],
-        o = r.showIndex;
+      let r = t[e];
+      let o = r.showIndex;
       if (r && r.selected) {
         for (e; e >= 0; e--) {
           let r = t[e];
@@ -186,7 +262,7 @@ Editor.Panel.extend({
             r.showIndex >= 0 &&
             r.showIndex < o
           ) {
-            Editor.Selection.select("node", r.id, !0, !0);
+            Editor.Selection.select("node", r.id, true, true);
             break;
           }
         }
@@ -195,16 +271,20 @@ Editor.Panel.extend({
     }
   },
   down(e) {
-    e && (e.stopPropagation(), e.preventDefault());
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
     let t = r.queryNodes();
     for (let e = t.length - 1; e >= 0; e--) {
-      let r = t[e],
-        o = r.showIndex;
+      let r = t[e];
+      let o = r.showIndex;
       if (r && r.selected) {
         for (e; e < t.length; e++) {
           let r = t[e];
           if ((!this._vm.filter || r.isSearch) && r.showIndex > o) {
-            Editor.Selection.select("node", r.id, !0, !0);
+            Editor.Selection.select("node", r.id, true, true);
             break;
           }
         }
@@ -213,56 +293,99 @@ Editor.Panel.extend({
     }
   },
   left(e) {
-    e && (e.stopPropagation(), e.preventDefault()),
-      r.queryNodes().forEach((e) => {
-        e.selected && o.fold(e.id, !0);
-      });
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    r.queryNodes().forEach((e) => {
+      if (e.selected) {
+        o.fold(e.id, true);
+      }
+    });
   },
   right(e) {
-    e && (e.stopPropagation(), e.preventDefault()),
-      r.queryNodes().forEach((e) => {
-        e.selected && o.fold(e.id, !1);
-      });
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    r.queryNodes().forEach((e) => {
+      if (e.selected) {
+        o.fold(e.id, false);
+      }
+    });
   },
   shiftUp(e) {
-    e && (e.stopPropagation(), e.preventDefault()), s("up");
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    s("up");
   },
   shiftDown(e) {
-    e && (e.stopPropagation(), e.preventDefault()), s("down");
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    s("down");
   },
   f2(e) {
-    e && (e.stopPropagation(), e.preventDefault());
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
     let t = r.queryNodes();
     for (let e = 0; e < t.length; e++) {
       let r = t[e];
       if (r && r.selected) {
-        o.rename(r.id, !0);
+        o.rename(r.id, true);
         break;
       }
     }
   },
   find(e) {
     let t = Editor.Selection.curSelection("node");
-    t.some((e) => {
+
+    if (!t.some((e) => {
       let t = r.queryNode(e);
       return t && t.rename;
-    }) ||
-      (e && (e.stopPropagation(), e.preventDefault()),
-      Editor.Ipc.sendToWins("scene:center-nodes", t));
+    })) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+
+      Editor.Ipc.sendToWins("scene:center-nodes", t);
+    }
   },
   copy() {
     Editor.Ipc.sendToPanel("hierarchy", "copy");
   },
   paste() {
-    if (r.recording) return;
-    let e = Editor.Selection.curActivate("node"),
-      t = r.queryNode(e);
-    t && t.parent && (e = t.parent),
-      Editor.Ipc.sendToPanel("scene", "scene:paste-nodes", e);
+    if (r.recording) {
+      return;
+    }
+    let e = Editor.Selection.curActivate("node");
+    let t = r.queryNode(e);
+
+    if (t && t.parent) {
+      e = t.parent;
+    }
+
+    Editor.Ipc.sendToPanel("scene", "scene:paste-nodes", e);
   },
   duplicate() {
-    if (r.recording) return;
+    if (r.recording) {
+      return;
+    }
     let e = Editor.Selection.curSelection("node");
-    e.length > 0 && Editor.Ipc.sendToPanel("hierarchy", "duplicate", e);
+
+    if (e.length > 0) {
+      Editor.Ipc.sendToPanel("hierarchy", "duplicate", e);
+    }
   },
 });

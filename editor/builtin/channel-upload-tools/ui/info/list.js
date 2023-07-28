@@ -1,9 +1,7 @@
-let e = require("fire-fs"),
-  t =
-    (require("fire-path"),
-    Editor.require("packages://channel-upload-tools/ui/info/item.js"),
-    require("../../package.json"));
+let e = require("fire-fs");
+let t = (require("fire-path"), Editor.require("packages://channel-upload-tools/ui/info/item.js"), require("../../package.json"));
 const a = 1;
+
 module.exports = {
   name: "upload-list",
   template: e.readFileSync(
@@ -12,7 +10,7 @@ module.exports = {
   ),
   props: ["info", "page", "platforms"],
   data: function () {
-    return { uploadProgress: 0, pause: !1, uploadState: a, progressTips: "" };
+    return { uploadProgress: 0, pause: false, uploadState: a, progressTips: "" };
   },
   watch: {
     info(e) {

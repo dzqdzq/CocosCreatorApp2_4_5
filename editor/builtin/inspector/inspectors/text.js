@@ -1,18 +1,20 @@
 (() => {
   "use strict";
-  const e = require("fire-path"),
-    t = {
-      ".txt": "text",
-      ".html": "html",
-      ".xml": "xml",
-      ".css": "css",
-      ".less": "less",
-      ".scss": "scss",
-      ".stylus": "stylus",
-      ".json": "json",
-      ".yaml": "yaml",
-      ".ini": "ini",
-    };
+  const e = require("fire-path");
+
+  const t = {
+    ".txt": "text",
+    ".html": "html",
+    ".xml": "xml",
+    ".css": "css",
+    ".less": "less",
+    ".scss": "scss",
+    ".stylus": "stylus",
+    ".json": "json",
+    ".yaml": "yaml",
+    ".ini": "ini",
+  };
+
   Editor.Panel.extend({
     dependencies: [
       "packages://inspector/share/meta-header.js",

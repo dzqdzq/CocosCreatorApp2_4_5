@@ -1,1 +1,1 @@
-module.exports={"last-edit":"","recent-items":[]};
+module.exports = {"last-edit":"","recent-items":[]};

@@ -1,25 +1,43 @@
 "use stirct";
-let e,
-  n = null,
-  t = !1,
-  u = !1;
+let e;
+let n = null;
+let t = false;
+let u = false;
 const { drawHermite: l } = require("./utils");
+
 let r = function () {
-    (n = null), (t = !1), (u = !1), (e = null);
-  },
-  a = function (n) {
-    (e = n),
-      t &&
-        process.nextTick(() => {
-          Editor.Ipc.sendToPanel("curve-editor", "current-keys", n), (u = !1);
-        });
-  };
+  n = null;
+  t = false;
+  u = false;
+  e = null;
+};
+
+let a = function (n) {
+  e = n;
+
+  if (t) {
+    process.nextTick(() => {
+      Editor.Ipc.sendToPanel("curve-editor", "current-keys", n);
+      u = false;
+    });
+  }
+};
+
 module.exports = {
   close: function (e) {
-    e === n && (Editor.Panel.close("curve-editor"), r());
+    if (e === n) {
+      Editor.Panel.close("curve-editor");
+      r();
+    }
   },
   open: function (e, t) {
-    u || (Editor.Panel.open("curve-editor"), (u = !0)), (n = t), a(e);
+    if (!u) {
+      Editor.Panel.open("curve-editor");
+      u = true;
+    }
+
+    n = t;
+    a(e);
   },
   update: a,
   drawCurve: function (e, n, t) {
@@ -36,11 +54,18 @@ module.exports = {
     l(u, n, t);
   },
   changeCurveState: function (u) {
-    (t = u),
-      u && n ? Editor.Ipc.sendToPanel("curve-editor", "current-keys", e) : r();
+    t = u;
+
+    if (u && n) {
+      Editor.Ipc.sendToPanel("curve-editor", "current-keys", e);
+    } else {
+      r();
+    }
   },
   changeCurveData: function (e) {
-    n && n.apply(e);
+    if (n) {
+      n.apply(e);
+    }
   },
   clear: r,
 };

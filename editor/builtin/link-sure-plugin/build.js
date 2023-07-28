@@ -9,23 +9,29 @@ module.exports = {
   messages: {
     "script-build-finished": function (t, r) {
       let i = Editor.Profile.load(e);
-      (r.settings.server = i.get("tinyPackageServer") || ""), t.reply();
+      r.settings.server = i.get("tinyPackageServer") || "";
+      t.reply();
     },
     "build-finished": async function (r, i) {
       try {
         var n = await t.gatherInfo(r, i);
-        if (!1 === n) return;
-        if (!1 === (n = await t.organizeResources(r))) return;
-        await t.pack(r),
-          (function (t) {
-            var r = Editor.Profile.load(e).getSelfData();
-            let i = {
-              resUrl: r.tinyPackageServer,
-              orientation: r.deviceOrientation,
-              projectName: r.name,
-            };
-            Editor.Ipc.sendToMain("builder:notify-build-result", t, i);
-          })(i);
+        if (false === n) {
+          return;
+        }
+        if (false === (n = await t.organizeResources(r))) {
+          return;
+        }
+        await t.pack(r);
+
+        (function (t) {
+          var r = Editor.Profile.load(e).getSelfData();
+          let i = {
+            resUrl: r.tinyPackageServer,
+            orientation: r.deviceOrientation,
+            projectName: r.name,
+          };
+          Editor.Ipc.sendToMain("builder:notify-build-result", t, i);
+        })(i);
       } catch (e) {
         r.reply(e);
       }
@@ -37,22 +43,24 @@ module.exports = {
     },
   },
   beforeFinish: function (e) {
-    let t = require("fs-extra"),
-      r = require("path"),
-      i = Editor.url(
-        "packages://runtime-adapters/platforms/link-sure/res/main.js"
-      );
+    let t = require("fs-extra");
+    let r = require("path");
+
+    let i = Editor.url(
+      "packages://runtime-adapters/platforms/link-sure/res/main.js"
+    );
+
     var n = r.join(e.dest, "main.js");
     t.copySync(i, n);
   },
   buildStart: function (t) {
     let r = Editor.Profile.load(e);
-    (t.startSceneAssetBundle = r.get("packFirstScreenRes") || !1),
-      (t.separateEngineMode = r.get("separateEngineMode") || !1);
+    t.startSceneAssetBundle = r.get("packFirstScreenRes") || false;
+    t.separateEngineMode = r.get("separateEngineMode") || false;
   },
   delPattern: function (e) {
-    let t = require("path"),
-      r = e.dest;
+    let t = require("path");
+    let r = e.dest;
     return [t.join(r, "**/*")];
   },
   settings: Editor.url("packages://link-sure-runtime/build-ui.js"),

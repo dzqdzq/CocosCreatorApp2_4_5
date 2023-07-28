@@ -1,4 +1,5 @@
 const e = require("./utils/animation");
+
 var n = [
     "_name",
     "_objFlags",
@@ -19,52 +20,58 @@ var n = [
     "rotation",
     "rotationX",
     "rotationY",
-  ],
-  t = [
-    "_name",
-    "_objFlags",
-    "node",
-    "name",
-    "uuid",
-    "__scriptAsset",
-    "_enabled",
-    "enabled",
-    "enabledInHierarchy",
-    "_isOnLoadCalled",
-    "__eventTargets",
   ];
+
+var t = [
+  "_name",
+  "_objFlags",
+  "node",
+  "name",
+  "uuid",
+  "__scriptAsset",
+  "_enabled",
+  "enabled",
+  "enabledInHierarchy",
+  "_isOnLoadCalled",
+  "__eventTargets",
+];
+
 function o(e, n) {
-  var t = e.constructor,
-    o = {},
-    r = new t();
-  return (
-    t.__props__.forEach(function (t) {
-      -1 === n.indexOf(t) && cc.Class.attr(e, t) && (o[t] = r[t]);
-    }),
-    o
-  );
+  var t = e.constructor;
+  var o = {};
+  var r = new t();
+
+  t.__props__.forEach(function (t) {
+    if (-1 === n.indexOf(t) && cc.Class.attr(e, t)) {
+      o[t] = r[t];
+    }
+  });
+
+  return o;
 }
-(_Scene.resetNode = function (e) {
+
+_Scene.resetNode = function (e) {
   var t = o(e, n);
   _Scene._UndoImpl.restoreObject(e, t);
-}),
-  (_Scene.resetComponent = function (n) {
+};
+
+_Scene.resetComponent = function (n) {
     if (!e.isRecording(n)) {
       var r = o(n, t);
       try {
         _Scene._UndoImpl.restoreObject(n, r);
       } catch (e) {
-        return (
-          cc._throw(e),
-          Editor.error(
-            `Failed to reset the component ${cc.js.getClassName(
-              n
-            )}, if you can't easily fix it, you can implement the "onRestore" function in the component.`
-          ),
-          void 0
+        cc._throw(e);
+
+        Editor.error(
+          `Failed to reset the component ${cc.js.getClassName(
+            n
+          )}, if you can't easily fix it, you can implement the "onRestore" function in the component.`
         );
+
+        return;
       }
-      cc.director._nodeActivator.resetComp(n, !0),
-        e.onResetComponent(n.node, n);
+      cc.director._nodeActivator.resetComp(n, true);
+      e.onResetComponent(n.node, n);
     }
-  });
+  };

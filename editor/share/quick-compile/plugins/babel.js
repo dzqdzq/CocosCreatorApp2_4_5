@@ -2,29 +2,34 @@ const e = require("@babel/core");
 module.exports = function (r) {
   return {
     transform(s) {
-      if (-1 !== s.src.indexOf(".json")) return;
+      if (-1 !== s.src.indexOf(".json")) {
+        return;
+      }
       let o = "inline";
-      (r = r || {}).exludesForSourceMap &&
-        r.exludesForSourceMap.includes(s.src) &&
-        (o = !1);
+
+      if ((r = r || {}).exludesForSourceMap &&
+        r.exludesForSourceMap.includes(s.src)) {
+        o = false;
+      }
+
       let l = e.transform(s.source, {
-        ast: !1,
-        highlightCode: !1,
+        ast: false,
+        highlightCode: false,
         sourceMaps: o,
-        compact: !1,
+        compact: false,
         filename: s.src,
         presets: [
-          [require("@babel/preset-env"), { loose: !0 }],
+          [require("@babel/preset-env"), { loose: true }],
           {
             plugins: [
-              [require("@babel/plugin-proposal-decorators"), { legacy: !0 }],
+              [require("@babel/plugin-proposal-decorators"), { legacy: true }],
               [
                 require("@babel/plugin-proposal-class-properties"),
-                { loose: !0 },
+                { loose: true },
               ],
             ],
           },
-          [require("@babel/preset-typescript"), { allowDeclareFields: !0 }],
+          [require("@babel/preset-typescript"), { allowDeclareFields: true }],
         ],
         plugins: [
           [require("babel-plugin-const-enum"), { transform: "constObject" }],

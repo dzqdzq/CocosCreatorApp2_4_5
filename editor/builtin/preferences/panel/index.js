@@ -1,9 +1,7 @@
 "use strict";
-const e = require("fire-fs"),
-  t =
-    (require("fire-path"),
-    Editor.require("packages://preferences/panel/utils")),
-  r = require("electron").remote.dialog;
+const e = require("fire-fs");
+const t = (require("fire-path"), Editor.require("packages://preferences/panel/utils"));
+const r = require("electron").remote.dialog;
 Editor.Panel.extend({
   style: e.readFileSync(
     Editor.url("packages://preferences/panel/style/home.css")
@@ -12,115 +10,117 @@ Editor.Panel.extend({
     Editor.url("packages://preferences/panel/template/home.html")
   ),
   ready() {
-    t.init(),
-      Editor.Ipc.sendToMain("preferences:query-tab", (e, i) => {
-        this._vm = (function (e, i) {
-          return new Vue({
-            el: e,
-            data: {
-              loaded: !0,
-              changed: !1,
-              tab: i || 0,
-              loading: !1,
-              general: t.queryGeneral(),
-              editor: t.queryEditor(),
-              native: t.queryNative(),
-              preview: t.queryPreview(),
+    t.init();
+
+    Editor.Ipc.sendToMain("preferences:query-tab", (e, i) => {
+      this._vm = (function (e, i) {
+        return new Vue({
+          el: e,
+          data: {
+            loaded: true,
+            changed: false,
+            tab: i || 0,
+            loading: false,
+            general: t.queryGeneral(),
+            editor: t.queryEditor(),
+            native: t.queryNative(),
+            preview: t.queryPreview(),
+          },
+          watch: {
+            tab(e) {
+              Editor.Ipc.sendToMain("preferences:update-tab", e);
             },
-            watch: {
-              tab(e) {
-                Editor.Ipc.sendToMain("preferences:update-tab", e);
-              },
-              general: {
-                deep: !0,
-                handler() {
-                  this.changed = !0;
-                },
-              },
-              editor: {
-                deep: !0,
-                handler() {
-                  this.changed = !0;
-                },
-              },
-              native: {
-                deep: !0,
-                handler() {
-                  this.changed = !0;
-                },
-              },
-              preview: {
-                deep: !0,
-                handler() {
-                  this.changed = !0;
-                },
-              },
-              "native.useDefaultCppEngine"(e) {
-                let r = e ? null : this.native.cppEnginePath;
-                t.resetSimulatorConfig(r), (this.preview = t.queryPreview());
-              },
-              "native.cppEnginePath"(e) {
-                (e = this.native.useDefaultCppEngine ? null : e),
-                  t.resetSimulatorConfig(e),
-                  (this.preview = t.queryPreview());
+            general: {
+              deep: true,
+              handler() {
+                this.changed = true;
               },
             },
-            methods: {
-              T: Editor.T,
-              _selectTab(e) {
-                (this.tab = e),
-                  Editor.Ipc.sendToMain("preferences:update-tab", e);
+            editor: {
+              deep: true,
+              handler() {
+                this.changed = true;
               },
-              _save() {
-                return this.native.useDefaultCppEngine ||
-                  this.native.cppEnginePath
-                  ? this.native.useDefaultJsEngine || this.native.jsEnginePath
-                    ? ((this.loading = !0),
-                      (this.changed = !1),
-                      t.setGeneral(this.general),
-                      t.setEditor(this.editor),
-                      t.setNative(this.native),
-                      t.setPreview(this.preview),
-                      t.save(),
-                      setTimeout(() => {
-                        this.loading = !1;
-                      }, 300),
-                      void 0)
-                    : (r.showErrorBox(
-                        Editor.T("PROJECT_SETTINGS.error.setting_error"),
-                        Editor.T(
-                          "PROJECT_SETTINGS.error.custom_engine_empty_tips",
-                          { name: "JavaScript" }
-                        )
-                      ),
-                      void 0)
+            },
+            native: {
+              deep: true,
+              handler() {
+                this.changed = true;
+              },
+            },
+            preview: {
+              deep: true,
+              handler() {
+                this.changed = true;
+              },
+            },
+            "native.useDefaultCppEngine"(e) {
+              let r = e ? null : this.native.cppEnginePath;
+              t.resetSimulatorConfig(r);
+              this.preview = t.queryPreview();
+            },
+            "native.cppEnginePath"(e) {
+              e = this.native.useDefaultCppEngine ? null : e;
+              t.resetSimulatorConfig(e);
+              this.preview = t.queryPreview();
+            },
+          },
+          methods: {
+            T: Editor.T,
+            _selectTab(e) {
+              this.tab = e;
+              Editor.Ipc.sendToMain("preferences:update-tab", e);
+            },
+            _save() {
+              return this.native.useDefaultCppEngine ||
+                this.native.cppEnginePath
+                ? this.native.useDefaultJsEngine || this.native.jsEnginePath
+                  ? ((this.loading = true),
+                    (this.changed = false),
+                    t.setGeneral(this.general),
+                    t.setEditor(this.editor),
+                    t.setNative(this.native),
+                    t.setPreview(this.preview),
+                    t.save(),
+                    setTimeout(() => {
+                      this.loading = false;
+                    }, 300),
+                    void 0)
                   : (r.showErrorBox(
                       Editor.T("PROJECT_SETTINGS.error.setting_error"),
                       Editor.T(
                         "PROJECT_SETTINGS.error.custom_engine_empty_tips",
-                        { name: "Cocos2d-x" }
+                        { name: "JavaScript" }
                       )
                     ),
-                    void 0);
-              },
+                    void 0)
+                : (r.showErrorBox(
+                    Editor.T("PROJECT_SETTINGS.error.setting_error"),
+                    Editor.T(
+                      "PROJECT_SETTINGS.error.custom_engine_empty_tips",
+                      { name: "Cocos2d-x" }
+                    )
+                  ),
+                  void 0);
             },
-            components: {
-              general: Editor.require(
-                "packages://preferences/panel/components/general"
-              ),
-              editor: Editor.require(
-                "packages://preferences/panel/components/editor"
-              ),
-              native: Editor.require(
-                "packages://preferences/panel/components/native"
-              ),
-              preview: Editor.require(
-                "packages://preferences/panel/components/preview"
-              ),
-            },
-          });
-        })(this.shadowRoot.getElementById("settings"), i);
-      });
+          },
+          components: {
+            general: Editor.require(
+              "packages://preferences/panel/components/general"
+            ),
+            editor: Editor.require(
+              "packages://preferences/panel/components/editor"
+            ),
+            native: Editor.require(
+              "packages://preferences/panel/components/native"
+            ),
+            preview: Editor.require(
+              "packages://preferences/panel/components/preview"
+            ),
+          },
+        });
+      })(this.shadowRoot.getElementById("settings"), i);
+    });
   },
   canClose() {
     let e = this._vm;
@@ -138,21 +138,19 @@ Editor.Panel.extend({
           detail: Editor.T("MESSAGE.preferences.modified"),
           defaultId: 0,
           cancelId: 0,
-          noLink: !0,
+          noLink: true,
         })
       ) {
         case 0:
           e._save();
         case 1:
-          return (
-            (e.changed = !1),
-            Editor.Ipc.sendToMain("preferences:close", this._vm.tab),
-            !0
-          );
+          e.changed = false;
+          Editor.Ipc.sendToMain("preferences:close", this._vm.tab);
+          return true;
         default:
-          return !1;
+          return false;
       }
     }
-    return !0;
+    return true;
   },
 });

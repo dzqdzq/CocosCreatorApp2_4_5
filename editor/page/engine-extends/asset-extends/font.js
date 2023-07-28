@@ -1,4 +1,5 @@
 cc.Font.prototype.createNode = function (e) {
   var n = new cc.Node(this.name);
-  return (n.addComponent(cc.Label).font = this), e(null, n);
+  n.addComponent(cc.Label).font = this;
+  return e(null, n);
 };

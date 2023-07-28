@@ -1,7 +1,9 @@
 "use strict";
-const e = require(Editor.url("packages://builder/panel/platform/common")),
-  t = require("electron").remote.dialog;
-require("fire-path"), require(Editor.url("app://editor/share/build-utils"));
+const e = require(Editor.url("packages://builder/panel/platform/common"));
+const t = require("electron").remote.dialog;
+require("fire-path");
+require(Editor.url("app://editor/share/build-utils"));
+
 exports.template = `\n    <ui-prop name="${Editor.T(
   "BUILDER.template"
 )}">\n        <ui-select class="flex-1" v-value="local.template">\n            <template v-for="item in templates">\n                <option v-bind:value="item">{{item}}</option>\n            </template>\n        </ui-select>\n    </ui-prop>\n\n    <ui-prop name="${Editor.T(
@@ -17,62 +19,85 @@ exports.template = `\n    <ui-prop name="${Editor.T(
 )}">\n        <ui-num-input v-value="mac.width"></ui-num-input>\n            <span>X</span>\n        <ui-num-input v-value="mac.height"></ui-num-input>\n    </ui-prop>\n\n    ${
   e.native.xxtea
 }\n`;
+
 const r = (exports.name = "mac");
-(exports.props = { local: null, project: null }),
-  (exports.data = function () {
+exports.props = { local: null, project: null };
+
+exports.data = function () {
     let e = this.project[r];
     return { templates: [], packageName: e.packageName, mac: e };
-  }),
-  (exports.watch = {
+  };
+
+exports.watch = {
     packageName: {
       handler(e) {
         let t = this.project[r];
-        t && (t.packageName = e);
+
+        if (t) {
+          t.packageName = e;
+        }
       },
     },
-  }),
-  (exports.created = function () {
-    (this.originIncludeAnySDK = this.project.includeAnySDK),
-      (this.project.includeAnySDK = !1),
-      Editor.Ipc.sendToMain("app:query-cocos-templates", (e, t) => {
-        if (e) return Editor.warn(e);
-        if (
-          (t.forEach((e) => {
-            "android-instant" !== e && this.templates.push(e);
-          }),
-          this.local)
-        ) {
-          var r = this.local.template;
-          if (t.length <= 0) return this.set("profiles.local.template", "");
-          -1 === t.indexOf(r) && this.set("profiles.local.template", t[0]);
-        }
-      });
-  }),
-  (exports.directives = {}),
-  (exports.methods = {
+  };
+
+exports.created = function () {
+  this.originIncludeAnySDK = this.project.includeAnySDK;
+  this.project.includeAnySDK = false;
+
+  Editor.Ipc.sendToMain("app:query-cocos-templates", (e, t) => {
+    if (e) {
+      return Editor.warn(e);
+    }
+
+    t.forEach((e) => {
+      if ("android-instant" !== e) {
+        this.templates.push(e);
+      }
+    });
+
+    if (
+      (this.local)
+    ) {
+      var r = this.local.template;
+      if (t.length <= 0) {
+        return this.set("profiles.local.template", "");
+      }
+
+      if (-1 === t.indexOf(r)) {
+        this.set("profiles.local.template", t[0]);
+      }
+    }
+  });
+};
+
+exports.directives = {};
+
+exports.methods = {
     checkParams() {
       let e = this.packageName;
-      if (!/^[a-zA-Z0-9_.]*$/.test(e))
-        return (
+      if (!/^[a-zA-Z0-9_.]*$/.test(e)) {
+        t.showErrorBox(
+          Editor.T("BUILDER.error.build_error"),
+          Editor.T("BUILDER.error.package_name_not_legal")
+        );
+
+        return false;
+      }
+      let r = e.split(".");
+      for (let e = 0; e < r.length; e++) {
+        if (!isNaN(r[e][0])) {
           t.showErrorBox(
             Editor.T("BUILDER.error.build_error"),
-            Editor.T("BUILDER.error.package_name_not_legal")
-          ),
-          !1
-        );
-      let r = e.split(".");
-      for (let e = 0; e < r.length; e++)
-        if (!isNaN(r[e][0]))
-          return (
-            t.showErrorBox(
-              Editor.T("BUILDER.error.build_error"),
-              Editor.T("BUILDER.error.package_name_start_with_number")
-            ),
-            !1
+            Editor.T("BUILDER.error.package_name_start_with_number")
           );
-      return !0;
+
+          return false;
+        }
+      }
+      return true;
     },
-  }),
-  (exports.beforeDestroy = function () {
+  };
+
+exports.beforeDestroy = function () {
     this.project.includeAnySDK = this.originIncludeAnySDK;
-  });
+  };

@@ -5,13 +5,15 @@ Editor.Panel.extend({
   $: { webview: "#webview" },
   ready() {
     const e = document.createElement("style");
-    (e.innerHTML = "ui-dock-tabs#tabs {display: none;}"),
-      document.querySelector("ui-dock-panel").shadowRoot.appendChild(e),
-      (this.$webview.shadowRoot.getElementById("view").className += "fit"),
-      (this.$webview.src = "http://baidu.com");
+    e.innerHTML = "ui-dock-tabs#tabs {display: none;}";
+    document.querySelector("ui-dock-panel").shadowRoot.appendChild(e);
+    this.$webview.shadowRoot.getElementById("view").className += "fit";
+    this.$webview.src = "http://baidu.com";
   },
   run(e) {
-    console.log(e), (this.$webview.src = e.url), (document.title = e.title);
+    console.log(e);
+    this.$webview.src = e.url;
+    document.title = e.title;
   },
   messages: {
     "vue-test:hello"(e) {

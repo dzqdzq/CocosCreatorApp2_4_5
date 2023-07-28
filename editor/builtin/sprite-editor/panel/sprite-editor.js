@@ -1,7 +1,7 @@
-const t = require("fs"),
-  s = require("fire-path"),
-  e = Editor.require("app://editor/page/gizmos/2d/elements/tools"),
-  i = require("svg.js");
+const t = require("fs");
+const s = require("fire-path");
+const e = Editor.require("app://editor/page/gizmos/2d/elements/tools");
+const i = require("svg.js");
 Editor.Panel.extend({
   template: t.readFileSync(
     Editor.url("packages://sprite-editor/panel/sprite-editor.html"),
@@ -17,12 +17,12 @@ Editor.Panel.extend({
       return new window.Vue({
         el: t,
         data: {
-          hasContent: !1,
+          hasContent: false,
           scale: 50,
           minScale: 20,
           maxScale: 500,
-          dirty: !1,
-          canSave: !1,
+          dirty: false,
+          canSave: false,
           leftPos: 0,
           rightPos: 0,
           topPos: 0,
@@ -36,22 +36,22 @@ Editor.Panel.extend({
           bottomPos: "bottomPosChanged",
         },
         compiled() {
-          (this._svg = i(this.$els.svg)),
-            this._svg.spof(),
-            (this._lastBcr = null),
-            (this._svgColor = "#5c5"),
-            (this._dotSize = 6),
-            (this._borderLeft = 0),
-            (this._borderRight = 0),
-            (this._borderBottom = 0),
-            (this._borderTop = 0),
-            (this._startLeftPos = 0),
-            (this._startRightPos = 0),
-            (this._startTopPos = 0),
-            (this._startBottomPos = 0),
-            (this._meta = null),
-            (this._scalingSize = null),
-            this.addListeners();
+          this._svg = i(this.$els.svg);
+          this._svg.spof();
+          this._lastBcr = null;
+          this._svgColor = "#5c5";
+          this._dotSize = 6;
+          this._borderLeft = 0;
+          this._borderRight = 0;
+          this._borderBottom = 0;
+          this._borderTop = 0;
+          this._startLeftPos = 0;
+          this._startRightPos = 0;
+          this._startTopPos = 0;
+          this._startBottomPos = 0;
+          this._meta = null;
+          this._scalingSize = null;
+          this.addListeners();
         },
         methods: {
           run(t) {
@@ -61,205 +61,231 @@ Editor.Panel.extend({
           addListeners() {
             let t = this;
             window.addEventListener("resize", function (s) {
-              (t._image || t._meta) &&
-                (t._refreshScaleSlider(),
+              if ((t._image || t._meta)) {
+                t._refreshScaleSlider();
+
                 t.resize(
                   (t._meta.rawWidth * t.scale) / 100,
                   (t._meta.rawHeight * t.scale) / 100
-                ));
+                );
+              }
             });
           },
           _refreshScaleSlider() {
-            var t,
-              s,
-              e,
-              i = this.$els.content.getBoundingClientRect();
-            (this._lastBcr &&
-              i.width === this._lastBcr.width &&
-              i.height === this._lastBcr.height) ||
-              ((t =
-                (s = (i.width / this._meta.rawWidth) * 100) <
-                (e = (i.height / this._meta.rawHeight) * 100)
-                  ? s
-                  : e),
-              (this.minScale = Math.ceil(t / 5)),
-              (this.maxScale = Math.ceil(t)),
-              (this.scale = Math.ceil((t + this.minScale) / 2)),
-              (this._lastBcr = this.$els.content.getBoundingClientRect()));
+            var t;
+            var s;
+            var e;
+            var i = this.$els.content.getBoundingClientRect();
+
+            if (!(this._lastBcr &&
+              i.width === this._lastBcr.width && i.height === this._lastBcr.height)) {
+              t = (s = (i.width / this._meta.rawWidth) * 100) <
+              (e = (i.height / this._meta.rawHeight) * 100)
+                ? s
+                : e;
+
+              this.minScale = Math.ceil(t / 5);
+              this.maxScale = Math.ceil(t);
+              this.scale = Math.ceil((t + this.minScale) / 2);
+              this._lastBcr = this.$els.content.getBoundingClientRect();
+            }
           },
           openSprite(t) {
-            if (!t) return;
+            if (!t) {
+              return;
+            }
             let s = this;
             this._loadMeta(t, function (e, i, o) {
-              if (e)
-                return (
-                  Editor.error(
-                    "Failed to load meta %s, Message: %s",
-                    t,
-                    e.stack
-                  ),
-                  void 0
+              if (e) {
+                Editor.error(
+                  "Failed to load meta %s, Message: %s",
+                  t,
+                  e.stack
                 );
-              (s.hasContent = !0),
-                s._refreshScaleSlider(),
-                Editor.assetdb.queryMetaInfoByUuid(
-                  o.rawTextureUuid,
-                  function (t, e) {
-                    (s._image = new Image()),
-                      (s._image.src = e.assetPath),
-                      (s._image.onload = function () {
-                        s.resize(
-                          (s._meta.rawWidth * s.scale) / 100,
-                          (s._meta.rawHeight * s.scale) / 100
-                        );
-                      });
-                  }
-                );
+
+                return;
+              }
+              s.hasContent = true;
+              s._refreshScaleSlider();
+
+              Editor.assetdb.queryMetaInfoByUuid(
+                o.rawTextureUuid,
+                function (t, e) {
+                  s._image = new Image();
+                  s._image.src = e.assetPath;
+
+                  s._image.onload = function () {
+                      s.resize(
+                        (s._meta.rawWidth * s.scale) / 100,
+                        (s._meta.rawHeight * s.scale) / 100
+                      );
+                    };
+                }
+              );
             });
           },
           _loadMeta(t, e) {
-            if (0 === t.indexOf("mount-"))
-              return (
-                e && e(new Error("Not support mount type assets.")), void 0
-              );
+            if (0 === t.indexOf("mount-")) {
+              if (e) {
+                e(new Error("Not support mount type assets."));
+              }
+
+              return;
+            }
             Editor.assetdb.queryMetaInfoByUuid(
               t,
               function (i, o) {
-                if (!o)
-                  return (
-                    e && e(new Error("Can not find asset path by uuid " + t)),
-                    void 0
-                  );
+                if (!o) {
+                  if (e) {
+                    e(new Error("Can not find asset path by uuid " + t));
+                  }
+
+                  return;
+                }
                 var h = o.assetType;
-                if ("sprite-frame" !== h)
-                  return (
-                    e &&
-                      e(
-                        new Error("Only support sprite-frame type assets now.")
-                      ),
-                    void 0
-                  );
+                if ("sprite-frame" !== h) {
+                  if (e) {
+                    e(
+                      new Error("Only support sprite-frame type assets now.")
+                    );
+                  }
+
+                  return;
+                }
                 var r = JSON.parse(o.json);
-                (r.__name__ = s.basenameNoExt(o.assetPath)),
-                  (r.__path__ = o.assetPath),
-                  (r.__mtime__ = o.assetMtime),
-                  (this._meta = r),
-                  this._resetPos(),
-                  e && e(null, h, r);
+                r.__name__ = s.basenameNoExt(o.assetPath);
+                r.__path__ = o.assetPath;
+                r.__mtime__ = o.assetMtime;
+                this._meta = r;
+                this._resetPos();
+
+                if (e) {
+                  e(null, h, r);
+                }
               }.bind(this)
             );
           },
           _resetPos() {
-            let t = this._meta,
-              s = (t.rawWidth - t.width) / 2,
-              e = (t.rawHeight - t.height) / 2;
-            (this.leftPos = Math.max(s + t.borderLeft + t.offsetX, 0)),
-              (this.rightPos = Math.max(s + t.borderRight + t.offsetX, 0)),
-              (this.topPos = Math.max(e + t.borderTop + t.offsetY, 0)),
-              (this.bottomPos = Math.max(e + t.borderBottom + t.offsetY, 0));
+            let t = this._meta;
+            let s = (t.rawWidth - t.width) / 2;
+            let e = (t.rawHeight - t.height) / 2;
+            this.leftPos = Math.max(s + t.borderLeft + t.offsetX, 0);
+            this.rightPos = Math.max(s + t.borderRight + t.offsetX, 0);
+            this.topPos = Math.max(e + t.borderTop + t.offsetY, 0);
+            this.bottomPos = Math.max(e + t.borderBottom + t.offsetY, 0);
           },
           _scaleChanged() {
-            this._image &&
-              this._meta &&
-              (this.scale < this.minScale
-                ? (this.scale = this.minScale)
-                : this.scale > this.maxScale && (this.scale = this.maxScale),
+            if (this._image &&
+              this._meta) {
+              if (this.scale < this.minScale) {
+                this.scale = this.minScale;
+              } else {
+                if (this.scale > this.maxScale) {
+                  this.scale = this.maxScale;
+                }
+              }
+
               this.resize(
                 (this._meta.rawWidth * this.scale) / 100,
                 (this._meta.rawHeight * this.scale) / 100
-              ));
+              );
+            }
           },
           _onInputChanged(t) {
             var s = t.srcElement;
             if (this._image && this._meta && void 0 !== s.value) {
-              var e = Number.parseInt(s.value),
-                i = 0;
+              var e = Number.parseInt(s.value);
+              var i = 0;
               switch (s.id) {
                 case "inputL":
-                  (i = this._image.width - this.rightPos),
-                    (this.leftPos = this.correctPosValue(e, 0, i));
+                  i = this._image.width - this.rightPos;
+                  this.leftPos = this.correctPosValue(e, 0, i);
                   break;
                 case "inputR":
-                  (i = this._image.width - this.leftPos),
-                    (this.rightPos = this.correctPosValue(e, 0, i));
+                  i = this._image.width - this.leftPos;
+                  this.rightPos = this.correctPosValue(e, 0, i);
                   break;
                 case "inputT":
-                  (i = this._image.height - this.bottomPos),
-                    (this.topPos = this.correctPosValue(e, 0, i));
+                  i = this._image.height - this.bottomPos;
+                  this.topPos = this.correctPosValue(e, 0, i);
                   break;
                 case "inputB":
-                  (i = this._image.height - this.topPos),
-                    (this.bottomPos = this.correctPosValue(e, 0, i));
+                  i = this._image.height - this.topPos;
+                  this.bottomPos = this.correctPosValue(e, 0, i);
               }
-              e > i && (s.value = i);
+
+              if (e > i) {
+                s.value = i;
+              }
             }
           },
           _onSliderValueChanged(t) {
             this.scale = t.target.value;
           },
           resize(t, s) {
-            var e = this.$els.content.getBoundingClientRect(),
-              i = Editor.Utils.fitSize(t, s, e.width, e.height);
-            (this._scalingSize = {
+            var e = this.$els.content.getBoundingClientRect();
+            var i = Editor.Utils.fitSize(t, s, e.width, e.height);
+
+            this._scalingSize = {
               width: Math.ceil(i[1]),
               height: Math.ceil(i[0]),
-            }),
-              (this.$els.canvas.width = Math.ceil(i[0])),
-              (this.$els.canvas.height = Math.ceil(i[1])),
-              this.repaint();
+            };
+
+            this.$els.canvas.width = Math.ceil(i[0]);
+            this.$els.canvas.height = Math.ceil(i[1]);
+            this.repaint();
           },
           getCanvasRect() {
             var t = {};
-            return (
-              (t.top = this.$els.canvas.offsetTop),
-              (t.left = this.$els.canvas.offsetLeft),
-              (t.bottom = this.$els.canvas.offsetTop + this.$els.canvas.height),
-              (t.right = this.$els.canvas.offsetLeft + this.$els.canvas.width),
-              (t.width = this.$els.canvas.width),
-              (t.height = this.$els.canvas.height),
-              t
-            );
+            t.top = this.$els.canvas.offsetTop;
+            t.left = this.$els.canvas.offsetLeft;
+            t.bottom = this.$els.canvas.offsetTop + this.$els.canvas.height;
+            t.right = this.$els.canvas.offsetLeft + this.$els.canvas.width;
+            t.width = this.$els.canvas.width;
+            t.height = this.$els.canvas.height;
+            return t;
           },
           updateBorderPos(t) {
-            (this._borderLeft = t.left + this.leftPos * (this.scale / 100)),
-              (this._borderRight =
-                t.right - this.rightPos * (this.scale / 100)),
-              (this._borderTop = t.top + this.topPos * (this.scale / 100)),
-              (this._borderBottom =
-                t.bottom - this.bottomPos * (this.scale / 100));
+            this._borderLeft = t.left + this.leftPos * (this.scale / 100);
+            this._borderRight = t.right - this.rightPos * (this.scale / 100);
+            this._borderTop = t.top + this.topPos * (this.scale / 100);
+            this._borderBottom = t.bottom - this.bottomPos * (this.scale / 100);
           },
           repaint() {
             var t = this.$els.canvas.getContext("2d");
-            t.imageSmoothingEnabled = !1;
-            var s,
-              e,
-              i,
-              o,
-              h = this._meta;
+            t.imageSmoothingEnabled = false;
+            var s;
+            var e;
+            var i;
+            var o;
+            var h = this._meta;
+            i = h.width;
+            o = h.height;
+            s = ((h.rawWidth - h.width) / 2 + h.offsetX) * (this.scale / 100);
+
+            e = ((h.rawHeight - h.height) / 2 + h.offsetY) *
+            (this.scale / 100);
+
             if (
-              ((i = h.width),
-              (o = h.height),
-              (s =
-                ((h.rawWidth - h.width) / 2 + h.offsetX) * (this.scale / 100)),
-              (e =
-                ((h.rawHeight - h.height) / 2 + h.offsetY) *
-                (this.scale / 100)),
-              h.rotated)
+              (h.rotated)
             ) {
-              var r = this.$els.canvas.width / 2,
-                a = this.$els.canvas.height / 2;
-              t.translate(r, a),
-                t.rotate((-90 * Math.PI) / 180),
-                t.translate(-r, -a),
-                (s =
-                  this.$els.canvas.width / 2 -
-                  (o / 2 - h.offsetY) * (this.scale / 100)),
-                (e =
-                  this.$els.canvas.height / 2 -
-                  (i / 2 - h.offsetX) * (this.scale / 100));
+              var r = this.$els.canvas.width / 2;
+              var a = this.$els.canvas.height / 2;
+              t.translate(r, a);
+              t.rotate((-90 * Math.PI) / 180);
+              t.translate(-r, -a);
+
+              s = this.$els.canvas.width / 2 -
+              (o / 2 - h.offsetY) * (this.scale / 100);
+
+              e = this.$els.canvas.height / 2 -
+              (i / 2 - h.offsetX) * (this.scale / 100);
+
               let d = i;
-              (i = o), (o = d);
+              i = o;
+              o = d;
             }
+
             t.drawImage(
               this._image,
               h.trimX,
@@ -270,16 +296,17 @@ Editor.Panel.extend({
               e,
               i * (this.scale / 100),
               o * (this.scale / 100)
-            ),
-              this.drawEditElements();
+            );
+
+            this.drawEditElements();
           },
           svgElementMoved(t, s, e) {
-            var i = s / (this.scale / 100),
-              o = e / (this.scale / 100);
+            var i = s / (this.scale / 100);
+            var o = e / (this.scale / 100);
+            i = i > 0 ? Math.floor(i) : Math.ceil(i);
+            o = o > 0 ? Math.floor(o) : Math.ceil(o);
             if (
-              ((i = i > 0 ? Math.floor(i) : Math.ceil(i)),
-              (o = o > 0 ? Math.floor(o) : Math.ceil(o)),
-              Math.abs(i) > 0)
+              (Math.abs(i) > 0)
             ) {
               if (t.indexOf("l") >= 0) {
                 var h = this._startLeftPos + i;
@@ -319,253 +346,303 @@ Editor.Panel.extend({
           },
           svgCallbacks(t) {
             var s = {};
-            return (
-              (s.start = function () {
-                (this._startLeftPos = this.leftPos),
-                  (this._startRightPos = this.rightPos),
-                  (this._startTopPos = this.topPos),
-                  (this._startBottomPos = this.bottomPos);
-              }.bind(this)),
-              (s.update = function (s, e) {
-                this.svgElementMoved(t, s, e);
-              }.bind(this)),
-              s
-            );
+
+            s.start = function () {
+              this._startLeftPos = this.leftPos;
+              this._startRightPos = this.rightPos;
+              this._startTopPos = this.topPos;
+              this._startBottomPos = this.bottomPos;
+            }.bind(this);
+
+            s.update = function (s, e) {
+              this.svgElementMoved(t, s, e);
+            }.bind(this);
+
+            return s;
           },
           drawLine(t, s, i, o, h) {
-            var r = { x: t, y: s },
-              a = { x: i, y: o },
-              d = e.lineTool(
-                this._svg,
-                r,
-                a,
-                this._svgColor,
-                "default",
-                this.svgCallbacks(h)
-              );
-            return (
-              "l" === h || "r" === h
-                ? d.style("cursor", "col-resize")
-                : ("t" !== h && "b" !== h) || d.style("cursor", "row-resize"),
-              d
+            var r = { x: t, y: s };
+            var a = { x: i, y: o };
+
+            var d = e.lineTool(
+              this._svg,
+              r,
+              a,
+              this._svgColor,
+              "default",
+              this.svgCallbacks(h)
             );
+
+            if ("l" === h || "r" === h) {
+              d.style("cursor", "col-resize");
+            } else {
+              if (!("t" !== h && "b" !== h)) {
+                d.style("cursor", "row-resize");
+              }
+            }
+
+            return d;
           },
           drawDot(t, s, i) {
-            var o = { color: this._svgColor },
-              h = e.circleTool(
-                this._svg,
-                this._dotSize,
-                o,
-                o,
-                this.svgCallbacks(i)
-              );
-            return (
-              "l" === i || "r" === i || "t" === i || "b" === i
-                ? h.style("cursor", "pointer")
-                : "lb" === i || "rt" === i
-                ? h.style("cursor", "nesw-resize")
-                : ("rb" !== i && "lt" !== i) ||
-                  h.style("cursor", "nwse-resize"),
-              this.moveDotTo(h, t, s),
-              h
+            var o = { color: this._svgColor };
+
+            var h = e.circleTool(
+              this._svg,
+              this._dotSize,
+              o,
+              o,
+              this.svgCallbacks(i)
             );
+
+            if ("l" === i || "r" === i || "t" === i || "b" === i) {
+              h.style("cursor", "pointer");
+            } else {
+              if ("lb" === i || "rt" === i) {
+                h.style("cursor", "nesw-resize");
+              } else {
+                if (!("rb" !== i && "lt" !== i)) {
+                  h.style("cursor", "nwse-resize");
+                }
+              }
+            }
+
+            this.moveDotTo(h, t, s);
+            return h;
           },
           moveDotTo(t, s, e) {
-            t && t.move(s, e);
+            if (t) {
+              t.move(s, e);
+            }
           },
           drawEditElements() {
             if (this._image) {
               this._svg.clear();
               var t = this.getCanvasRect();
-              this.updateBorderPos(t),
-                (this.lineLeft = this.drawLine(
+              this.updateBorderPos(t);
+
+              this.lineLeft = this.drawLine(
                   this._borderLeft,
                   t.bottom,
                   this._borderLeft,
                   t.top,
                   "l"
-                )),
-                (this.lineRight = this.drawLine(
+                );
+
+              this.lineRight = this.drawLine(
                   this._borderRight,
                   t.bottom,
                   this._borderRight,
                   t.top,
                   "r"
-                )),
-                (this.lineTop = this.drawLine(
+                );
+
+              this.lineTop = this.drawLine(
                   t.left,
                   this._borderTop,
                   t.right,
                   this._borderTop,
                   "t"
-                )),
-                (this.lineBottom = this.drawLine(
+                );
+
+              this.lineBottom = this.drawLine(
                   t.left,
                   this._borderBottom,
                   t.right,
                   this._borderBottom,
                   "b"
-                )),
-                (this.dotLB = this.drawDot(
+                );
+
+              this.dotLB = this.drawDot(
                   this._borderLeft,
                   this._borderBottom,
                   "lb"
-                )),
-                (this.dotLT = this.drawDot(
+                );
+
+              this.dotLT = this.drawDot(
                   this._borderLeft,
                   this._borderTop,
                   "lt"
-                )),
-                (this.dotRB = this.drawDot(
+                );
+
+              this.dotRB = this.drawDot(
                   this._borderRight,
                   this._borderBottom,
                   "rb"
-                )),
-                (this.dotRT = this.drawDot(
+                );
+
+              this.dotRT = this.drawDot(
                   this._borderRight,
                   this._borderTop,
                   "rt"
-                )),
-                (this.dotL = this.drawDot(
+                );
+
+              this.dotL = this.drawDot(
                   this._borderLeft,
                   t.bottom - t.height / 2,
                   "l"
-                )),
-                (this.dotR = this.drawDot(
+                );
+
+              this.dotR = this.drawDot(
                   this._borderRight,
                   t.bottom - t.height / 2,
                   "r"
-                )),
-                (this.dotB = this.drawDot(
+                );
+
+              this.dotB = this.drawDot(
                   t.left + t.width / 2,
                   this._borderBottom,
                   "b"
-                )),
-                (this.dotT = this.drawDot(
+                );
+
+              this.dotT = this.drawDot(
                   t.left + t.width / 2,
                   this._borderTop,
                   "t"
-                ));
+                );
             }
           },
           correctPosValue: (t, s, e) => (t < s ? s : t > e ? e : t),
           checkState() {
-            let t = Math.ceil((this._meta.rawWidth - this._meta.width) / 2),
-              s = Math.ceil((this._meta.rawHeight - this._meta.height) / 2),
-              e =
-                this.leftPos - t - this._meta.offsetX !== this._meta.borderLeft,
-              i = this.leftPos - t - this._meta.offsetX >= 0,
-              o =
-                this.rightPos - t - this._meta.offsetX !==
-                this._meta.borderRight,
-              h = this.rightPos - t - this._meta.offsetX >= 0,
-              r = this.topPos - s - this._meta.offsetY !== this._meta.borderTop,
-              a = this.topPos - s - this._meta.offsetY >= 0,
-              d =
-                this.bottomPos - s - this._meta.offsetY !==
-                this._meta.borderBottom,
-              l = this.bottomPos - s - this._meta.offsetY >= 0;
-            (this.dirty = e || o || r || d),
-              (this.canSave = this.dirty && i && h && a && l);
+            let t = Math.ceil((this._meta.rawWidth - this._meta.width) / 2);
+            let s = Math.ceil((this._meta.rawHeight - this._meta.height) / 2);
+            let e = this.leftPos - t - this._meta.offsetX !== this._meta.borderLeft;
+            let i = this.leftPos - t - this._meta.offsetX >= 0;
+
+            let o = this.rightPos - t - this._meta.offsetX !==
+            this._meta.borderRight;
+
+            let h = this.rightPos - t - this._meta.offsetX >= 0;
+            let r = this.topPos - s - this._meta.offsetY !== this._meta.borderTop;
+            let a = this.topPos - s - this._meta.offsetY >= 0;
+
+            let d = this.bottomPos - s - this._meta.offsetY !==
+            this._meta.borderBottom;
+
+            let l = this.bottomPos - s - this._meta.offsetY >= 0;
+            this.dirty = e || o || r || d;
+            this.canSave = this.dirty && i && h && a && l;
           },
           leftPosChanged() {
             if (this._image) {
               var t = this.getCanvasRect();
-              this.updateBorderPos(t),
-                this.moveDotTo(
-                  this.dotL,
+              this.updateBorderPos(t);
+
+              this.moveDotTo(
+                this.dotL,
+                this._borderLeft,
+                t.bottom - t.height / 2
+              );
+
+              this.moveDotTo(
+                this.dotLB,
+                this._borderLeft,
+                this._borderBottom
+              );
+
+              this.moveDotTo(this.dotLT, this._borderLeft, this._borderTop);
+
+              if (this.lineLeft) {
+                this.lineLeft.plot(
                   this._borderLeft,
-                  t.bottom - t.height / 2
-                ),
-                this.moveDotTo(
-                  this.dotLB,
+                  t.bottom,
                   this._borderLeft,
-                  this._borderBottom
-                ),
-                this.moveDotTo(this.dotLT, this._borderLeft, this._borderTop),
-                this.lineLeft &&
-                  this.lineLeft.plot(
-                    this._borderLeft,
-                    t.bottom,
-                    this._borderLeft,
-                    t.top
-                  ),
-                this.checkState();
+                  t.top
+                );
+              }
+
+              this.checkState();
             }
           },
           rightPosChanged() {
             if (this._image) {
               var t = this.getCanvasRect();
-              this.updateBorderPos(t),
-                this.moveDotTo(
-                  this.dotR,
+              this.updateBorderPos(t);
+
+              this.moveDotTo(
+                this.dotR,
+                this._borderRight,
+                t.bottom - t.height / 2
+              );
+
+              this.moveDotTo(
+                this.dotRB,
+                this._borderRight,
+                this._borderBottom
+              );
+
+              this.moveDotTo(this.dotRT, this._borderRight, this._borderTop);
+
+              if (this.lineRight) {
+                this.lineRight.plot(
                   this._borderRight,
-                  t.bottom - t.height / 2
-                ),
-                this.moveDotTo(
-                  this.dotRB,
+                  t.bottom,
                   this._borderRight,
-                  this._borderBottom
-                ),
-                this.moveDotTo(this.dotRT, this._borderRight, this._borderTop),
-                this.lineRight &&
-                  this.lineRight.plot(
-                    this._borderRight,
-                    t.bottom,
-                    this._borderRight,
-                    t.top
-                  ),
-                this.checkState();
+                  t.top
+                );
+              }
+
+              this.checkState();
             }
           },
           topPosChanged() {
             if (this._image) {
               var t = this.getCanvasRect();
-              this.updateBorderPos(t),
-                this.moveDotTo(
-                  this.dotT,
-                  t.left + t.width / 2,
+              this.updateBorderPos(t);
+
+              this.moveDotTo(
+                this.dotT,
+                t.left + t.width / 2,
+                this._borderTop
+              );
+
+              this.moveDotTo(this.dotLT, this._borderLeft, this._borderTop);
+              this.moveDotTo(this.dotRT, this._borderRight, this._borderTop);
+
+              if (this.lineTop) {
+                this.lineTop.plot(
+                  t.left,
+                  this._borderTop,
+                  t.right,
                   this._borderTop
-                ),
-                this.moveDotTo(this.dotLT, this._borderLeft, this._borderTop),
-                this.moveDotTo(this.dotRT, this._borderRight, this._borderTop),
-                this.lineTop &&
-                  this.lineTop.plot(
-                    t.left,
-                    this._borderTop,
-                    t.right,
-                    this._borderTop
-                  ),
-                this.checkState();
+                );
+              }
+
+              this.checkState();
             }
           },
           bottomPosChanged() {
             if (this._image) {
               var t = this.getCanvasRect();
-              this.updateBorderPos(t),
-                this.moveDotTo(
-                  this.dotB,
-                  t.left + t.width / 2,
+              this.updateBorderPos(t);
+
+              this.moveDotTo(
+                this.dotB,
+                t.left + t.width / 2,
+                this._borderBottom
+              );
+
+              this.moveDotTo(
+                this.dotLB,
+                this._borderLeft,
+                this._borderBottom
+              );
+
+              this.moveDotTo(
+                this.dotRB,
+                this._borderRight,
+                this._borderBottom
+              );
+
+              if (this.lineBottom) {
+                this.lineBottom.plot(
+                  t.left,
+                  this._borderBottom,
+                  t.right,
                   this._borderBottom
-                ),
-                this.moveDotTo(
-                  this.dotLB,
-                  this._borderLeft,
-                  this._borderBottom
-                ),
-                this.moveDotTo(
-                  this.dotRB,
-                  this._borderRight,
-                  this._borderBottom
-                ),
-                this.lineBottom &&
-                  this.lineBottom.plot(
-                    t.left,
-                    this._borderBottom,
-                    t.right,
-                    this._borderBottom
-                  ),
-                this.checkState();
+                );
+              }
+
+              this.checkState();
             }
           },
           onMouseWheel(t) {
@@ -576,36 +653,51 @@ Editor.Panel.extend({
             }
           },
           _onRevert(t) {
-            this._image &&
-              this._meta &&
-              (t && t.stopPropagation(), this._resetPos(), this.checkState());
+            if (this._image &&
+              this._meta) {
+              if (t) {
+                t.stopPropagation();
+              }
+
+              this._resetPos();
+              this.checkState();
+            }
           },
           _onApply(t) {
-            if (!this._image || !this._meta) return;
-            t && t.stopPropagation();
-            var s = this._meta.borderTop,
-              e = this._meta.borderBottom,
-              i = this._meta.borderLeft,
-              o = this._meta.borderRight,
-              h = this._meta;
-            let r = Math.ceil((h.rawWidth - h.width) / 2),
-              a = Math.ceil((h.rawHeight - h.height) / 2);
-            (h.borderTop = Math.max(this.topPos - a - h.offsetY, 0)),
-              (h.borderBottom = Math.max(this.bottomPos - a - h.offsetY, 0)),
-              (h.borderLeft = Math.max(this.leftPos - r - h.offsetX, 0)),
-              (h.borderRight = Math.max(this.rightPos - r - h.offsetX, 0));
-            var d = JSON.stringify(h),
-              l = h.uuid;
+            if (!this._image || !this._meta) {
+              return;
+            }
+
+            if (t) {
+              t.stopPropagation();
+            }
+
+            var s = this._meta.borderTop;
+            var e = this._meta.borderBottom;
+            var i = this._meta.borderLeft;
+            var o = this._meta.borderRight;
+            var h = this._meta;
+            let r = Math.ceil((h.rawWidth - h.width) / 2);
+            let a = Math.ceil((h.rawHeight - h.height) / 2);
+            h.borderTop = Math.max(this.topPos - a - h.offsetY, 0);
+            h.borderBottom = Math.max(this.bottomPos - a - h.offsetY, 0);
+            h.borderLeft = Math.max(this.leftPos - r - h.offsetX, 0);
+            h.borderRight = Math.max(this.rightPos - r - h.offsetX, 0);
+            var d = JSON.stringify(h);
+            var l = h.uuid;
+
             Editor.assetdb.saveMeta(l, d, (t) => {
-              t &&
-                ((this._meta.borderTop = s),
-                (this._meta.borderBottom = e),
-                (this._meta.borderLeft = i),
-                (this._meta.borderRight = o),
-                this._resetPos(),
-                this.checkState());
-            }),
-              this.checkState();
+              if (t) {
+                this._meta.borderTop = s;
+                this._meta.borderBottom = e;
+                this._meta.borderLeft = i;
+                this._meta.borderRight = o;
+                this._resetPos();
+                this.checkState();
+              }
+            });
+
+            this.checkState();
           },
         },
       });

@@ -1,39 +1,49 @@
 "use strict";
-const e = require("path"),
-  t = {
-    engine: { dev: "engine", release: "../engine" },
-    "engine-dev": {
-      dev: "engine/bin/.cache/dev",
-      release: "../engine/bin/.cache/dev",
-    },
-    simulator: { dev: "simulator", release: "simulator" },
-    static: { dev: "editor/static", release: "../static" },
-    templates: { dev: "templates", release: "../templates" },
-    utils: { dev: "utils", release: "../utils" },
-    editor: { dev: "editor", release: "../app.asar.unpacked/editor" },
-    node_modules: { dev: "", release: "../app.asar.unpacked/node_modules" },
-  };
+const e = require("path");
+
+const t = {
+  engine: { dev: "engine", release: "../engine" },
+  "engine-dev": {
+    dev: "engine/bin/.cache/dev",
+    release: "../engine/bin/.cache/dev",
+  },
+  simulator: { dev: "simulator", release: "simulator" },
+  static: { dev: "editor/static", release: "../static" },
+  templates: { dev: "templates", release: "../templates" },
+  utils: { dev: "utils", release: "../utils" },
+  editor: { dev: "editor", release: "../app.asar.unpacked/editor" },
+  node_modules: { dev: "", release: "../app.asar.unpacked/node_modules" },
+};
+
 let i = e.relative(t.engine.release, t["engine-dev"].release);
-(exports.unpackUrl2path = function (n) {
-  let a = n.hostname,
-    s = n.pathname || "",
-    r = t[a];
-  if (!r)
-    return (
-      Editor.error(
-        `Unrecognized unpack host '${a}'! Please validate your url.`
-      ),
-      null
+
+exports.unpackUrl2path = function (n) {
+  let a = n.hostname;
+  let s = n.pathname || "";
+  let r = t[a];
+  if (!r) {
+    Editor.error(
+      `Unrecognized unpack host '${a}'! Please validate your url.`
     );
-  let o = Editor.isMainProcess ? Editor.Profile : Editor.remote.Profile,
-    l = o.load("local://settings.json");
-  l
-    ? !1 !== l.get("use-global-engine-setting") &&
-      (l = o.load("global://settings.json"))
-    : (l = o.load("global://settings.json"));
-  let d = Editor.isMainProcess ? Editor.App.path : Editor.appPath,
-    g = Editor.dev ? r.dev : r.release;
-  if (!g) return s.replace(/^[/\\]/, "");
+
+    return null;
+  }
+  let o = Editor.isMainProcess ? Editor.Profile : Editor.remote.Profile;
+  let l = o.load("local://settings.json");
+
+  if (l) {
+    if (false !== l.get("use-global-engine-setting")) {
+      l = o.load("global://settings.json");
+    }
+  } else {
+    l = o.load("global://settings.json");
+  }
+
+  let d = Editor.isMainProcess ? Editor.App.path : Editor.appPath;
+  let g = Editor.dev ? r.dev : r.release;
+  if (!g) {
+    return s.replace(/^[/\\]/, "");
+  }
   switch (a) {
     case "simulator":
       d = l.get("use-default-cpp-engine")
@@ -44,10 +54,13 @@ let i = e.relative(t.engine.release, t["engine-dev"].release);
       break;
     case "engine-dev":
     case "engine":
-      !l.get("use-default-js-engine") &&
-        l.get("js-engine-path") &&
-        ((d = l.get("js-engine-path")), (g = "engine-dev" === a ? i : ""));
+      if (!l.get("use-default-js-engine") &&
+        l.get("js-engine-path")) {
+        d = l.get("js-engine-path");
+        g = "engine-dev" === a ? i : "";
+      }
   }
   return e.join(d, g, s);
-}),
-  (exports.unpackMapping = t);
+};
+
+exports.unpackMapping = t;

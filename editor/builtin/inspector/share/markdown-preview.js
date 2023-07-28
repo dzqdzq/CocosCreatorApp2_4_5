@@ -8,11 +8,13 @@ Vue.component("cc-markdown-preview", {
   },
   methods: {
     _updateText() {
-      this.path && "unknown" !== this.type && this._highlightCode();
+      if (this.path && "unknown" !== this.type) {
+        this._highlightCode();
+      }
     },
     _highlightCode() {
-      const e = require("highlight.js"),
-        t = require("fire-fs");
+      const e = require("highlight.js");
+      const t = require("fire-fs");
       require("marked").setOptions({
         highlight: (t) => e.highlightAuto(t).value,
       });

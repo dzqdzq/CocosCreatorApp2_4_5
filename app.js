@@ -65,8 +65,10 @@ EditorFramework.App.extend({
         let project = null;
         if (options._.length > 0) {
             project = Path.resolve(options._[0]);
-        } else if (options.path) {
-            project = Path.resolve(options.path);
+        } else {
+            if (options.path) {
+                project = Path.resolve(options.path);
+            }
         }
 
         // 使用新版本 dashboard 启动时候才会触发，文件夹权限检查

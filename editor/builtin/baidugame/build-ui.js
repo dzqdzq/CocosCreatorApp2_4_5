@@ -1,5 +1,6 @@
 "use strict";
-(exports.template = `\n    <ui-prop name="${Editor.T(
+
+exports.template = `\n    <ui-prop name="${Editor.T(
   "BUILDER.start_scene_asset_bundle"
 )}"\n        tooltip="${Editor.T(
   "BUILDER.start_scene_asset_bundle_tooltip"
@@ -17,33 +18,40 @@
   "baidugame.sub_context_tips"
 )}">\n        <ui-input class="flex-1" v-value="baidugame.subContext" placeholder="${Editor.T(
   "BUILDER.optional_input_tips"
-)}"></ui-input>\n    </ui-prop>\n`),
-  (exports.name = "baidugame"),
-  (exports.props = { data: null, project: null, anysdk: null }),
-  (exports.created = function () {
-    (this.profile = Editor.Profile.load("project://baidugame.json")),
-      Object.keys(this.baidugame).forEach((e) => {
-        this.baidugame[e] = this.profile.get(e);
-      });
-  }),
-  (exports.watch = {
+)}"></ui-input>\n    </ui-prop>\n`;
+
+exports.name = "baidugame";
+exports.props = { data: null, project: null, anysdk: null };
+
+exports.created = function () {
+  this.profile = Editor.Profile.load("project://baidugame.json");
+
+  Object.keys(this.baidugame).forEach((e) => {
+    this.baidugame[e] = this.profile.get(e);
+  });
+};
+
+exports.watch = {
     baidugame: {
       handler(e) {
-        this.profile.set("", e), this.profile.save();
+        this.profile.set("", e);
+        this.profile.save();
       },
-      deep: !0,
+      deep: true,
     },
-  }),
-  (exports.data = function () {
+  };
+
+exports.data = function () {
     return {
       baidugame: {
         appid: "testappid",
         orientation: "portrait",
         REMOTE_SERVER_ROOT: "",
         subContext: "",
-        startSceneAssetBundle: !1,
+        startSceneAssetBundle: false,
       },
     };
-  }),
-  (exports.directives = {}),
-  (exports.methods = {});
+  };
+
+exports.directives = {};
+exports.methods = {};
