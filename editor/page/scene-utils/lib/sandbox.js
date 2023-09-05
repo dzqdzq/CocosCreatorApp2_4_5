@@ -146,7 +146,7 @@ let g = {
     c.load((r) => {
       let i = cc.js;
 
-      let o = [
+      let i18nKeys = [
         "i18n:MAIN_MENU.component.renderers",
         "i18n:MAIN_MENU.component.mesh",
         "i18n:MAIN_MENU.component.ui",
@@ -157,12 +157,12 @@ let g = {
         "|%%separator%%|",
       ];
 
-      o.forEach((e, r) => {
-        o[r] = Editor.i18n.formatPath(e);
+      i18nKeys.forEach((e, r) => {
+        i18nKeys[r] = Editor.i18n.formatPath(e);
       });
       let a = {};
 
-      o.forEach((e) => {
+      i18nKeys.forEach((e) => {
         a[e] = [];
       });
 
@@ -171,13 +171,13 @@ let g = {
 
         if (!a[i]) {
           a[i] = [];
-          o.push(i);
+          i18nKeys.push(i);
         }
 
         a[i].push(e);
       });
 
-      o.forEach((e) => {
+      i18nKeys.forEach((e) => {
         a[e].sort((e, r) =>
           e.menuPath.localeCompare(r.menuPath, "en", { numeric: true })
         );
