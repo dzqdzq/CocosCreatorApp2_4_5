@@ -12,27 +12,27 @@ const l = require("./meta");
 let d = {};
 let myPath = {};
 let globby = oldglobby;
-let MTP = "MTP";
-if(Editor.argv.MYAPP === 'BT' || Editor.argv.MYAPP === 'SCB'){
-  MTP = "MTP2";
-}
+
 if(Editor.argv.MYAPP){
+  let filter = null;
   globby = function(path, cb) {
     if(path.endsWith("/assets/**/*")){
       if(myPath[path]){
         cb(null, myPath[path]);
       }else{
-        let RES = path.replace("/**/*", "/resources");
-        let bundleGames = path.replace("/**/*", "/bundleGames");
-        let filter = [
-          `${RES}/${MTP}/**/*`,
-          `${RES}/${Editor.argv.MYAPP}/**/*`,
-          `${RES}/COMMON/**/*`,
-          `${bundleGames}/**/*`,
-        ]
+        if(!filter){
+          filter = Editor.argv.MYAPP.split(",").map((item)=>{
+            return `${path.replace("/**/*", "")}/${item.trim()}/**/*`;
+          });
+        }
         oldglobby(filter, (err, paths)=>{
-          paths.push(RES);
-          paths.push(`${RES}.meta`);
+          const resourcesPath = path.replace("/**/*", "/resources");
+          // 判断是否存在
+          if(e.existsSync(resourcesPath)){
+            paths.push(resourcesPath);
+            paths.push(`${resourcesPath}.meta`);
+          }
+          
           for(let i=0; i<filter.length; i++){
             paths.push(filter[i].replace("/**/*", ""));
             paths.push(filter[i].replace("/**/*", ".meta"));

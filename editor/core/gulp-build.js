@@ -3,7 +3,7 @@ const t = require("fire-url");
 const i = require("fire-fs");
 const { format: r, promisify: s } = require("util");
 const n = require("electron").ipcMain;
-const o = require("globby");
+const globby = require("globby");
 const a = require("gulp").Gulp;
 const l = require("gulp-rename");
 const u = require("gulp-util");
@@ -24,7 +24,7 @@ const S = Editor.require("app://editor/share/3d-physics-build-utils");
 const k = Editor.require("app://editor/share/bundle-utils");
 const x = "build-platform_";
 const M = "db://";
-const A = "window._CCSettings";
+const _CCSettingsStr = "window._CCSettings";
 const C = 5;
 const T = ["SubContext", "Canvas Renderer"];
 const q = "default";
@@ -68,12 +68,12 @@ function D(t) {
     this.emit("data", i);
   });
 }
-function O(e, t) {
+function getSettingFileCon(e, t) {
   var i = JSON.stringify(e, null, t ? 4 : 0).replace(
     /"([A-Za-z_$][0-9A-Za-z_$]*)":/gm,
     "$1:"
   );
-  return (i = t ? `${A} = ${i};\n` : `${A}=${i};`);
+  return (i = t ? `${_CCSettingsStr} = ${i};\n` : `${_CCSettingsStr}=${i};`);
 }
 async function $(e, t, ...i) {
   let r = F(t.actualPlatform, e);
@@ -94,11 +94,11 @@ function P(e, i) {
   var s = e.buildResults;
   var n = {};
   var o = e.sceneList;
-  var a = e.debug;
+  var debug22 = e.debug;
   var l = !e.preview;
   var u = Editor.assetdb;
   var c = Editor.assets;
-  var d = Editor.Utils.UuidUtils.compressUuid;
+  var compressUuid = Editor.Utils.UuidUtils.compressUuid;
   function p(e, i) {
     if (!e) {
       console.error("can not get url to build: " + i);
@@ -198,7 +198,7 @@ function P(e, i) {
       }
 
       if (l) {
-        t = d(t, true);
+        t = compressUuid(t, true);
       }
 
       c.push(t);
@@ -220,11 +220,11 @@ function P(e, i) {
     console.time("writeAssets");
 
     (function (e) {
-      var t;
-      var i = (n.paths = {});
+      var types;
+      var paths = (n.paths = {});
 
-      if (!a) {
-        t = n.types = [];
+      if (!debug22) {
+        types = n.types = [];
       }
 
       var s = {};
@@ -268,12 +268,12 @@ function P(e, i) {
           }
         }
         var b = cc.js._getClassId(p.ctor, false);
-        if (!a) {
+        if (!debug22) {
           var h = s[b];
 
           if (void 0 === h) {
-            t.push(b);
-            h = t.length - 1;
+            types.push(b);
+            h = types.length - 1;
             s[b] = h;
           }
 
@@ -288,10 +288,10 @@ function P(e, i) {
         let n = p.uuid;
 
         if (l) {
-          n = d(n, true);
+          n = compressUuid(n, true);
         }
 
-        i[n] = v;
+        paths[n] = v;
       }
     })(u);
 
@@ -306,7 +306,7 @@ function P(e, i) {
 
         if (t) {
           if (l) {
-            e = d(e, true);
+            e = compressUuid(e, true);
           }
 
           if (-1 === n.uuids.indexOf(e)) {
@@ -331,7 +331,7 @@ function P(e, i) {
               var t = {};
               for (var i in e) {
                 var r = e[i];
-                t[i] = r.map((e) => d(e, true));
+                t[i] = r.map((e) => compressUuid(e, true));
               }
               e = t;
             }
@@ -342,18 +342,18 @@ function P(e, i) {
     n.name = e.name;
     n.importBase = e.importBase;
     n.nativeBase = e.nativeBase;
-    n.debug = a;
+    n.debug = debug22;
     n.isZip = e.isZip;
     n.encrypted = e.encrypted;
 
     if ((!("stringify" in e) || e.stringify)) {
-      n = JSON.stringify(n, null, a ? 4 : 0);
+      n = JSON.stringify(n, null, debug22 ? 4 : 0);
     }
 
     i(null, n);
   });
 }
-function R(e, t) {
+function buildSettings(e, t) {
   var i = e.customSettings;
   var r = e.debug;
   var s = Object.create(null);
@@ -398,7 +398,7 @@ function R(e, t) {
     })(i, c);
 
     if ((!("stringify" in e) || e.stringify)) {
-      i = O(i, r);
+      i = getSettingFileCon(i, r);
     }
 
     t(null, i, s);
@@ -873,7 +873,7 @@ exports.startWithArgs = async function (t, g) {
       o.server = t[H].REMOTE_SERVER_ROOT;
     }
 
-    R(o, function (i, r, s) {
+    buildSettings(o, function (i, r, s) {
       if (i) {
         e(i);
       } else {
@@ -899,8 +899,8 @@ exports.startWithArgs = async function (t, g) {
           i[e] = e;
         }
       }
-      let s = e.paths;
-      for (let e in s) r(e);
+      let paths22 = e.paths;
+      for (let e in paths22) r(e);
       let n = e.scenes;
       for (let e in n) r(n[e]);
       let o = e.packs;
@@ -924,10 +924,10 @@ exports.startWithArgs = async function (t, g) {
       var s = re[r].config;
       var n = i(s);
       let e = s.paths;
-      let a = (s.paths = {});
+      let path33 = (s.paths = {});
       for (let t in e) {
         var o = e[t];
-        a[n[t]] = o;
+        path33[n[t]] = o;
       }
       let l = s.scenes;
       for (let e in l) {
@@ -1083,7 +1083,7 @@ exports.startWithArgs = async function (t, g) {
       l.push(`!${e.join(a, t)}`);
     });
 
-    o(l, (s, o) => {
+    globby(l, (s, o) => {
       (o = o.map((t) => e.resolve(t))).forEach((r) => {
         let s = e.relative(n, r);
         let o = e.join(t.buildPath, s);
@@ -1169,7 +1169,7 @@ exports.startWithArgs = async function (t, g) {
   }
   async function de(t) {
     const i = Editor.Utils.UuidUtils.getUuidFromLibPath;
-    var r = await s(o)(t, { nodir: true });
+    var r = await s(globby)(t, { nodir: true });
     let n = {};
     for (let t = 0; t < r.length; t++) {
       let s = r[t];
@@ -1383,7 +1383,7 @@ exports.startWithArgs = async function (t, g) {
   });
 
   z.task("save-settings", function (e) {
-    var t = O(se, G);
+    var t = getSettingFileCon(se, G);
     i.outputFile(ie.settings, t, e);
   });
 
@@ -1424,7 +1424,7 @@ exports.startWithArgs = async function (t, g) {
       se.bundleVers = Object.create(null);
       for (let t = 0; t < re.length; t++) {
         let i = re[t];
-        let r = o.sync(e.join(i.dest, "config.*"), { absolute: true });
+        let r = globby.sync(e.join(i.dest, "config.*"), { absolute: true });
 
         if (0 !== r.length) {
           r = r[0];
@@ -1770,7 +1770,7 @@ exports.startWithArgs = async function (t, g) {
       (G ? Editor.log : Editor.warn)(
         Editor.T("BUILDER.build_script_only_tips")
       );
-      let r = o.sync([e.join(ie.assets, "*"), e.join(ie.remote, "*")], {
+      let r = globby.sync([e.join(ie.assets, "*"), e.join(ie.remote, "*")], {
         absolute: true,
       });
       be.push("!" + ie.assets);
@@ -1794,7 +1794,7 @@ exports.startWithArgs = async function (t, g) {
 
       (function (t) {
         let r = e.join(t.dest, "src");
-        let s = o.sync(r + "/settings.*", { absolute: true });
+        let s = globby.sync(r + "/settings.*", { absolute: true });
         if (0 === s.length) {
           return;
         }
@@ -1846,5 +1846,5 @@ exports.startWithArgs = async function (t, g) {
 };
 
 exports.getTemplateFillPipe = D;
-exports.buildSettings = R;
+exports.buildSettings = buildSettings;
 exports.buildConfig = P;

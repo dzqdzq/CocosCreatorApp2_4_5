@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Parser = void 0;
 const e = require("lodash");
-const t = require("../../editor-utils/uuid-utils");
+const uuid_utils = require("../../editor-utils/uuid-utils");
 const r = require("./builder");
 const i = require("./builder");
 const s = require("./pack-jsons");
@@ -249,7 +249,7 @@ let m = (() => {
           var l = i._uuid;
 
           if (this.exporting) {
-            l = t.compressUuid(l, true);
+            l = uuid_utils.compressUuid(l, true);
           }
 
           this.builder.setProperty_AssetUuid(e, r, l, s);

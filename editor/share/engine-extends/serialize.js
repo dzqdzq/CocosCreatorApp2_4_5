@@ -1,4 +1,4 @@
-var e = require("../editor-utils/uuid-utils").compressUuid;
+var compressUuid = require("../editor-utils/uuid-utils").compressUuid;
 var i = cc.Object;
 var r = cc.Asset;
 var t = cc._BaseNode;
@@ -229,7 +229,7 @@ function A(t, n) {
                 }
               }
             })(t, n, u),
-            t._exporting && (u = e(u, true)),
+            t._exporting && (u = compressUuid(u, true)),
             { __uuid__: u })
           : null;
       }
@@ -354,8 +354,8 @@ function m(e, r) {
 function R(e, i) {
   var r;
   var t = !("stringify" in (i = i || {})) || i.stringify;
-  var s = i.minify;
-  var n = s || i.nicify;
+  var minify = i.minify;
+  var n = minify || i.nicify;
   var a = new d(e, i).serializedList;
 
   if (n) {
@@ -363,7 +363,7 @@ function R(e, i) {
   }
 
   r = 1 !== a.length || Array.isArray(a[0]) ? a : a[0];
-  return false === t ? r : JSON.stringify(r, null, s ? 0 : 2);
+  return false === t ? r : JSON.stringify(r, null, minify ? 0 : 2);
 }
 
 R.asAsset = function (e) {

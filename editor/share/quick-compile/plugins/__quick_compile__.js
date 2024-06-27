@@ -123,6 +123,21 @@ function formatPath(path) {
   return path;
 }
 
+function getAbsolutePath(basePath, relativePath) {
+  const baseParts = basePath.split('/');
+  const relativeParts = relativePath.split('/');
+  baseParts.pop();
+  for (const part of relativeParts) {
+    if (part === '..') {
+      baseParts.pop();
+    } else if (part !== '.') {
+      baseParts.push(part);
+    }
+  }
+
+  return baseParts.join('/');
+}
+
 window.__quick_compile__ = {
   destPath: "",
 
@@ -171,13 +186,9 @@ window.__quick_compile__ = {
       }
 
       if (!requestPath) {
-        if (CC_JSB) {
-          return require(request);
-        } else {
-          console.warn(
-            "Can not find deps [" + request + "] for path : " + path
-          );
-          return null;
+        requestPath = getAbsolutePath(path, request);
+        if(!requestPath.endsWith(".js")){
+            requestPath += ".js";
         }
       }
     } else {
