@@ -24,7 +24,7 @@ const S = Editor.require("app://editor/share/3d-physics-build-utils");
 const k = Editor.require("app://editor/share/bundle-utils");
 const x = "build-platform_";
 const M = "db://";
-const _CCSettingsStr = "window._CCSettings";
+let settingStr = "window._CCSettings";
 const C = 5;
 const T = ["SubContext", "Canvas Renderer"];
 const q = "default";
@@ -73,7 +73,7 @@ function getSettingFileCon(e, t) {
     /"([A-Za-z_$][0-9A-Za-z_$]*)":/gm,
     "$1:"
   );
-  return (i = t ? `${_CCSettingsStr} = ${i};\n` : `${_CCSettingsStr}=${i};`);
+  return (i = t ? `${settingStr} = ${i};\n` : `${settingStr}=${i};`);
 }
 async function $(e, t, ...i) {
   let r = F(t.actualPlatform, e);
