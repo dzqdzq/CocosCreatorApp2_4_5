@@ -6,7 +6,7 @@ const r = require("path");
 var n;
 var app;
 var o;
-var a;
+var aasdasCall;
 var c;
 var d = false;
 function u() {
@@ -103,7 +103,8 @@ let l = {
     this._validateStashedScene = t;
     var E = d.join(l.tmpdir(), "fireball-game-builds");
     p.sync(d.join(E, "**/*").replace(/\\/g, "/"), { force: true });
-    (app = express()).use(m());
+    app = express();
+    app.use(m());
     let w = d.join(Editor.Project.path, "preview-templates");
 
     if (!r.existsSync(w)) {
@@ -152,8 +153,8 @@ let l = {
     });
 
     app.use("/build", function (e, t, i) {
-      if (a) {
-        a(e, t, i);
+      if (aasdasCall) {
+        aasdasCall(e, t, i);
       } else {
         t.send("Please build your game project first!");
       }
@@ -453,7 +454,7 @@ let l = {
   },
   setPreviewBuildPath: function (e) {
     var t = require("express");
-    a = t.static(e);
+    aasdasCall = t.static(e);
   },
   setPreviewAndroidInstantPath: function (e) {
     var t = require("express");

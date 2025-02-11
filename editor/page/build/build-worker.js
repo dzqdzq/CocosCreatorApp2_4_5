@@ -4,13 +4,13 @@
   const e = require("electron").ipcRenderer;
   var t;
   var r;
-  var i;
-  var n;
+  var asyncLib;
+  var lodash;
   var o;
   var a;
   const s = "none";
   const l = "default";
-  const d = "merge_all_json";
+  const merge_all_json = "merge_all_json";
 
   window.onerror = function (e, t, r, i, n) {
     window.onerror = null;
@@ -34,8 +34,8 @@
     r = require("fire-fs");
     require("gulp");
     require("event-stream");
-    i = require("async");
-    n = require("lodash");
+    asyncLib = require("async");
+    lodash = require("lodash");
     o = require("../../share/build-platforms");
     Editor.isBuilder = true;
     window.CC_TEST = false;
@@ -55,7 +55,7 @@
     a = Editor.remote.importPath.replace(/\\/g, "/");
     var c = Editor.remote.Builder.actualPlatform2Platform(s);
     var u = !o[c].exportSimpleProject;
-    i.waterfall(
+    asyncLib.waterfall(
       [
         function (e) {
           cc.assetManager.init({ importBase: a, nativeBase: a });
@@ -96,14 +96,14 @@
       var q = o[b];
       var v = w.hasOwnProperty("pack") ? w.pack : q.pack;
       var k = t.join(c, "import");
-      var y = require("./file-writer");
+      var writer = require("./file-writer");
       var x = require("./asset-crawler");
       var C = require("./build-asset");
       var U = require("./group-manager");
       var P = require("./group-strategies");
       var T = require("./texture-packer");
       var j = require("./building-assetdb");
-      var S = new y(k, f);
+      var writerObj = new writer(k, f);
       var _ = new j(Editor.assetdb);
       var A = new T();
       if (w.compressionType === l) {
@@ -124,7 +124,7 @@
         if (w.compressionType === s) {
           v = false;
         } else {
-          if (w.compressionType === d) {
+          if (w.compressionType === merge_all_json) {
             w.mergeAllJson = true;
             w.inlineSpriteFrames = false;
           } else {
@@ -134,7 +134,7 @@
       }
 
       if (v) {
-        g = w.compressionType === d
+        g = w.compressionType === merge_all_json
           ? new P.MergeAllJson()
           : q.isNative
           ? w.optimizeHotUpdate
@@ -145,19 +145,19 @@
         console.log("group strategy:", cc.js.getClassName(g));
 
         E = new U(
-            S,
+            writerObj,
             f,
             g,
             _,
-            n.pick(w, "inlineSpriteFrames", "mergeAllJson")
+            lodash.pick(w, "inlineSpriteFrames", "mergeAllJson")
           );
       }
 
-      var M;
+      var packUuids;
       var B;
       var F;
       var I;
-      var R = new C(S, a, _, m, w.sharedUuid);
+      var R = new C(writerObj, a, _, m, w.sharedUuid);
       var z = new x(R, h, A);
       var D = [
         (e) => {
@@ -222,8 +222,8 @@
               .map((e) => e.uuid);
 
           var i = p;
-          M = n.uniq(i.concat(r));
-          z.start(M, t);
+          packUuids = lodash.uniq(i.concat(r));
+          z.start(packUuids, t);
         },
         (e, t) => {
           console.timeEnd("startAssetCrawler");
@@ -241,7 +241,7 @@
             Editor.assetdb.queryAssets("db://**/*.pac", "auto-atlas", e);
           },
           function (e, t) {
-            A.init({ root: u, files: e, writer: S, actualPlatform: m })
+            A.init({ root: u, files: e, writer: writerObj, actualPlatform: m })
               .then(t)
               .catch(t);
           },
@@ -258,7 +258,7 @@
                 } = t;
 
               let a = r.map((e) => e.textureUuid);
-              let s = n.pullAll(A.textureUuids, a);
+              let s = lodash.pullAll(A.textureUuids, a);
               I = t.pacInfos;
               for (let e in i) B[e] = { dependUuids: [i[e]] };
               for (let e in o) {
@@ -294,7 +294,7 @@
                   }
                 }
               }
-              n.pullAll(M, A.textureUuids);
+              lodash.pullAll(packUuids, A.textureUuids);
               if (r.length > 0 || l.length > 0) {
                 let t = r
                   .map((e) => {
@@ -318,7 +318,7 @@
                   e();
                 });
 
-                M = n.uniq(M.concat(t));
+                packUuids = lodash.uniq(packUuids.concat(t));
               } else {
                 e();
               }
@@ -332,7 +332,7 @@
         D.push(
           function (e) {
             console.time("init packs");
-            E.initPacks(M, B, e);
+            E.initPacks(packUuids, B, e);
           },
           function (e) {
             console.timeEnd("init packs");
@@ -348,10 +348,10 @@
       }
 
       D.push(function (e) {
-        S.flush(e);
+        writerObj.flush(e);
       });
 
-      i.waterfall(D, function (t) {
+      asyncLib.waterfall(D, function (t) {
         if (t) {
           if (!((t = t && t.stack) instanceof Error)) {
             t = new Error(t);
@@ -361,7 +361,7 @@
         } else {
           console.log("finished build-worker");
 
-          M.forEach((e) => {
+          packUuids.forEach((e) => {
             var t = B[e];
 
             if ("object" != typeof t) {

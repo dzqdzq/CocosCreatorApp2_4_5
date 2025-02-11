@@ -28,7 +28,7 @@ let settingStr = "window._CCSettings";
 const C = 5;
 const T = ["SubContext", "Canvas Renderer"];
 const q = "default";
-const _ = "merge_all_json";
+const merge_all_json = "merge_all_json";
 const U = "subpackage";
 const B = "zip";
 function D(t) {
@@ -41,8 +41,8 @@ function D(t) {
         r = "";
       }
 
-      const n = Editor.url("app://node_modules/vConsole/dist/vconsole.min.js");
-      const o = `<script src="${e.basename(n)}"><\/script>`;
+      const webDebuggerSrc = Editor.url("app://node_modules/vConsole/dist/vconsole.min.js");
+      const o = `<script src="${e.basename(webDebuggerSrc)}"><\/script>`;
       var s = {
         file: i,
         project: t.projectName || e.basename(t.project),
@@ -547,7 +547,7 @@ exports.startWithArgs = async function (t, g) {
           c || K.supportDownloadScript || !d ? p : e.join(ie.src, "scripts", r),
         priority: o,
         scenes: n[r] || [],
-        compressionType: s[H] || ("db://internal/resources" === i ? _ : q),
+        compressionType: s[H] || ("db://internal/resources" === i ? merge_all_json : q),
         optimizeHotUpdate: a[H],
         inlineSpriteFrames: l[H],
         isRemote: d,
@@ -555,8 +555,7 @@ exports.startWithArgs = async function (t, g) {
     });
     let a = n[r];
 
-    if (!(!Z && !J) &&
-      t.startSceneAssetBundle) {
+    if (!(!Z && !J) && t.startSceneAssetBundle) {
       re.push({
           root: null,
           priority: 9,
@@ -564,7 +563,7 @@ exports.startWithArgs = async function (t, g) {
           scriptDest: e.join(ie.assets, s),
           name: s,
           scenes: [t.startScene],
-          compressionType: _,
+          compressionType: merge_all_json,
           optimizeHotUpdate: false,
           inlineSpriteFrames: false,
           isRemote: false,

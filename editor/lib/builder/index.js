@@ -404,7 +404,7 @@ var u = Object.assign(new t(), {
     this._registerCommandProgressBar();
     this.compile(o, t);
   },
-  debugWorker: false,
+  debugWorker: true,
   buildTemplates: Object.create(null),
   simpleBuildTargets: Object.create(null),
 });

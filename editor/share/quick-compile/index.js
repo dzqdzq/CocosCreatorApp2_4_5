@@ -373,9 +373,9 @@ Object.assign(m.prototype, {
     _.end();
 
     _.on("missing", (e, t) => {
-      console.log(
-        `Cannot resolve module [${e}] when parse [${t.filename}]`
-      );
+      // console.log(
+      //   `Cannot resolve module [${e}] when parse [${t.filename}]`
+      // );
 
       this._missingScripts = n.union(this._missingScripts, [
           h(t.filename),

@@ -1,6 +1,6 @@
 "use strict";
 const e = require("electron");
-const t = require("fire-url");
+const fireUrl = require("fire-url");
 const i = require("fire-fs");
 const n = require("lodash");
 const s = require("events");
@@ -13,6 +13,7 @@ let h = "";
 let u = null;
 let w = [];
 const p = "auto";
+
 class f extends s {
   constructor(t, s) {
     super();
@@ -196,7 +197,7 @@ class f extends s {
     this._loaded = false;
     let o = n ? encodeURIComponent(JSON.stringify(n)) : void 0;
     if (i.existsSync(s)) {
-      s = t.format({ protocol: "file", pathname: s, slashes: true, hash: o });
+      s = fireUrl.format({ protocol: "file", pathname: s, slashes: true, hash: o });
       this.nativeWin.loadURL(s);
       return;
     }

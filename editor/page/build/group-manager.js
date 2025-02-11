@@ -370,6 +370,7 @@ module.exports = class {
     });
   }
   buildPacks(t) {
+    debugger;
     var s = this.packers.map((e) => e.pack(this.minify));
     var i = s.map((e) => e.indices);
     var r = l.calculate(i, l.BuiltinHashType.PackedAssets);
