@@ -272,6 +272,14 @@ module.exports = class {
       t(null, e);
     });
   }
+  _packAllSpine(e, t) {
+    this.queryAssetInfosInBuild(sp.SkeletonData, (s, i) => {
+      var r = i.map((e) => e.uuid);
+      this.removeFromGroups(e, r);
+      e.push({ name: "", uuids: r, type: "spine" });
+      t(null, e);
+    });
+  }
   _mergeSmallFiles(t, s) {
     var i = [(e) => e(null, t)];
 
@@ -281,6 +289,8 @@ module.exports = class {
 
     if (!this.mergeAllJson) {
       i.push(this._packAllTextures.bind(this));
+    }else{
+      i.push(this._packAllSpine.bind(this));
     }
 
     e.waterfall(i, s);

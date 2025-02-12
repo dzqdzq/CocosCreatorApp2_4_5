@@ -1,7 +1,7 @@
 "use strict";
 var e = require("lodash");
 var r = require("async");
-class n {
+class GroupStrategyBase {
   constructor() {
     this.groupManager = null;
   }
@@ -20,8 +20,8 @@ class n {
 }
 
 module.exports = {
-  GroupStrategyBase: n,
-  Balanced: class extends n {
+  GroupStrategyBase: GroupStrategyBase,
+  Balanced: class extends GroupStrategyBase {
     shouldPack(e) {
       return (
         "scene" === e.type ||
@@ -29,7 +29,7 @@ module.exports = {
       );
     }
   },
-  SizeMinimized: class extends n {
+  SizeMinimized: class extends GroupStrategyBase {
     shouldPack(e) {
       return !e.isSubAsset;
     }
@@ -103,7 +103,7 @@ module.exports = {
       return t;
     }
   },
-  ForHotUpdate: class extends n {
+  ForHotUpdate: class extends GroupStrategyBase {
     mergeSmallFiles(e, n, t) {
       this.groupManager.queryAssetInfosInBuild(cc.SpriteFrame, (s, i) => {
         var u = new Editor.Utils.MultipleValueDict();
@@ -138,7 +138,7 @@ module.exports = {
       });
     }
   },
-  MergeAllJson: class extends n {
+  MergeAllJson: class extends GroupStrategyBase {
     shouldPack() {
       return false;
     }
