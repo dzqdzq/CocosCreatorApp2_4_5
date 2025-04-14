@@ -241,7 +241,7 @@ function A(e) {
     }
   });
 }
-async function I(r) {
+async function savePrefabFile(r) {
   if (!r.isValid || !r._prefab.asset) {
     return false;
   }
@@ -830,7 +830,7 @@ let P = false;
 
 p.confirmPrefabSynced = async function (e, r) {
   console.trace("dzq confirmPrefabSynced", e, r);
-  return (!(!P && e && (await I(e))) || (await new Promise(async (o) => {
+  return (!(!P && e && (await savePrefabFile(e))) || (await new Promise(async (o) => {
     let i = "win32" === process.platform ? n.getFocusedWindow() : null;
     const c = await t.showMessageBox(i, {
       type: "question",
