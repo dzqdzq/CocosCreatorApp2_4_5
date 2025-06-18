@@ -357,7 +357,11 @@ function g(i, r, n, o, u) {
       let d = a + ".meta";
       d = a + ".meta";
       if ((e.existsSync(d))) {
-        if (!(r = l.load(i, d)).uuid || i._uuid2path[r.uuid]) {
+        r = l.load(i, d);
+        if(!r){
+          console.error(`dzq Failed to load meta ${d}`);
+        }
+        if (!r.uuid || i._uuid2path[r.uuid]) {
           const e = s();
 
           i.warn(
