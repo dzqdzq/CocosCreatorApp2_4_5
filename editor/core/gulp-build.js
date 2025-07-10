@@ -985,7 +985,7 @@ exports.startWithArgs = async function (t, g) {
         console.log(`start gulpping ${c} to ${a}`);
         var l = z.src(c);
         if (!G) {
-          var u = Editor.require("unpack://engine/gulp/util/utils").uglify;
+          var uglify = Editor.require("unpack://engine/gulp/util/utils").uglify;
           let e = { jsb: X && !J, runtime: J, debug: G, support_jit: false };
           let r = F(t, H);
 
@@ -993,7 +993,7 @@ exports.startWithArgs = async function (t, g) {
             Object.assign(e, r);
           }
 
-          l = l.pipe(u("build", e));
+          l = l.pipe(uglify("build", e));
 
           d.obj([l]).on("error", function (e) {
             i(e.message);
@@ -1001,6 +1001,9 @@ exports.startWithArgs = async function (t, g) {
         }
 
         l = l.pipe(z.dest(a)).on("end", () => {
+          if (global.gc) {
+            global.gc();
+          }
           console.log("finish gulpping", c);
         });
 

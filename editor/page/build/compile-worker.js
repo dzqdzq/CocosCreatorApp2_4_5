@@ -27,8 +27,8 @@
       let d = false;
       const p = require("vinyl-source-stream");
       const f = require("vinyl-buffer");
-      const m = require("gulp-sourcemaps");
-      const g = Editor.require("unpack://engine/gulp/util/utils").uglify;
+      const gulpSourcemap = require("gulp-sourcemaps");
+      const uglify = Editor.require("unpack://engine/gulp/util/utils").uglify;
       const b = Editor.require("app://editor/page/refine-sourcemap");
       const h = l.readFileSync(Editor.url("unpack://static/_prelude.js"), "utf8");
 
@@ -289,7 +289,7 @@
         M = M.pipe(f());
 
         if (t.sourceMaps) {
-          M = M.pipe(m.init({ loadMaps: true }));
+          M = M.pipe(gulpSourcemap.init({ loadMaps: true }));
         }
 
         var C = Editor.require("app://editor/share/build-platforms")[t.platform]
@@ -307,12 +307,15 @@
           Object.assign(F, t.compileFlags);
         }
 
-        M = M.pipe(g("build", F));
+        M = M.pipe(uglify("build", F));
 
         if (t.sourceMaps) {
-          M = M.pipe(b(_, v)).pipe(m.write("./"));
+          M = M.pipe(b(_, v)).pipe(gulpSourcemap.write("./"));
         }
 
+        if (global.gc) {
+          global.gc();
+        }
         (M = M.pipe(s.dest(r))).on("end", l);
       }
 
